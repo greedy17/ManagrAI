@@ -183,19 +183,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     company: [Company name],
     email: '[EMAIL IF FOUND]'
 
-    Structure your resposne in the following format:
-    **Heading** in `<h2>` tags,
-    Sections with `<strong>` subheadings, 
-    Ordered or unordered lists using `<ol>` or `<ul>`, 
-    Paragraphs with `<p>`, and 
-    Line breaks `<br>` between main points for clarity.
-    Do not include ```html in your response.
-
-    Make sure to:
-    1. Use descriptive headings for each section.
-    2. Separate main points with line breaks or paragraphs.
-    3. Keep responses structured and consistent for easy reading in a Vue.js app.
-    4. Do not wrap the JSON in ```json```
+    Do not wrap the JSON in ```json```
     """
     return prompt
 
@@ -307,7 +295,30 @@ DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
 OPEN_AI_QUERY_STRING = (
-    lambda search: f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
+    lambda search, project:
+    
+    f"""
+    Generate a boolean search query for NewsAPI based on user input and Projects details (if provided). Follow these guidelines:
+
+    If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
+    If no search term is provided and the user asks for help generating one, craft a relevant, 2-3 word search term based on Projects that is likely to yield news coverage. You can also use multiple terms with OR between them. For example, if the project is about an electric car launch by Audi, use "electric vehicles" or Cars AND sustainability or electric cars OR electric vehicles.
+  
+    Boolean Formatting:
+    1. Use quotes around exact phrases as needed.
+    2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
+    3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
+    4. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage."
+    5. Use no more than one AND in the query to keep it concise.
+   
+    Input Format:
+
+    User Request: {search}
+
+    Project details (campaign, media pitch, etc):
+    {project} 
+    """
+    
+     f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
     1. When quotes are present, use the exact phrase
     2. Do not include AND or OR within quotes unless part of an entity name.
     3. Convert negative qualifiers to boolean operators, e.g., 'not stock related' becomes 'NOT stocks', 'NOT shares', 'NOT Nasdaq'.
@@ -351,56 +362,27 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, project ,elma, instructions=
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
-    Here are the instructions or just a search term:
-    {instructions}
-    \n
+    Input Format:
 
-    Here is all the news coverage:
-    {clips}
-    \n
+    User Request: {search}
+    News Coverage: {clips}
+    Project details (campaign, media pitch, etc): {project}
+   
+    Output format:
 
-    Here are project details, if any (company, pitch, or campaign they are working on):
-    {project}
-  
-    \n
-
-    Structure your resposne in the following format:
     **Heading** in `<h2>` tags,
-    Sections with `<strong>` subheadings, 
-    Ordered or unordered lists using `<ol>` or `<ul>`, 
-    Paragraphs with `<p>`, and 
+    Sections with `<strong>` subheadings,
+    Ordered or unordered lists using `<ol>` or `<ul>`,
+    Paragraphs with `<p>`, and
     Line breaks `<br>` between main points for clarity.
     Do not include ```html in your response.
 
-    Make sure to:
-    1. Separate main points with line breaks or paragraphs.
-    2. Keep responses structured and consistent for easy reading in a Vue.js app.
+    Keep responses structured and consistent for easy reading in a Vue.js app.
     """
     return body
 
 
 def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
-    # Today is {date}. {elma}. The user has a follow-up question or request based on your previous response and the news coverage below. They may also provide additional details about the project they are working on (media pitch, campaign, company boiler plate). Follow the steps below carefully:
-    # If the follow-up question can be answered using the existing information (previous summary along with news coverage below), provide a brief and accurate response directly related to the follow-up. Cite your sources following the citation guidelines below.
-
-    # If the follow-up question introduces a new topic OR the request is unrelated to this news coverage, disregard the question and create a new search term. I'll use this search term to find new articles to find the required information. Make sure the search term is simple, fairly broad, and likely to get media coverage. Use an AND or OR if needed. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]"
-    
-    # Here is your previous response:
-    # {previous}
-    # \n
-
-    # Here are the new instructions or just a search term:
-    # {instructions}
-    # \n
-
-    # Here is all the news coverage:
-    # {clips}
-    # \n
-
-    # Here are project details, if any (company, pitch, or campaign they are working on):
-    # {project}
-    # \n
-
     body = f"""
 
     {elma}.
@@ -408,38 +390,28 @@ def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
     Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the news coverage below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
-
+    
     Follow these instructions carefully:
-
+    
     1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
     2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
-   
-    Here's the query:
-    {instructions}
-
-    Here is your previous response:
-    {previous}
-
-    Here is all the news coverage:
-    {clips}
-
-    Here are project details, if any (company, pitch, or campaign they are working on): 
-    {project}
-
-
-    Structure your resposne in the following format:
+    
+    Input Format:
+    Previous response: {previous}
+    User Request: {instructions}
+    News Coverage: {clips}
+    Project details (campaign, media pitch, etc): {project}
+    
+    Output format:
     **Heading** in `<h2>` tags,
-    Sections with `<strong>` subheadings, 
-    Ordered or unordered lists using `<ol>` or `<ul>`, 
-    Paragraphs with `<p>`, and 
-    Line breaks `<br>` between main points for clarity.
-    Do not include ```html in your response.
-
-    Make sure to:
-    1. Separate main points with line breaks or paragraphs.
-    2. Keep responses structured and consistent for easy reading in a Vue.js app.
+        Sections with `<strong>` subheadings,
+        Ordered or unordered lists using `<ol>` or `<ul>`,
+        Paragraphs with `<p>`, and
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+    Keep responses structured and consistent for easy reading in a Vue.js app.
     """
 
     return body
@@ -533,24 +505,16 @@ def OPEN_AI_PITCH(date, type, instructions, elma, style=False):
     body = f"""
     {elma}.
     
-    Today's date is {date}.  A PR professional has requested the content below. Generate the content by carefully following the instructions.
+    Today's date is {date}. Generate a response per the user's instructions below.
+    
+    Input Format:
 
-    1. Here is what you are asked to generate: 
-    {type}
+    User Request: {type}
+    Project details (campaign, media pitch, etc): {instructions}
+    Writing style instructions: {style}
 
-    2. If provided, generated content must be based on this information: 
-    {instructions}
-
-    3. Lastly, you must follow this Writing Style: 
-    {style}
-
-
-    Make sure to Keep responses structured and consistent for easy reading in a Vue.js app.
-
-    Different Sections must use `<strong>` subheadings, 
-    When using ordered or unordered lists must use `<ol>` or `<ul>`, 
-    Paragraphs with `<p>`, and 
-    Line breaks `<br>` between main points for clarity.
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    Use Paragraphs with `<p>`, and Line breaks `<br>` between paragraphs for clarity.
     Do not include ```html in your response.
     """
     return body
@@ -561,26 +525,17 @@ OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS = (
 
     {elma}.
     
-    A PR professional has requested the content below. Generate the content by carefully following the instructions. I will include the previously generated content and the user's current project details (if any) for reference.
+    Generate a response per the user's instructions below.
 
-    Here is the request: 
-    {instructions}
+    Input Format:
 
-    Project information, if any (pitch, campaign, or notes):
-    {details}
-
-    Previous content:
-    {pitch}
-
-    You must follow this Writing Style: 
-    {style}
+    Previous Response {pitch}
+    User Request: {instructions}
+    Project details (campaign, media pitch, etc): {details}
+    Writing style instructions: {style}
 
     Make sure to Keep responses structured and consistent for easy reading in a Vue.js app.
-
-    Different Sections must use `<strong>` subheadings, 
-    When using ordered or unordered lists they must be `<ol>` or `<ul>`, 
-    Paragraphs with `<p>`, and 
-    Line breaks `<br>` between main points for clarity.
+    Use Paragraphs with `<p>`, and Line breaks `<br>` between paragraphs for clarity.
     Do not include ```html in your response.
 
     """

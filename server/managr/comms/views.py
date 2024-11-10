@@ -115,6 +115,7 @@ def getclips(request):
         date_to = request.GET.get("date_to", False)
         date_from = request.GET.get("date_from", False)
         is_report = request.GET.get("is_report", False)
+        project = request.GET.get("project", None)
         suggestions = ''
         if "journalist:" in search:
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
@@ -122,7 +123,7 @@ def getclips(request):
             return {"articles": articles, "string": search}
         if not boolean:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search,project)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,

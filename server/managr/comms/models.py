@@ -119,7 +119,6 @@ class Search(TimeStampModel):
                 )
             )  
         
-        print('THE PROMPT IS HERE ---- > :', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
@@ -184,7 +183,6 @@ class Search(TimeStampModel):
 
     @classmethod
     def no_results(cls, user, boolean):
-        print('BOOLEAN IS HERE' , boolean)
         timeout = 60.0
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
 
