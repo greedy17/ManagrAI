@@ -684,11 +684,11 @@
                 </section>
 
                 <section style="padding: 16px" v-else>
-                  Your saved details
+                  Your saved projects
                   <span>
                     <img
                       style="margin-right: 4px"
-                      src="@/assets/images/building.svg"
+                      src="@/assets/images/folder.svg"
                       height="12px"
                       alt=""
                     />
@@ -881,7 +881,7 @@
           <div>
             <h4 class="regen-header-title">Add Project</h4>
             <p class="regen-header-subtitle">
-              Provide additional details about a company, person, product, etc.
+              Provide project details (e.g. campaign, product launch, announcement, etc.)
             </p>
           </div>
         </div>
@@ -891,7 +891,7 @@
             id="styleName"
             style="width: 100%; margin: 0.5rem 0 1rem 0"
             class="area-input-outline"
-            placeholder="Detail Name..."
+            placeholder="Project name..."
             type="text"
             v-model="detailsName"
             :disabled="savingStyle"
@@ -904,7 +904,7 @@
             maxlength="8000"
             class="area-input-outline wider"
             style="width: 100%; margin: 0.5rem 0 0 0; max-height: 280px"
-            placeholder="Paste company name and details here..."
+            placeholder="Project details..."
             v-model="detailsBody"
             v-autoresize
           />
@@ -1401,11 +1401,11 @@
                         </section>
 
                         <section style="padding: 16px" v-else>
-                          Your saved details
+                          Your saved projects
                           <span>
                             <img
                               style="margin-right: 4px"
-                              src="@/assets/images/building.svg"
+                              src="@/assets/images/folder.svg"
                               height="12px"
                               alt=""
                             />
@@ -1420,7 +1420,7 @@
                             class="primary-button"
                             style="margin-right: 4px"
                           >
-                            Add Details
+                            Add Project
                           </button>
                         </footer>
                       </div>
@@ -1887,11 +1887,11 @@
                   </section>
 
                   <section style="padding: 16px" v-else>
-                    Your saved details
+                    Your saved projects
                     <span>
                       <img
                         style="margin-right: 4px"
-                        src="@/assets/images/building.svg"
+                        src="@/assets/images/folder.svg"
                         height="12px"
                         alt=""
                       />
@@ -3227,11 +3227,11 @@
                 </section>
 
                 <section style="padding: 16px" v-else>
-                  Your saved details
+                  Your saved projects
                   <span>
                     <img
                       style="margin-right: 4px"
-                      src="@/assets/images/building.svg"
+                      src="@/assets/images/folder.svg"
                       height="12px"
                       alt=""
                     />
@@ -3246,7 +3246,7 @@
                     class="primary-button"
                     style="margin-right: 4px"
                   >
-                    Add Details
+                    Add Project
                   </button>
                 </footer>
               </div>
@@ -7488,6 +7488,7 @@ www.forbes.com/article-3
               user_id: this.user.id,
               date_from: this.dateStart,
               date_to: this.dateEnd,
+              project: this.selectedOrg,
             },
             this.controllers.getClips.controller.signal,
           )
@@ -7824,7 +7825,7 @@ www.forbes.com/article-3
 
       try {
         const res = await Comms.api.regeneratePitch({
-          pitch: this.summary,
+          pitch: this.summaries.length ? this.summaries[this.summaries.length - 1] : this.summary,
           instructions: this.followUps[this.followUps.length - 1],
           style: this.writingStyle,
           details: this.selectedOrg,
@@ -8758,6 +8759,10 @@ www.forbes.com/article-3
     border: none;
     border-radius: 16px;
     margin: 12px 0 0 0;
+  }
+
+  p {
+    margin: 0;
   }
 }
 
