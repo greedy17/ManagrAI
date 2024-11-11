@@ -7887,9 +7887,10 @@ www.forbes.com/article-3
           followUp: true,
         })
 
+        console.log('regen respolnse is here', res)
+
         if (res.summary.toLowerCase().includes('new search term')) {
           this.newSearch = this.extractTerm(res.summary)
-
           this.generateNewSearch(null, false)
         } else {
           this.summary = response.summary
