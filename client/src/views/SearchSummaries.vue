@@ -506,7 +506,9 @@
                 class="drop-options-alt-up"
               >
                 <header class="space-between">
-                  <section class="h-padding">
+                  <h4>Writing style</h4>
+                  <p>Select a desired writing style or create your own</p>
+                  <!-- <section class="h-padding">
                     <section @click="toggleStyles" class="toggle">
                       <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
                         <small>Personal</small>
@@ -516,7 +518,7 @@
                         <small>Group</small>
                       </span>
                     </section>
-                  </section>
+                  </section> -->
 
                   <!-- <button
                   @click="toggleLearnInputModal('')"
@@ -1139,7 +1141,9 @@
                           alt=""
                         />
 
-                        <small>{{ toCamelCase(mainView) }}</small>
+                        <small>{{
+                          mainView === 'discover' ? 'Contacts' : toCamelCase(mainView)
+                        }}</small>
                         <!-- <img
                         v-if="!showingSources"
                         src="@/assets/images/arrowDropUp.svg"
@@ -2619,6 +2623,7 @@
                   >
                     <div style="width: 24%" v-for="(clip, i) in summary.clips.slice(0, 4)" :key="i">
                       <img
+                        style="margin-right: 4px"
                         @click="setAndShowArticles(summary.clips)"
                         :src="clip.image_url"
                         @error="onImageError($event)"
@@ -2764,7 +2769,16 @@
 
               <div style="margin-top: 32px; width: 100%" v-else-if="secondaryLoaderAlt">
                 <div class="row">
-                  <p style="margin: 0; margin-right: 8px" class="bold-text">Gathering news...</p>
+                  <p
+                    v-if="mainView !== 'web'"
+                    style="margin: 0; margin-right: 8px"
+                    class="bold-text"
+                  >
+                    Gathering news...
+                  </p>
+                  <p v-else style="margin: 0; margin-right: 8px" class="bold-text">
+                    Scanning the web...
+                  </p>
                   <img
                     class="rotation innvert"
                     height="14px"
@@ -2992,7 +3006,7 @@
               autocomplete="off"
               rows="1"
               v-model="newTemplate"
-              :disabled="!summary || loading || summaryLoading"
+              :disabled="loading || summaryLoading"
               @keyup.enter="
                 mainView === 'news'
                   ? getChatSummary($event, filteredArticles, newTemplate)
@@ -3080,7 +3094,7 @@
                   alt=""
                 />
 
-                <small>{{ toCamelCase(mainView) }}</small>
+                <small>{{ mainView === 'discover' ? 'Contacts' : toCamelCase(mainView) }}</small>
               </div>
 
               <div
@@ -3903,7 +3917,7 @@ www.forbes.com/article-3
           value: `U.S journalist covering {Topic}`,
         },
         {
-          name: `Podacsters interested in...`,
+          name: `Podcasters interested in...`,
           value: `Podcasters interested in {Topic}`,
         },
         {
@@ -4777,6 +4791,11 @@ www.forbes.com/article-3
           info: discover ? this.newSearch : this.followUps[this.followUps.length - 1],
           content: '',
           discover: discover,
+          previous: this.summaries.length
+            ? this.summaries[this.summaries.length - 1].list
+            : this.discoverList
+            ? this.discoverList
+            : '',
         })
 
         if (discover) {
@@ -6533,7 +6552,10 @@ www.forbes.com/article-3
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
-          this.scrollToSummariesTop()
+
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
         }
 
         this.$nextTick(() => {
@@ -7219,10 +7241,6 @@ www.forbes.com/article-3
       } else if (this.mainView === 'social') {
         this.closeRegenModal()
         this.getTweets(saved)
-      } else if (this.mainView === 'instagram') {
-        this.closeRegenModal()
-        this.removeHashtags()
-        this.getPosts(saved)
       } else if (this.mainView === 'web') {
         this.closeRegenModal()
         this.googleSearch()
@@ -7780,6 +7798,18 @@ www.forbes.com/article-3
       if (event.shiftKey) {
         return
       }
+
+      if (!this.summary) {
+        this.newSearch = this.newTemplate
+        if (this.mainView !== 'news') {
+          this.generateNewSearch(null, false)
+        } else {
+          this.regenerateSummary()
+        }
+
+        return
+      }
+
       this.noResultsString = null
       this.followUps.push(this.newTemplate)
       this.newTemplate = ''
@@ -7844,6 +7874,33 @@ www.forbes.com/article-3
       }
     },
 
+    async regenerateSummary() {
+      console.log(this.noResultsString)
+      this.loading = true
+      try {
+        const res = await Comms.api.getSummary({
+          clips: [],
+          search: this.newSearch,
+          instructions: this.newSearch,
+          company: this.selectedOrg,
+          previous: this.noResultsString,
+          followUp: true,
+        })
+
+        if (res.summary.toLowerCase().includes('new search term')) {
+          this.newSearch = this.extractTerm(res.summary)
+
+          this.generateNewSearch(null, false)
+        } else {
+          this.summary = response.summary
+            .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+        }
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
     async getSummary(
       clips,
       instructions = '',
@@ -9201,7 +9258,7 @@ www.forbes.com/article-3
       font-size: 14px;
       margin-left: 4px !important;
       font-family: $base-font-family;
-      max-width: 55px;
+      max-width: 60px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;

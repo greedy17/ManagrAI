@@ -1562,7 +1562,7 @@
               Activity
             </p>
             <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
-              AI Insights
+              Ask Elma
             </p>
             <p :class="{ activelink: section === 'edit' }" @click="setSection('edit')">Edit</p>
           </div>
