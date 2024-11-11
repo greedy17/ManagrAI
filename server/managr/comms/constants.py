@@ -394,7 +394,7 @@ def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
     Follow these instructions carefully:
     
     1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
-    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
     
@@ -643,7 +643,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         Follow these instructions carefully:
 
         1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
-        2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+        2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance),  or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
         3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
         4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
 
@@ -811,7 +811,7 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
 
 
 
-def OPEN_AI_GET_JOURNALIST_LIST(info, content):
+def OPEN_AI_GET_JOURNALIST_LIST(info, content, list):
     initial_sentence = (
         f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
     )
@@ -819,7 +819,11 @@ def OPEN_AI_GET_JOURNALIST_LIST(info, content):
         initial_sentence += f" and would be interested in this pitch: {content}"
     prompt = f"""
     {initial_sentence}.\n
-   
+    
+    Always Reference my current list of journalist (if any) before responding in case I need something based on that list.
+
+    Current list, if any: {list}
+
     You must follow the instructions below very carefully:
     * Ensure that all journalists, podcasters, or bloggers are real and currently active. 
     * Do not include fake names such as Jane Doe or John Smith or make names up.

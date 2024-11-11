@@ -3,7 +3,7 @@
     <Modal v-if="insightModalOpen" class="modal-margin">
       <div class="modal-container">
         <div style="background-color: white; z-index: 3" class="col max-height-sticky">
-          <h2 class="bold-txt">AI Insights</h2>
+          <h2 class="bold-txt">Ask Elma</h2>
           <h4>Ask about recent activity or for suggestions</h4>
         </div>
 
@@ -323,8 +323,8 @@
         </div>
 
         <div @click="insightModalOpen = true" class="icon-btn">
-          <img src="@/assets/images/wand.svg" height="11px" alt="" />
-          AI Insights
+          <img src="@/assets/images/sparkle.svg" height="11px" alt="" />
+          Ask Elma
         </div>
       </div>
 

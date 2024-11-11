@@ -1879,7 +1879,8 @@ class DiscoveryViewSet(
         user = request.user
         info = request.data.get("info")
         content = request.data.get("content", None)
-        message = get_journalists(info, content)
+        previous = request.data.get('previous', None)
+        message = get_journalists(info, content, previous)
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=message)

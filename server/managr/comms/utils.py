@@ -747,7 +747,7 @@ def check_journalist_validity(journalist, outlet, email):
         return {"error": "Could not create contact."}
 
 
-def get_journalist_list(search, content):
+def get_journalist_list(search, content, previous=None):
     token_amount = 1000
     timeout = 60.0
     journalist_list = []
@@ -755,7 +755,7 @@ def get_journalist_list(search, content):
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             if not journalist_list:
-                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(search, content)
+                prompt = comms_consts.OPEN_AI_GET_JOURNALIST_LIST(search, content, previous)
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     "zach@mymanagr.com",
                     prompt,
@@ -830,11 +830,11 @@ def fill_journalist_info(search, journalists, content):
     return journalist_data
 
 
-def get_journalists(search, content):
+def get_journalists(search, content, previous=None):
     journalist_data = []
     while True:
         try:
-            journalist_list = get_journalist_list(search, content)
+            journalist_list = get_journalist_list(search, content, previous)
             if isinstance(journalist_list, str):
                 journalist_data = journalist_list
                 break
