@@ -599,4 +599,5 @@ router.register("discovery", comms_views.DiscoveryViewSet, "discovery")
 router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 router.register("company-details", comms_views.CompanyDetailsViewSet, "company-details")
 router.register("tracker", comms_views.EmailTrackerViewSet, "tracker")
+router.register("threads", comms_views.ThreadViewSet, "threads")
 urlpatterns += router.urls
