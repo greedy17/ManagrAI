@@ -1526,6 +1526,7 @@ class ThreadMessage(TimeStampModel):
     meta_data = JSONField(default=dict)
 
     class Meta:
+        ordering = ["index"]
         constraints = [UniqueConstraint(fields=["thread", "index"], name="unique_message")]
 
     def as_dict(self):

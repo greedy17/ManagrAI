@@ -14,6 +14,7 @@ from .models import (
     EmailTracker,
     JournalistContact,
     CompanyDetails,
+    Thread,
 )
 from django.contrib.postgres.search import SearchVector
 
@@ -212,3 +213,13 @@ class CompanyDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyDetails
         fields = ("id", "details", "user", "title")
+
+
+class ThreadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Thread
+        fields = (
+            "id",
+            "title",
+            "user",
+        )
