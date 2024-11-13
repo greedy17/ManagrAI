@@ -713,7 +713,20 @@ export default {
 
   methods: {
     setInsightData() {
-      this.$emit('set-insight-data', this.sortedEmails)
+      let newEmails = this.sanitizeEmails(this.sortedEmails)
+      this.$emit('set-insight-data', newEmails)
+    },
+    sanitizeEmails(emails) {
+      return emails.map((email) => {
+        const sanitizedBody = email.body.replace(/<[^>]+>/g, '')
+
+        const truncatedBody = sanitizedBody.slice(0, 500)
+
+        return {
+          ...email,
+          body: truncatedBody,
+        }
+      })
     },
     toggleDeleteModal(id) {
       if (id) {

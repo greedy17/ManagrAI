@@ -1112,7 +1112,7 @@
 
                   <div class="row">
                     <div style="margin: 12px 12px 0 18px" class="source-dropdown fadein">
-                      <div @click.stop="toggleSources" class="drop-header">
+                      <div @click.stop="toggleSources" class="drop-header img-blue">
                         <img
                           v-if="mainView === 'write'"
                           src="@/assets/images/brain.svg"
@@ -1738,17 +1738,9 @@
                 <div class="s-tooltip">Share</div> -->
               </div>
 
-              <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
-                <!-- <img
-                  style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/clipboard.svg"
-                  height="16px"
-                  alt=""
-                  @click="copyText"
-                /> -->
-
+              <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
-              </div>
+              </div> -->
 
               <div
                 @click="copyDiscoverText"
@@ -2504,7 +2496,12 @@
             </div>
 
             <div v-else class="content-padding relative">
-              <div style="width: 100%" v-if="summary" class="space-between abs-container">
+              <div
+                style="width: 100%"
+                v-if="summary"
+                class="space-between abs-container"
+                :class="{ lessTop: mainView === 'write' }"
+              >
                 <!-- <img
                 style="margin-right: 8px"
                 src="@/assets/images/sparkle.svg"
@@ -2516,7 +2513,7 @@
                 <div></div>
 
                 <div
-                  v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
+                  v-if="mainView !== 'discover'"
                   style="margin: 2px 0 0 4px"
                   class="image-container s-wrapper"
                 >
@@ -2550,7 +2547,7 @@
                 v-html="insertCitations(summary)"
               ></div>
               <div
-                style="margin-top: 16px"
+                style="padding: 32px 0"
                 v-else-if="mainView === 'write'"
                 class="citation-text"
                 v-html="summary"
@@ -2662,16 +2659,13 @@
                   <div v-if="mainView !== 'discover'" style="position: relative">
                     <div
                       style="width: 100%"
-                      v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
+                      v-if="mainView !== 'discover'"
                       class="space-between abs-container"
+                      :class="{ lesserTop: mainView === 'write' }"
                     >
                       <div></div>
 
-                      <div
-                        v-if="mainView === 'web' || mainView === 'social' || mainView === 'news'"
-                        style="margin: 2px 0 0 4px"
-                        class="image-container s-wrapper"
-                      >
+                      <div style="margin: 2px 0 0 4px" class="image-container s-wrapper">
                         <img
                           style="cursor: pointer; filter: invert(40%)"
                           src="@/assets/images/clipboard.svg"
@@ -2763,6 +2757,7 @@
                         : `Results (${googleResults.length})`
                     }}
                   </button>
+                  <div style="margin-top: 32px" v-else></div>
                 </div>
               </div>
 
@@ -8003,12 +7998,14 @@ www.forbes.com/article-3
           summary: res.pitch,
           clips: [],
         })
+        this.$nextTick(() => {
+          this.scrollToSummariesTop()
+        })
       } catch (e) {
         console.log('ERROR CREATING PITCH::', e)
       } finally {
         this.refreshUser()
         this.secondaryLoader = false
-        this.scrollToSummariesTop()
       }
     },
 
@@ -11021,8 +11018,9 @@ li {
     contrast(87%) !important;
 }
 
-// .img-blue-filter {
-//   background-color: $liter-blue;
+// .img-blue {
+//   background-color: $liter-blue !important;
+//   color: $lite-blue;
 //   img {
 //     filter: invert(46%) sepia(77%) saturate(367%) hue-rotate(159deg) brightness(95%) contrast(97%) !important;
 //   }
@@ -14171,5 +14169,11 @@ select {
   position: absolute;
   top: 36px;
   right: 8px;
+}
+.lessTop {
+  top: 0 !important;
+}
+.lesserTop {
+  top: -24px !important;
 }
 </style>
