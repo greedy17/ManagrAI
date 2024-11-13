@@ -101,24 +101,28 @@ class Search(TimeStampModel):
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         elma = core_consts.ELMA
-        
+
         if is_follow__up:
-            prompt = (
-                comms_consts.SUMMARY_FOLLOW_UP(
-                    datetime.now().date(), clips, previous, company, elma, instructions
-                )
+            prompt = comms_consts.SUMMARY_FOLLOW_UP(
+                datetime.now().date(), clips, previous, company, elma, instructions
             )
-        else: 
+        else:
             prompt = (
                 comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY(
-                    datetime.now().date(), clips, input_text, company, elma, instructions, for_client
+                    datetime.now().date(),
+                    clips,
+                    input_text,
+                    company,
+                    elma,
+                    instructions,
+                    for_client,
                 )
                 if for_client
                 else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
                     datetime.now().date(), clips, input_text, previous, instructions, for_client
                 )
-            )  
-        
+            )
+
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
@@ -186,11 +190,7 @@ class Search(TimeStampModel):
         timeout = 60.0
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
 
-        prompt = (
-            comms_consts.OPEN_AI_NO_RESULTS(
-                boolean
-            )
-        )
+        prompt = comms_consts.OPEN_AI_NO_RESULTS(boolean)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user,
             prompt,
@@ -203,7 +203,7 @@ class Search(TimeStampModel):
                 data=json.dumps(body),
                 headers=core_consts.OPEN_AI_HEADERS,
             )
-        return open_ai_exceptions._handle_response(r)    
+        return open_ai_exceptions._handle_response(r)
 
     def generate_shareable_link(self):
         date = str(datetime.now())
@@ -1480,3 +1480,54 @@ class CompanyDetails(models.Model):
     @property
     def as_slack_option(self):
         return block_builders.option(self.title[:74], str(self.id))
+
+
+class Thread(TimeStampModel):
+    user = models.ForeignKey(
+        "core.User",
+        related_name="threads",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    title = models.TextField()
+    meta_data = JSONField(default=dict)
+
+    @property
+    def current_index(self):
+        message_idxs = list(self.messages.all().values_list("index", flat=True))
+        if message_idxs:
+            return max(message_idxs)
+        else:
+            return None
+
+    def add_message(self, message_text, role="SYSTEM"):
+        curr_idx = self.current_index()
+        if curr_idx:
+            data = dict(body=message_text, index=(curr_idx + 1), role=role, thread=self)
+            try:
+                message = ThreadMessage.objects.create(**data)
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        return {"success": True, "data": message.as_dict()}
+
+
+class ThreadMessage(TimeStampModel):
+    body = models.TextField(blank=True, null=True)
+    thread = models.ForeignKey(
+        "Thread",
+        related_name="messages",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
+    role = models.CharField(choices=comms_consts.MESSAGE_TYPES, max_length=50, default="SYSTEM")
+    index = models.PositiveIntegerField(default=0)
+    meta_data = JSONField(default=dict)
+
+    class Meta:
+        ordering = ["index"]
+        constraints = [UniqueConstraint(fields=["thread", "index"], name="unique_message")]
+
+    def as_dict(self):
+        return dict(body=self.body, thread=str(self.thread.id), role=self.role, index=self.index)

@@ -43,6 +43,7 @@ from .models import (
     Discovery,
     Journalist,
     EmailTracker,
+    Thread,
 )
 from .models import Article as InternalArticle
 from .models import WritingStyle, AssistAlert, JournalistContact
@@ -69,6 +70,7 @@ from .serializers import (
     EmailTrackerSerializer,
     JournalistContactSerializer,
     CompanyDetailsSerializer,
+    ThreadSerializer,
 )
 from managr.core import constants as core_consts
 from managr.utils.client import Variable_Client
@@ -116,14 +118,14 @@ def getclips(request):
         date_from = request.GET.get("date_from", False)
         is_report = request.GET.get("is_report", False)
         project = request.GET.get("project", None)
-        suggestions = ''
+        suggestions = ""
         if "journalist:" in search:
             internal_articles = InternalArticle.search_by_query(search, date_to, date_from, True)
             articles = normalize_article_data([], internal_articles)
             return {"articles": articles, "string": search}
         if not boolean:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search,project)
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search, project)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -151,7 +153,7 @@ def getclips(request):
         articles = normalize_article_data(articles, internal_articles, is_report)
         if not articles:
             suggestions = Search.no_results(user.email, query_input)
-            query_input = suggestions.get("choices")[0].get("message").get("content")  
+            query_input = suggestions.get("choices")[0].get("message").get("content")
         return {"articles": articles, "string": query_input}
 
     except Exception as e:
@@ -252,7 +254,16 @@ class PRSearchViewSet(
         while True:
             try:
                 res = Search.get_summary(
-                    request.user, token_amount, timeout, clips, search, previous, is_follow_up, company, instructions, True
+                    request.user,
+                    token_amount,
+                    timeout,
+                    clips,
+                    search,
+                    previous,
+                    is_follow_up,
+                    company,
+                    instructions,
+                    True,
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("news_summaries")
@@ -1207,7 +1218,7 @@ class PitchViewSet(
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_PTICH_DRAFT_WITH_INSTRUCTIONS(
-                   elma, pitch, instructions, style, details
+                    elma, pitch, instructions, style, details
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email,
@@ -1879,7 +1890,7 @@ class DiscoveryViewSet(
         user = request.user
         info = request.data.get("info")
         content = request.data.get("content", None)
-        previous = request.data.get('previous', None)
+        previous = request.data.get("previous", None)
         message = get_journalists(info, content, previous)
         if isinstance(message, str):
             send_to_error_channel(message, user.email, "run discovery (platform)")
@@ -2661,6 +2672,46 @@ class EmailTrackerViewSet(
         return Response(status=status.HTTP_200_OK, data=data)
 
 
+class ThreadViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+):
+    serializer_class = ThreadSerializer
+
+    def get_queryset(self):
+        return Thread.objects.filter(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            readSerializer = self.serializer_class(instance=serializer.instance)
+        except Exception as e:
+            logger.exception(f"Error validating data for new thread <{e}>")
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = self.request.data
+        serializer = self.serializer_class(instance=instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            instance.delete()
+        except Exception as e:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+        return Response(status=status.HTTP_200_OK)
+
+
 # ENDPOINTS
 
 
@@ -3079,7 +3130,7 @@ def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
     instructions = request.data.get("instructions")
-    summary = request.data.get("summary")
+    summary = request.data.get("summary", None)
     results = request.data.get("results", None)
     text = ""
     elma = core_consts.ELMA
@@ -3107,7 +3158,9 @@ def get_google_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma)
+            prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
+                query, results, text, instructions, summary, elma
+            )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,

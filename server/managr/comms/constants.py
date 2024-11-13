@@ -271,6 +271,7 @@ NEW_API_EVERYTHING_DATE_URI = (
 SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
 COVERAGE_TYPE_CHOICES = (("NATIONAL", "National"), ("LOCAL", "Local"), ("BOTH", "Both"))
 ALERT_TYPES = (("EMAIL", "Email"), ("SLACK", "Slack"), ("BOTH", "Both"))
+MESSAGE_TYPES = (("USER", "User"), ("SYSTEM", "System"))
 
 DEFAULT_INSTRUCTIONS = """*Executive summary:*\n Highlighting 5 key points from today's clips.\n
 *Sentiment*\n Evaluate the overall tone or sentiment of the coverage. Is it primarily positive, neutral, or negative and why.\n
@@ -295,9 +296,7 @@ DEFAULT_INSTAGRAM_CLIENT_INSTRUCTIONS = """<strong>Summary of the Posts: No more
 DEFAULT_WRITING_STYLE = "Aim for a professional, informative, yet concise style, bypassing formalities, such as Dear, Sir, Best regards, etc. Get right to the point"
 
 OPEN_AI_QUERY_STRING = (
-    lambda search, project:
-    
-    f"""
+    lambda search, project: f"""
     Generate a boolean search query for NewsAPI based on user input and Projects details (if provided). Follow these guidelines:
 
     If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
@@ -317,8 +316,7 @@ OPEN_AI_QUERY_STRING = (
     Project details (campaign, media pitch, etc):
     {project} 
     """
-    
-     f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
+    f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
     1. When quotes are present, use the exact phrase
     2. Do not include AND or OR within quotes unless part of an entity name.
     3. Convert negative qualifiers to boolean operators, e.g., 'not stock related' becomes 'NOT stocks', 'NOT shares', 'NOT Nasdaq'.
@@ -353,7 +351,9 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
     return f"Summarize the tweets from the author, then you must provide a factual background on the author (important: do not make it up). Lastly, provide pitching tips for user who works for {company} "
 
 
-def OPEN_AI_NEWS_CLIPS_SUMMARY(date, clips, search, project ,elma, instructions=False, for_client=False):
+def OPEN_AI_NEWS_CLIPS_SUMMARY(
+    date, clips, search, project, elma, instructions=False, for_client=False
+):
     body = f"""
 
     {elma}.
@@ -636,7 +636,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         prompt = f"""
         {elma}.
 
-        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
@@ -667,7 +667,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         prompt = f"""
         {elma}.
 
-        Please provide a concise and accurate response to my query, using the given search results. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Please provide a concise and accurate response to my query, using the given search results. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
@@ -810,7 +810,6 @@ def OPEN_AI_DISCOVER_JOURNALIST(info, journalists, content):
     return prompt
 
 
-
 def OPEN_AI_GET_JOURNALIST_LIST(info, content, list):
     initial_sentence = (
         f"List 20 real, active journalists, podcasters, or bloggers based on this criteria: {info}"
@@ -945,6 +944,7 @@ def REPORT_SUMMARY(brand, clips):
 
     return prompt
 
+
 def OPEN_AI_NO_RESULTS(boolean):
     prompt = f"""
     No results were found for the search term: {boolean}. You must generate alternative search suggestions using common variations and related terms that may increase the likelihood of finding relevant content. 
@@ -973,7 +973,7 @@ def OPEN_AI_NO_RESULTS(boolean):
 
     """
 
-    return prompt    
+    return prompt
 
 
 REGENERATE_REPORT_SUMMARY = (
