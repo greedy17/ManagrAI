@@ -903,13 +903,16 @@
           <textarea
             id="sample"
             :disabled="savingStyle"
-            maxlength="8000"
+            maxlength="800"
             class="area-input-outline wider"
             style="width: 100%; margin: 0.5rem 0 0 0; max-height: 280px"
             placeholder="Project details..."
             v-model="detailsBody"
             v-autoresize
           />
+          <div class="flex-end">
+            {{ detailsBody.length + '/800' }}
+          </div>
         </div>
         <footer class="paid-footer aligned-right">
           <button :disabled="savingStyle" @click="toggleDetailsInputModal" class="secondary-button">
@@ -2617,13 +2620,12 @@
                   :ref="'summary-' + i"
                 >
                   <div
-                    style="width: 100%; justify-content: space-between"
+                    style="width: 100%; justify-content: space-between; gap: 4px"
                     class="row"
                     v-if="summary.clips.length && mainView === 'news'"
                   >
                     <div style="width: 24%" v-for="(clip, i) in summary.clips.slice(0, 4)" :key="i">
                       <img
-                        style="margin-right: 4px"
                         @click="setAndShowArticles(summary.clips)"
                         :src="clip.image_url"
                         @error="onImageError($event)"
@@ -2676,8 +2678,16 @@
                     </div>
 
                     <div
+                      v-if="mainView !== 'web'"
                       style="margin-top: 24px"
                       v-html="insertAltNewsCitations(summary.summary, i)"
+                      class="citation-text"
+                    ></div>
+
+                    <div
+                      v-else
+                      style="margin-top: 24px"
+                      v-html="insertAltWebCitations(summary.summary, i)"
                       class="citation-text"
                     ></div>
                   </div>
@@ -3890,7 +3900,7 @@ www.forbes.com/article-3
         },
         {
           name: `Help me brainstorm...`,
-          value: `Craft a short media pitch for {BrandX}`,
+          value: `Help me brainstorm ideas for a ....`,
         },
         {
           name: `Write a social post...`,
@@ -4338,18 +4348,34 @@ www.forbes.com/article-3
 
       const journalistElements = document.querySelectorAll('.select-journalist')
 
-      journalistElements.forEach((element) => {
-        element.addEventListener('click', (event) => {
-          const citationIndex = event.target.getAttribute('data-citation')
-          try {
-            const citation = this.filteredArticles[citationIndex]
-            this.selectJournalist(citation)
-          } catch (error) {
-            console.error('Failed to parse citation JSON:', citationJson)
-            console.error('Error:', error)
-          }
+      if (this.mainView === 'news') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            try {
+              const citation = this.filteredArticles[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', citationJson)
+              console.error('Error:', error)
+            }
+          })
         })
-      })
+      } else if (this.mainView === 'web') {
+        console.log('web here')
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            try {
+              const citation = this.googleResults[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
+      }
     }
 
     if (!this.altCitationsMounted) {
@@ -4357,21 +4383,43 @@ www.forbes.com/article-3
 
       const journalistElements = document.querySelectorAll('.select-journalist-alt')
 
-      journalistElements.forEach((element) => {
-        element.addEventListener('click', (event) => {
-          const citationIndex = event.target.getAttribute('data-citation')
-          const summaryIndex = event.target.getAttribute('summary-index')
-          try {
-            const citation = this.summaries[summaryIndex].clips.length
-              ? this.summaries[summaryIndex].clips[citationIndex]
-              : this.filteredArticles[citationIndex]
-            this.selectJournalist(citation)
-          } catch (error) {
-            console.error('Failed to parse citation JSON:', citationJson)
-            console.error('Error:', error)
-          }
+      if (this.mainView === 'news') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            const summaryIndex = event.target.getAttribute('summary-index')
+
+            try {
+              const citation =
+                this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
+                  ? this.summaries[summaryIndex].clips[citationIndex]
+                  : this.filteredArticles[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
         })
-      })
+      } else if (this.mainView === 'web') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            const summaryIndex = event.target.getAttribute('summary-index')
+
+            try {
+              const citation =
+                this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
+                  ? this.summaries[summaryIndex].clips[citationIndex]
+                  : this.googleResults[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
+      }
     }
   },
   mounted() {
@@ -4399,7 +4447,7 @@ www.forbes.com/article-3
       if (citationWrappers.length === 0) {
         return
       } else {
-        this.altCitationsMounted = true
+        // this.altCitationsMounted = true
       }
 
       citationWrappers.forEach((wrapper) => {
@@ -5150,30 +5198,84 @@ www.forbes.com/article-3
         if (citation) {
           return `
         <sup>
+
+
           <span class="citation-wrapper-alt" >
             <a  class="citation-link citation-link-alt">
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source.name}      
+              </span>
+
               <span class="row">
-                <img src="${citation.image_url}" alt="">
-                <strong> ${citation.source.name}</strong>      
+                <span class="col">
+               
+              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                </span>
+               <img src="${citation.image_url}" alt="">
               </span>
-              <br>
-              <a class="inline-link" href="${
-                citation.link
-              }" target="_blank" >${citation.title.slice(0, 35)}...</a>
-              <br>
-              <span data-citation='${citationIndex}'
-              class="author select-journalist-alt">
-              <img class="inline-svg" src="${this.journalistSvg}" alt="">
-              ${citation.author}
-              </span>
-              <span summary-index='${i}'> 
+              
+              
+            
+              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              By ${citation.author}
               </span>
              
             </span>
           </span>
+
+
+       
+        </sup>
+      `
+        }
+        return match
+      })
+    },
+    insertAltWebCitations(text, i) {
+      return text.replace(/\[(\d+)\]/g, (match, p1) => {
+        const citationIndex = parseInt(p1)
+        const citation = this.summaries[i].clips.length
+          ? this.summaries[i].clips[citationIndex]
+          : this.googleResults[citationIndex]
+
+        if (citation) {
+          return `
+        <sup>
+
+
+           <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                </span>
+               <img src="${citation.image}" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
+            </span>
+          </span>
+
+
+         
         </sup>
       `
         }
@@ -5192,19 +5294,23 @@ www.forbes.com/article-3
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="row">
-                <img src="${citation.image_url}" alt="">
-                <strong> ${citation.source.name}</strong>      
+              <span class="c-elip">
+                ${citation.source.name}      
               </span>
-              <br>
-              <a class="inline-link" href="${
-                citation.link
-              }" target="_blank" >${citation.title.slice(0, 35)}...</a>
-              <br>
-              <span data-citation='${citationIndex}'
-              class="author select-journalist">
-              <img class="inline-svg" src="${this.journalistSvg}" alt="">
-              ${citation.author}
+
+              <span class="row">
+                <span class="col">
+               
+              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                </span>
+               <img src="${citation.image_url}" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              By ${citation.author}
               </span>
              
             </span>
@@ -5217,26 +5323,40 @@ www.forbes.com/article-3
     },
     insertCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
-        const citationId = parseInt(p1)
-        const citation = this.googleResults.find((c) => c.id === citationId)
+        const citationIndex = parseInt(p1)
+        const citation = this.googleResults[citationIndex]
         if (citation) {
           return `
         <sup>
-          <span class="citation-wrapper" >
-              <a  class="citation-link citation-link-alt">
+
+         <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
-
             <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source}      
+              </span>
 
-             <span class="row">
-                <img src="${citation.image}" alt="">
-                <strong> ${citation.source}</strong>  
-              </span> 
-              <br>    
-              ${citation.title}
+              <span class="row">
+                <span class="col">
+               
+              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                </span>
+               <img src="${citation.image}" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
             </span>
           </span>
+
+         
         </sup>
       `
         }
@@ -5862,7 +5982,7 @@ www.forbes.com/article-3
       return { name, publication, tip }
     },
     selectJournalist(article, web = false) {
-      if (web) {
+      if (this.mainView === 'web') {
         const author = article.author
         const outlet = article.source
         const headline = article.title
@@ -6508,7 +6628,14 @@ www.forbes.com/article-3
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
-          this.scrollToSummariesTop()
+
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
+
+          setTimeout(() => {
+            this.altCitationsMounted = true
+          }, 5000)
         }
 
         this.secondaryLoader = false
@@ -6519,6 +6646,7 @@ www.forbes.com/article-3
     },
     async googleSearch() {
       // this.resetAll()
+      this.citationsMounted = false
       if (!this.newSearch) {
         return
       }
@@ -7887,13 +8015,11 @@ www.forbes.com/article-3
           followUp: true,
         })
 
-        console.log('regen respolnse is here', res)
-
         if (res.summary.toLowerCase().includes('new search term')) {
           this.newSearch = this.extractTerm(res.summary)
           this.generateNewSearch(null, false)
         } else {
-          this.summary = response.summary
+          this.summary = res.summary
             .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
         }
@@ -7911,7 +8037,7 @@ www.forbes.com/article-3
       followUp = false,
     ) {
       this.citationsMounted = false
-      this.altCitationsMounted = false
+      // this.altCitationsMounted = false
       let allClips
 
       if (!twitter) {
@@ -7971,6 +8097,9 @@ www.forbes.com/article-3
                 })
                 this.secondaryLoader = false
                 this.secondaryLoaderAlt = false
+                setTimeout(() => {
+                  this.altCitationsMounted = true
+                }, 5000)
               }
             } else {
               this.summary = response.summary
@@ -8683,9 +8812,17 @@ www.forbes.com/article-3
   }
 
   .inline-link {
-    font-family: $base-font-family;
-    color: $lite-blue;
+    // font-family: $base-font-family;
+    display: inline-block;
+    font-size: 14px;
+    color: $dark-gray-blue;
+    text-decoration: none;
     padding-bottom: 2px;
+  }
+
+  .inline-link:hover {
+    text-decoration: underline;
+    color: $lite-blue;
   }
 
   sup {
@@ -8733,14 +8870,14 @@ www.forbes.com/article-3
 
   .citation-tooltip {
     visibility: hidden;
-    width: 240px;
+    width: 254px;
     background-color: #fff;
     color: #333;
     text-align: left;
     border-radius: 4px;
     padding: 10px;
     position: absolute;
-    z-index: 100;
+    z-index: 100000;
     bottom: 125%;
     left: 50%;
     margin-left: -100px;
@@ -8757,13 +8894,42 @@ www.forbes.com/article-3
     align-items: flex-start;
     justify-content: flex-start;
     strong {
-      font-size: 14px;
+      font-size: 12px !important;
     }
     img {
-      width: 16px;
-      height: 16px;
+      width: 40px;
+      height: 40px;
+      margin-left: 8px;
       vertical-align: middle;
+      border-radius: 4px;
     }
+  }
+
+  .c-blue {
+    color: $lite-blue;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .c-elip {
+    max-height: 40px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .c-elip-small {
+    max-height: 40px;
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .citation-tooltip.show {
@@ -11300,6 +11466,7 @@ li {
       min-height: 20vh;
       padding: 8px 32px 96px 32px;
       overflow-y: scroll;
+      overflow: visible;
       // margin-bottom: 16px;
       // border-bottom: 0.5px solid transparent;
       // border-image: linear-gradient(

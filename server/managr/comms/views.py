@@ -3130,7 +3130,7 @@ def get_google_summary(request):
     user = request.user
     query = request.data.get("query")
     instructions = request.data.get("instructions")
-    summary = request.data.get("summary")
+    summary = request.data.get("summary", None)
     results = request.data.get("results", None)
     text = ""
     elma = core_consts.ELMA

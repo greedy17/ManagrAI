@@ -678,6 +678,7 @@ def alternate_google_search(query, number_of_results=6):
                     else metatags.get("author", "Unknown")
                 )
                 result_data = {
+                    "citationIndex": index,
                     "id": index + 1,
                     "title": item["title"],
                     "snippet": item["snippet"],

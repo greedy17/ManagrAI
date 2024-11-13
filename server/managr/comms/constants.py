@@ -636,7 +636,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         prompt = f"""
         {elma}.
 
-        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
@@ -667,7 +667,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         prompt = f"""
         {elma}.
 
-        Please provide a concise and accurate response to my query, using the given search results. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Please provide a concise and accurate response to my query, using the given search results. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
