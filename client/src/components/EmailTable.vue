@@ -720,7 +720,7 @@ export default {
       return emails.map((email) => {
         const sanitizedBody = email.body.replace(/<[^>]+>/g, '')
 
-        const truncatedBody = sanitizedBody.slice(0, 500)
+        const truncatedBody = sanitizedBody.slice(0, 100)
 
         return {
           ...email,
