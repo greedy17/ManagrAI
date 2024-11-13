@@ -1360,7 +1360,7 @@
                       <div
                         @click.stop="toggleMainDetails"
                         :class="{
-                          'drop-header': detailTitle,
+                          'drop-header padding-right-x': detailTitle,
                           'soft-gray-bg': showingMainDetails,
                         }"
                         class="image-container"
@@ -1368,6 +1368,13 @@
                         <img src="@/assets/images/folder.svg" height="15px" alt="" />
 
                         <small v-if="detailTitle" :title="detailTitle">{{ detailTitle }}</small>
+                        <div
+                          class="image-container abs-right-img"
+                          @click="clearDetails"
+                          v-if="detailTitle"
+                        >
+                          <img src="@/assets/images/close.svg" height="12px" alt="" />
+                        </div>
                       </div>
 
                       <div
@@ -3184,10 +3191,13 @@
             >
               <div
                 @click.stop="toggleMainDetails"
-                :class="detailTitle ? 'drop-header' : 'image-container'"
+                :class="detailTitle ? 'drop-header padding-right-x' : 'image-container'"
               >
                 <img src="@/assets/images/folder.svg" height="15px" alt="" />
                 <small v-if="detailTitle" :title="detailTitle">{{ detailTitle }}</small>
+                <div class="image-container abs-right-img" @click="clearDetails" v-if="detailTitle">
+                  <img src="@/assets/images/close.svg" height="12px" alt="" />
+                </div>
               </div>
 
               <div
@@ -9425,7 +9435,7 @@ www.forbes.com/article-3
       font-size: 14px;
       margin-left: 4px !important;
       font-family: $base-font-family;
-      max-width: 60px;
+      max-width: 100px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -11925,6 +11935,22 @@ p {
   font-family: $base-font-family;
   img {
     filter: none;
+  }
+}
+
+.padding-right-x {
+  padding-right: 24px !important;
+}
+
+.abs-right-img {
+  background-color: $gray-blue !important;
+  position: absolute;
+  right: 0;
+  padding: 4px !important;
+
+  img {
+    margin: 0 !important;
+    filter: invert(100%) !important;
   }
 }
 
