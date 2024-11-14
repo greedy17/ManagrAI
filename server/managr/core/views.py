@@ -869,9 +869,22 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         # If the serializer is valid, then the email/password combo is valid.
         # Get the user entity, from which we can get (or create) the auth token
+        try:
+            user = User.objects.get(email=request.data.get("email"))
+            if not user.is_active:
+                raise ValidationError(
+                    {
+                        "non_field_errors": [("Account is deactivated" "Please contact support.")],
+                    }
+                )
+        except User.DoesNotExist:
+            raise ValidationError(
+                {
+                    "non_field_errors": [("User does not exist" "Check your login information.")],
+                }
+            )
         user = authenticate(request, **serializer.data)
         if user is None:
             raise ValidationError(
