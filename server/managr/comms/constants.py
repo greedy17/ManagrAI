@@ -146,7 +146,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Ordered or unordered lists using `<ol>` or `<ul>`, 
     Paragraphs with `<p>`, and 
     Line breaks `<br>` between main points for clarity.
-    Do not include ```html in your response.
+    All links must be anchor tags with target="_blank" so that they open in a new window.
 
     Make sure to:
     1. Use descriptive headings for each section.
@@ -184,6 +184,21 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     email: '[EMAIL IF FOUND]'
 
     Do not wrap the JSON in ```json```
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    All links must be anchor tags with target="_blank" so that they open in a new window.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    
+
     """
     return prompt
 
@@ -217,7 +232,8 @@ def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     2. Separate main points with line breaks or paragraphs.
     3. Keep responses structured and consistent for easy reading in a Vue.js app.
     4. Do not wrap the JSON in ```json```
-    5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    5. All links must be anchor tags with target="_blank" so that they open in a new window.
+    6. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
     return prompt
 
@@ -608,17 +624,19 @@ def OPEN_AI_REWRITE_PTICH(original, bio, style, with_style, journalist, name):
     return prompt
 
 
-def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
+def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma, project):
     if not instructions:
         prompt = f"""
         {elma}.
 
-        Please provide a concise and accurate response to my query, using the given search results.  Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Please provide a concise and accurate response to my query, using the given search results. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the search results for their project. 
+        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         
         query: {query}
         search results: {results}
         full text from the top result: {text}
+        Project details (campaign, media pitch, etc): {project}
 
         Structure your resposne in the following format:
         **Heading** in `<h2>` tags,
@@ -636,7 +654,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         prompt = f"""
         {elma}.
 
-        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the search results for their project.  Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
@@ -650,6 +668,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma):
         initial summary: {summary}
         follow-up question: {instructions}
         search results: {results}
+        Project details (campaign, media pitch, etc): {project}
 
         Structure your resposne in the following format:
         **Heading** in `<h2>` tags,

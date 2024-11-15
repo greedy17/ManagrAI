@@ -464,6 +464,13 @@ export default {
         this.newInsight = res.content.replace(/\*(.*?)\*/g, '<strong>$1</strong>')
       } catch (e) {
         console.error(e)
+        this.$toast('Too much data. Apply a filter then try again.', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
       } finally {
         this.insight = ''
         this.loadingInsight = false
