@@ -1354,7 +1354,7 @@
 
                     <div
                       style="margin-right: 12px"
-                      v-if="mainView !== 'discover' && mainView !== 'web'"
+                      v-if="mainView !== 'discover'"
                       class="source-dropdown fadein"
                     >
                       <div
@@ -3032,7 +3032,7 @@
 
             <div
               style="margin-right: 12px"
-              v-if="mainView !== 'discover' && mainView !== 'web'"
+              v-if="mainView !== 'discover'"
               class="source-dropdown fadein"
             >
               <div
@@ -3822,8 +3822,8 @@ www.forbes.com/article-3
           value: `List upcoming awards...`,
         },
         {
-          name: `Show me best reviews for...`,
-          value: `Show me best reviews for {BrandX}`,
+          name: `Create a briefing sheet...`,
+          value: `Create a briefing sheet for {journalist name} from {outlet}`,
         },
         {
           name: `Who covered AI in 2024`,
@@ -6474,6 +6474,7 @@ www.forbes.com/article-3
           instructions: instructions,
           summary: this.summary,
           results: clips,
+          project: this.selectedOrg,
         })
 
         if (res.message.toLowerCase().includes('new search term')) {
@@ -6523,6 +6524,7 @@ www.forbes.com/article-3
         const res = await Comms.api.googleSearch({
           query: this.newSearch,
           instructions: this.newTemplate,
+          project: this.selectedOrg,
         })
         this.searchResponseText = ' '
         this.searchResponseText = ''

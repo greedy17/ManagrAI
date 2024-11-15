@@ -3132,6 +3132,7 @@ def get_google_summary(request):
     instructions = request.data.get("instructions")
     summary = request.data.get("summary", None)
     results = request.data.get("results", None)
+    project = request.data.get("project", None)
     text = ""
     elma = core_consts.ELMA
     if not instructions or not summary:
@@ -3159,7 +3160,7 @@ def get_google_summary(request):
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.OPEN_AI_WEB_SUMMARY(
-                query, results, text, instructions, summary, elma
+                query, results, text, instructions, summary, elma, project
             )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
