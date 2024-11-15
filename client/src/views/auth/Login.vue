@@ -254,6 +254,7 @@ export default {
       }
     },
     async handleLoginAttempt() {
+      this.loginForm.field.email.value = this.loginForm.field.email.value.toLowerCase()
       this.loginForm.validate()
       if (this.loginForm.isValid) {
         this.loggingIn = true
