@@ -882,7 +882,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
         except User.DoesNotExist:
             raise ValidationError(
                 {
-                    "non_field_errors": [("User does not exist" "Check your login information.")],
+                    "non_field_errors": [("User does not exist. Check your login information.")],
                 }
             )
         user = authenticate(request, **serializer.data)
