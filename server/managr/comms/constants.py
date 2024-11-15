@@ -146,7 +146,7 @@ def OPEN_AI_RESULTS_PROMPT(journalist, results, company, text):
     Ordered or unordered lists using `<ol>` or `<ul>`, 
     Paragraphs with `<p>`, and 
     Line breaks `<br>` between main points for clarity.
-    Do not include ```html in your response.
+    All links must be anchor tags with target="_blank" so that they open in a new window.
 
     Make sure to:
     1. Use descriptive headings for each section.
@@ -184,6 +184,21 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
     email: '[EMAIL IF FOUND]'
 
     Do not wrap the JSON in ```json```
+
+    Structure your resposne in the following format:
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    All links must be anchor tags with target="_blank" so that they open in a new window.
+
+    Make sure to:
+    1. Use descriptive headings for each section.
+    2. Separate main points with line breaks or paragraphs.
+    3. Keep responses structured and consistent for easy reading in a Vue.js app.
+    
+
     """
     return prompt
 
@@ -217,7 +232,8 @@ def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     2. Separate main points with line breaks or paragraphs.
     3. Keep responses structured and consistent for easy reading in a Vue.js app.
     4. Do not wrap the JSON in ```json```
-    5. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
+    5. All links must be anchor tags with target="_blank" so that they open in a new window.
+    6. NEVER include any additional text next to the email. example: instead of email@email.com (guessed email based on typical email patterns), simply return email@email.com, Instead of email@email.com (guessed email), simply return email@email.com. This is very important, do not ignore
     """
     return prompt
 

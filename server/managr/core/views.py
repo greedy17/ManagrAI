@@ -876,7 +876,7 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             if not user.is_active:
                 raise ValidationError(
                     {
-                        "non_field_errors": [("Account is deactivated" "Please contact support.")],
+                        "non_field_errors": [("Account is deactivated. " " Please contact support.")],
                     }
                 )
         except User.DoesNotExist:

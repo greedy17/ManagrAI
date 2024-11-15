@@ -283,7 +283,7 @@ export default {
               bodyClassName: ['custom'],
             })
           } else if (error.response.status >= 400) {
-            this.$toast('Incorrect Email/Password combo', {
+            this.$toast(`${error.response.data.non_field_errors[0]}`, {
               timeout: 2000,
               position: 'top-left',
               type: 'error',

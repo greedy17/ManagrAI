@@ -1639,7 +1639,7 @@
         <div
           ref="loadedContent"
           style="position: relative"
-          :class="['body widebody', { contentShiftAlt: showingArticles }]"
+          :class="['widebody', { contentShiftAlt: showingArticles }]"
         >
           <header class="content-header-test">
             <div class="row-top">
@@ -1742,21 +1742,15 @@
                 <div>{{ copyTip }}</div>
               </div> -->
 
-              <div
+              <!-- <div
                 @click="copyDiscoverText"
                 v-else-if="mainView === 'discover'"
                 class="secondary-button"
               >
-                <!-- <img
-                  style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/clipboard.svg"
-                  height="16px"
-                  alt=""
-                  @click="copyDiscoverText"
-                /> -->
+               
 
                 <div>{{ copyTip }}</div>
-              </div>
+              </div> -->
 
               <button
                 class="primary-button"
@@ -2558,6 +2552,22 @@
                 class="journalistCol"
                 v-else-if="mainView === 'discover'"
               >
+                <div style="width: 100%" class="flex-end">
+                  <div
+                    @click="copyDiscoverText"
+                    style="margin: 2px 0 0 4px"
+                    class="image-container s-wrapper"
+                  >
+                    <img
+                      style="cursor: pointer; filter: invert(40%)"
+                      src="@/assets/images/clipboard.svg"
+                      height="16px"
+                      alt=""
+                    />
+
+                    <div class="s-tooltip">{{ copyTip }}</div>
+                  </div>
+                </div>
                 <div class="journalistSection" v-for="(j, i) in discoverList" :key="i">
                   <p><span>Name</span>: {{ j.name }}</p>
                   <p><span>Publication</span>: {{ j.publication }}</p>
@@ -2694,7 +2704,23 @@
                   </div>
 
                   <div style="padding-bottom: 40px" class="journalistCol" v-else>
-                    <div class="journalistSection" v-for="(j, i) in summary.list" :key="i">
+                    <div style="width: 100%" class="flex-end">
+                      <div></div>
+
+                      <div style="margin: 2px 0 0 4px" class="image-container s-wrapper">
+                        <img
+                          style="cursor: pointer; filter: invert(40%)"
+                          src="@/assets/images/clipboard.svg"
+                          height="16px"
+                          alt=""
+                          @click="copyDiscoverTextAlt(summary.list)"
+                        />
+
+                        <div class="s-tooltip">{{ copyTip }}</div>
+                      </div>
+                    </div>
+
+                    <div v-for="(j, i) in summary.list" :key="i" class="journalistSection">
                       <p><span>Name</span>: {{ j.name }}</p>
                       <p><span>Publication</span>: {{ j.publication }}</p>
                       <p><span>Reason for selection</span>: {{ j.reason }}</p>
@@ -2806,181 +2832,6 @@
                   <div style="width: 23.5%" class="skeleton skeleton-img"></div>
                 </div>
               </div>
-            </div>
-          </section>
-          <section v-if="mainView !== 'write' && mainView !== 'discover'" class="content">
-            <!-- <div ref="topDivider" class="between">
-              <div class="row">
-                <img
-                  v-if="mainView === 'news'"
-                  style="margin-right: 8px"
-                  src="@/assets/images/newspaper.svg"
-                  height="14px"
-                  alt=""
-                />
-                <img
-                  v-else-if="mainView === 'social'"
-                  src="@/assets/images/twitter-x.svg"
-                  height="20px"
-                  alt=""
-                />
-                <img
-                  v-else-if="mainView === 'web'"
-                  style="margin-right: 8px"
-                  src="@/assets/images/google.svg"
-                  height="15px"
-                  alt=""
-                />
-
-                <p class="header-p">
-                  <span>{{
-                    mainView === 'news'
-                      ? `Articles (${articlesFiltered.length})`
-                      : mainView === 'social'
-                      ? `Posts (${filteredTweets.length})`
-                      : `Results (${googleResults.length})`
-                  }}</span>
-                </p>
-              </div>
-
-              <div style="width: 100%" class="input">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <input
-                  v-if="mainView === 'news'"
-                  v-model="searchArticleText"
-                  class="search-input"
-                  :placeholder="`Search articles...`"
-                />
-
-                <input
-                  v-else-if="mainView === 'social'"
-                  v-model="searchTweetText"
-                  class="search-input"
-                  :placeholder="`Search posts...`"
-                />
-                <input
-                  v-else-if="mainView === 'web'"
-                  v-model="searchResultText"
-                  class="search-input"
-                  :placeholder="`Search results...`"
-                />
-                <img
-                  v-if="searchTweetText || searchArticleText || searchResultText"
-                  @click="clearSearchText"
-                  src="@/assets/images/close.svg"
-                  class="pointer"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div> -->
-
-            <div v-if="mainView === 'social'" class="cards-container">
-              <div class="card" v-for="(tweet, i) in filteredTweets" :key="i">
-                <div style="width: 100%">
-                  <div v-if="tweet.attachments">
-                    <div v-for="media in tweetMedia" :key="media.media_key">
-                      <div v-if="media.media_key === tweet.attachments.media_keys[0]">
-                        <img
-                          v-if="media.type === 'photo'"
-                          :src="media.url"
-                          class="card-photo-header"
-                          alt=""
-                        />
-
-                        <video
-                          v-else-if="media.type === 'video'"
-                          class="card-photo-header"
-                          controls
-                        >
-                          <source :src="media.variants[1].url" type="video/mp4" />
-                        </video>
-
-                        <video
-                          v-else-if="media.type === 'animated_gif'"
-                          class="card-photo-header"
-                          autoplay
-                          loop
-                          muted
-                          playsinline
-                        >
-                          <source :src="media.variants[0].url" type="video/mp4" />
-                        </video>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="main-body">
-                    <div class="card-row-med">
-                      <img :src="tweet.user.profile_image_url" />
-                      <small class="pointer" @click="openTweet(tweet.user.username, tweet.id)">
-                        {{ tweet.user.name }}
-                      </small>
-                      <svg
-                        v-if="tweet.user.verified"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 22 22"
-                        aria-label="Verified account"
-                        role="img"
-                        class="twitter-blue"
-                        data-testid="icon-verified"
-                      >
-                        <g>
-                          <path
-                            d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
-                          ></path>
-                        </g>
-                      </svg>
-                    </div>
-                    <p
-                      style="font-size: 15px; cursor: pointer"
-                      class="p-header"
-                      @click="openTweet(tweet.user.username, tweet.id)"
-                    >
-                      {{ tweet.text }}
-                    </p>
-                  </div>
-
-                  <div class="main-footer">
-                    <div class="author-time">
-                      <span
-                        @mouseenter="changeJournalistName(i)"
-                        @mouseleave="removeNameIndex"
-                        @click="selectJournalist(tweet)"
-                        style="cursor: pointer"
-                        class="author"
-                      >
-                        <span style="padding: 2px 4px" v-if="journalistIndex === i && showingName">
-                          View Bio
-                        </span>
-
-                        <span v-else>
-                          {{ '@' + tweet.user.username }}
-                        </span>
-                      </span>
-                      <span style="margin-right: 4px" class="divider-dot">.</span>
-                      <small class="regular-font"
-                        >{{ formatNumber(tweet.user.public_metrics.followers_count) }}
-                        <span>Followers</span>
-                      </small>
-                      <span style="margin-left: 4px" class="divider-dot">.</span>
-                      <span class="off-gray time">{{
-                        getTimeDifferenceInMinutes(tweet.created_at)
-                      }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- <div ref="contentBottom"></div> -->
             </div>
           </section>
         </div>
@@ -3381,6 +3232,17 @@
                     <p>{{ style.style }}</p>
                   </div>
                 </section>
+
+                <footer class="space-between">
+                  <span></span>
+                  <button
+                    @click="toggleLearnInputModal('')"
+                    class="primary-button"
+                    style="margin-right: 12px"
+                  >
+                    Create
+                  </button>
+                </footer>
               </div>
             </div>
 
@@ -4860,8 +4722,9 @@ www.forbes.com/article-3
             clips: [],
             list: res.journalists,
           })
-
-          console.log(this.summaries)
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
         }
       } catch (e) {
         console.log(e)
@@ -4879,12 +4742,6 @@ www.forbes.com/article-3
           this.scrollToTop()
         }
         this.refreshUser()
-        // if (this.chatting && this.discoverList.length) {
-        //   this.chatting = false
-        //   this.changeSearch({ search: this.newSearch, template: this.newTemplate })
-        // } else if (this.chatting && !this.discoverList.length) {
-        //   this.responseEmpty = true
-        // }
       }
     },
     async saveWritingStyle() {
@@ -5264,7 +5121,7 @@ www.forbes.com/article-3
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <strong class="c-elip" >${citation.title}</strong>
               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
                 </span>
                <img src="${citation.image}" alt="">
@@ -5306,7 +5163,7 @@ www.forbes.com/article-3
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <strong class="c-elip" >${citation.title}</strong>
               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
                 </span>
                <img src="${citation.image_url}" alt="">
@@ -5346,7 +5203,7 @@ www.forbes.com/article-3
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
+              <strong class="c-elip">${citation.title}</strong>
               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
                 </span>
                <img src="${citation.image}" alt="">
@@ -6929,6 +6786,33 @@ www.forbes.com/article-3
     //     console.error('Failed to copy text: ', err)
     //   }
     // },
+    async copyDiscoverTextAlt(list) {
+      try {
+        // Extract and clean the text from each object in discoverList
+        const cleanedSummary = list
+          .map((item) => {
+            // Clean each property of HTML tags
+            const name = item.name.replace(/<\/?[^>]+(>|$)/g, '')
+            const publication = item.publication.replace(/<\/?[^>]+(>|$)/g, '')
+            const reason = item.reason.replace(/<\/?[^>]+(>|$)/g, '')
+
+            // Concatenate the cleaned properties
+            return `${name} - ${publication}: ${reason}`
+          })
+          .join('\n') // Join all the text into a single string, each object on a new line
+
+        // Copy the cleaned text to the clipboard
+        await navigator.clipboard.writeText(cleanedSummary)
+        this.copyTip = 'Copied!'
+
+        // Reset the copyTip after 2 seconds
+        setTimeout(() => {
+          this.copyTip = 'Copy'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async copyDiscoverText() {
       try {
         // Extract and clean the text from each object in discoverList
@@ -11294,7 +11178,7 @@ li {
     top: 0;
     background: $off-white;
     // border-bottom: 1px solid rgba(0, 0, 0, 0.128);
-    padding: 80px 32px 8px 24px;
+    padding: 56px 32px 8px 24px;
     z-index: 10;
 
     @media only screen and (max-width: 600px) {
@@ -11618,7 +11502,7 @@ li {
   height: 100vh;
   width: 100vw;
   padding: 0 14vw;
-  overflow: hidden;
+  overflow: clip;
 
   @media only screen and (max-width: 600px) {
     padding: 0;
