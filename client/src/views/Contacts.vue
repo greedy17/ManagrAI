@@ -372,11 +372,10 @@
                 @click.stop="toggleShowStyles"
                 :class="{ 'soft-gray-bg': showingStyles }"
                 class="drop-header"
-                style="padding-left: 12px"
               >
-                <!-- <img src="@/assets/images/wand.svg" height="14px" alt="" /> -->
+                <img src="@/assets/images/wand.svg" height="14px" alt="" />
 
-                <p class="mobile-text-hide">Writing Style:</p>
+                <!-- <p class="mobile-text-hide">Voice:</p> -->
                 <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
                 <img
                   v-if="!showingStyles"
@@ -394,19 +393,9 @@
               </div>
 
               <div v-outside-click="hideStyles" v-show="showingStyles" class="drop-options-alt">
-                <header style="padding" class="space-between">
-                  <h2>Add writing style</h2>
-                  <section style="padding: 8px 0" class="h-padding">
-                    <section style="padding: 0" @click="toggleStyles" class="toggle">
-                      <span :class="{ 'active-toggle': personalStyles }" class="toggle-side">
-                        <small>Personal</small>
-                      </span>
-
-                      <span :class="{ 'active-toggle': !personalStyles }" class="toggle-side">
-                        <small>Group</small>
-                      </span>
-                    </section>
-                  </section>
+                <header>
+                  <h4>Voices</h4>
+                  <p>Select a desired writing style or create your own</p>
 
                   <!-- <button
                     @click="toggleLearnInputModal('')"
@@ -417,7 +406,7 @@
                   </button> -->
                 </header>
 
-                <section v-if="userWritingStyles.length">
+                <section style="padding-top: 8px" v-if="userWritingStyles.length">
                   <div
                     @click="addWritingStyle(style.style, style.title)"
                     v-for="style in defaultWritingStyles"
@@ -426,12 +415,6 @@
                     :title="style.title"
                   >
                     <span>
-                      <img
-                        class="blue-filter"
-                        src="@/assets/images/logo.png"
-                        height="11px"
-                        alt=""
-                      />
                       {{ style.title }}
                     </span>
                     <p>{{ style.style }}</p>
@@ -444,16 +427,10 @@
                     :class="{ activeswitch: writingStyleTitle === style.title }"
                     :title="style.title"
                   >
-                    <span class="pink-text">
-                      <img
-                        class="pink-filter"
-                        src="@/assets/images/scroll.svg"
-                        height="11px"
-                        alt=""
-                      />
+                    <span>
                       {{ style.title }}
                     </span>
-                    <p class="pink-text">{{ style.style }}</p>
+                    <p>{{ style.style }}</p>
 
                     <!-- <span
                     v-if="hoverIndex === i"
@@ -487,11 +464,10 @@
                 @click.stop="toggleShowDetails"
                 :class="{ 'soft-gray-bg': showingDetails }"
                 class="drop-header"
-                style="padding-left: 12px"
               >
-                <!-- <img src="@/assets/images/building.svg" height="14px" alt="" /> -->
+                <img src="@/assets/images/folder.svg" height="14px" alt="" />
 
-                <p class="mobile-text-hide">Project:</p>
+                <!-- <p class="mobile-text-hide">Project:</p> -->
                 <small :title="detailTitle ? detailTitle : 'None'">{{
                   detailTitle ? detailTitle : 'None'
                 }}</small>
@@ -510,12 +486,10 @@
                 />
               </div>
 
-              <div
-                v-outside-click="hideDetails"
-                v-show="showingDetails"
-                class="drop-options-alternate"
-              >
-                <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
+              <div v-outside-click="hideDetails" v-show="showingDetails" class="drop-options-alt">
+                <header>
+                  <h4>Projects</h4>
+                  <p>Let Elma know what you're working on (e.g. campaign, pitch, launch)</p>
                   <!-- <section class="h-padding">
                     <section>
                       <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
@@ -529,7 +503,6 @@
                   >
                     <img src="@/assets/images/add.svg" height="14px" alt="" /> Add Details
                   </button> -->
-                  <h2 style="margin-left: 8px">Add Details</h2>
 
                   <!-- <button
                   :disabled="!detailTitle"
@@ -556,12 +529,6 @@
                     :title="detail.title"
                   >
                     <span class="">
-                      <img
-                        class="blue-filter"
-                        src="@/assets/images/logo.png"
-                        height="11px"
-                        alt=""
-                      />
                       {{ detail.title }}
                     </span>
                     <p class="">{{ detail.details }}</p>
@@ -573,11 +540,11 @@
                 </section>
 
                 <section style="padding: 16px" v-else>
-                  Your saved details
+                  Your saved projects
                   <span>
                     <img
                       style="margin-right: 4px"
-                      src="@/assets/images/building.svg"
+                      src="@/assets/images/folder.svg"
                       height="12px"
                       alt=""
                     />
@@ -2174,40 +2141,61 @@ export default {
       defaultWritingStyles: [
         {
           title: 'Default',
-          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+          style: `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+To replicate the author's style, focus on the following guidelines:
+
+Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+Tone Adaptation: Adjust your style based on the content type:
+
+Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+Social Media Copy: Short, snappy, and aligned with trends.
+
+Blog Post: Personal, insightful, and easy to digest.
+
+Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`,
         },
-        {
-          title: 'Media Pitch',
-          style: `
-        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
-        `,
-        },
-        {
-          title: 'Blog Post',
-          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
-        Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
-        },
-        {
-          title: 'Email',
-          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
-        2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
-        3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
-        4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
-        5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
-        6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
-        7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
-        8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
-        9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
-        10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
-        },
+        // {
+        //   title: 'Media Pitch',
+        //   style: `
+        // 1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        // 2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        // 3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        // 4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        // 5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        // 6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        // 7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        // 8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        // 9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        // `,
+        // },
+        // {
+        //   title: 'Blog Post',
+        //   style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
+        // Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
+        // },
+        // {
+        //   title: 'Email',
+        //   style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
+        // 2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
+        // 3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
+        // 4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
+        // 5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
+        // 6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
+        // 7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
+        // 8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
+        // 9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
+        // 10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
+        // },
       ],
     }
   },
@@ -2557,19 +2545,30 @@ export default {
       this.$router.push({ name: 'EmailTracking' })
     },
     pitchStyleSetup() {
-      const style = `
-        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
-        `
+      const style = `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+To replicate the author's style, focus on the following guidelines:
+
+Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+Tone Adaptation: Adjust your style based on the content type:
+
+Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+Social Media Copy: Short, snappy, and aligned with trends.
+
+Blog Post: Personal, insightful, and easy to digest.
+
+Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`
       this.writingStyle = style
-      this.writingStyleTitle = 'Media Pitch'
+      this.writingStyleTitle = 'Default'
     },
     addWritingStyle(ex, title) {
       this.writingStyle = ex
@@ -5304,35 +5303,36 @@ h2 {
 }
 
 .drop-header {
-  padding: 9px 6px 9px 8px;
+  padding: 8px 8px 8px 0;
   background-color: $off-white;
-  font-size: 13px !important;
-  border: 1px solid rgba(0, 0, 0, 0.185);
-  border-radius: 16px;
+  font-size: 14px !important;
+  border-radius: 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
   cursor: pointer;
-  min-width: 150px;
-  // color: $graper;
 
-  &:hover {
-    background-color: $soft-gray;
+  @media only screen and (max-width: 600px) {
+    font-size: 12px !important;
   }
 
   img {
-    margin: 0 8px;
+    margin: 0 4px 0 8px;
     filter: invert(40%);
+
+    @media only screen and (max-width: 600px) {
+      // display: none;
+    }
   }
 
   small {
     font-size: 14px;
     margin-left: 4px !important;
     font-family: $base-font-family;
-  }
-  p {
-    font-size: 16px;
+    max-width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   p,
@@ -5340,7 +5340,50 @@ h2 {
     margin: 0;
     padding: 0;
   }
+
+  &:hover {
+    background-color: $soft-gray;
+  }
 }
+
+// .drop-header {
+//   padding: 9px 6px 9px 8px;
+//   background-color: $off-white;
+//   font-size: 13px !important;
+//   border: 1px solid rgba(0, 0, 0, 0.185);
+//   border-radius: 16px;
+//   display: flex;
+//   flex-direction: row;
+//   align-items: center;
+//   justify-content: center;
+//   cursor: pointer;
+//   min-width: 150px;
+//   // color: $graper;
+
+//   &:hover {
+//     background-color: $soft-gray;
+//   }
+
+//   img {
+//     margin: 0 8px;
+//     filter: invert(40%);
+//   }
+
+//   small {
+//     font-size: 14px;
+//     margin-left: 4px !important;
+//     font-family: $base-font-family;
+//   }
+//   p {
+//     font-size: 16px;
+//   }
+
+//   p,
+//   small {
+//     margin: 0;
+//     padding: 0;
+//   }
+// }
 
 .drop-options {
   width: 20vw;
@@ -6011,10 +6054,10 @@ textarea::placeholder {
   position: relative;
 
   .drop-header {
-    padding: 8px 6px;
-    background-color: white;
+    padding: 8px 8px 8px 0;
+    background-color: $off-white;
     font-size: 14px !important;
-    border-radius: 16px;
+    border-radius: 10px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -6025,7 +6068,7 @@ textarea::placeholder {
     }
 
     img {
-      margin: 0 8px;
+      margin: 0 4px 0 8px;
       filter: invert(40%);
 
       @media only screen and (max-width: 600px) {
@@ -6037,7 +6080,7 @@ textarea::placeholder {
       font-size: 14px;
       margin-left: 4px !important;
       font-family: $base-font-family;
-      max-width: 55px;
+      max-width: 100px;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -6053,6 +6096,50 @@ textarea::placeholder {
       background-color: $soft-gray;
     }
   }
+
+  // .drop-header {
+  //   padding: 8px 6px;
+  //   background-color: white;
+  //   font-size: 14px !important;
+  //   border-radius: 16px;
+  //   display: flex;
+  //   flex-direction: row;
+  //   align-items: center;
+  //   cursor: pointer;
+
+  //   @media only screen and (max-width: 600px) {
+  //     font-size: 12px !important;
+  //   }
+
+  //   img {
+  //     margin: 0 8px;
+  //     filter: invert(40%);
+
+  //     @media only screen and (max-width: 600px) {
+  //       // display: none;
+  //     }
+  //   }
+
+  //   small {
+  //     font-size: 14px;
+  //     margin-left: 4px !important;
+  //     font-family: $base-font-family;
+  //     max-width: 55px;
+  //     overflow: hidden;
+  //     white-space: nowrap;
+  //     text-overflow: ellipsis;
+  //   }
+
+  //   p,
+  //   small {
+  //     margin: 0;
+  //     padding: 0;
+  //   }
+
+  //   &:hover {
+  //     background-color: $soft-gray;
+  //   }
+  // }
 
   .drop-options-alternate {
     width: 450px;
@@ -6163,6 +6250,28 @@ textarea::placeholder {
     @media only screen and (max-width: 600px) {
       left: -120%;
       width: 85vw;
+    }
+
+    header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 14px;
+      padding: 0 0 12px 8px;
+      position: sticky;
+      top: 0;
+
+      h4 {
+        font-family: $base-font-family;
+        margin: 0;
+        font-size: 16px;
+      }
+      p {
+        margin: 0;
+        font-family: $thin-font-family;
+      }
     }
 
     section:last-of-type {

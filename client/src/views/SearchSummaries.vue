@@ -1,43 +1,5 @@
 <template>
   <div class="empty-search fadein">
-    <Modal v-if="contentModalOpen" class="regen-modal">
-      <div :class="{ dim: contentLoading }" class="regen-container">
-        <div class="regen-header">
-          <div>
-            <h4 class="regen-header-title">Generate {{ contentType }}</h4>
-            <p class="regen-header-subtitle">Provide additional instructions</p>
-          </div>
-        </div>
-
-        <div style="border: none" class="regen-body padding">
-          <textarea
-            class="area-input-outline wider"
-            style="max-height: 200px"
-            v-model="contentInstructions"
-            type="text"
-            v-autoresize
-            :disabled="contentLoading"
-          />
-        </div>
-
-        <div class="regen-footer">
-          <div></div>
-          <div class="row">
-            <button :disabled="contentLoading" @click="closeContentModal" class="cancel-button">
-              Cancel
-            </button>
-            <button :disabled="contentLoading" @click="generateContent" class="save-button">
-              {{ contentLoading ? 'Submitting' : 'Submit' }}
-              <div style="margin-left: 4px" v-if="contentLoading" class="loading-small">
-                <div class="dot"></div>
-                <div class="dot"></div>
-                <div class="dot"></div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
     <Modal v-if="paidModal" class="paid-modal">
       <div class="regen-container">
         <div class="paid-header">
@@ -483,7 +445,7 @@
               >
                 <img src="@/assets/images/wand.svg" height="14px" alt="" />
 
-                <p class="mobile-text-hide">Writing Style:</p>
+                <p class="mobile-text-hide">Voice:</p>
                 <small>{{ writingStyleTitle ? writingStyleTitle : 'Select style' }}</small>
                 <img
                   v-if="!showingStyles"
@@ -506,7 +468,7 @@
                 class="drop-options-alt-up"
               >
                 <header class="space-between">
-                  <h4>Writing style</h4>
+                  <h4>Voices</h4>
                   <p>Select a desired writing style or create your own</p>
                   <!-- <section class="h-padding">
                     <section @click="toggleStyles" class="toggle">
@@ -558,16 +520,10 @@
                     :class="{ activeswitch: writingStyleTitle === style.title }"
                     :title="style.title"
                   >
-                    <span class="pink-text">
-                      <img
-                        class="pink-filter"
-                        src="@/assets/images/scroll.svg"
-                        height="11px"
-                        alt=""
-                      />
+                    <span>
                       {{ style.title }}
                     </span>
-                    <p class="pink-text">{{ style.style }}</p>
+                    <p>{{ style.style }}</p>
 
                     <span
                       v-if="hoverIndex === i"
@@ -820,7 +776,7 @@
       >
         <div class="paid-header">
           <div>
-            <h4 class="regen-header-title">Learn Writing Style</h4>
+            <h4 class="regen-header-title">Learn Voice</h4>
             <p class="regen-header-subtitle">
               Provide a sample of the writing style you want to emulate
             </p>
@@ -1184,17 +1140,17 @@
                             <p>Search through real-time news outlets</p>
                           </div>
 
-                          <!-- <div
+                          <div
                             @click="switchMainView('social')"
                             :class="{ activeswitch: mainView === 'social' }"
                           >
                             <span>
-                              <img src="@/assets/images/comment.svg" height="11px" alt="" />
+                              <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
                               Social
                             </span>
 
                             <p>Search through top social post</p>
-                          </div> -->
+                          </div>
 
                           <div
                             @click="switchMainView('web')"
@@ -1247,7 +1203,7 @@
                       >
                         <img src="@/assets/images/wand.svg" height="15px" alt="" />
 
-                        <small>{{ writingStyleTitle ? writingStyleTitle : 'Writing Style' }}</small>
+                        <small>{{ writingStyleTitle ? writingStyleTitle : 'Voice' }}</small>
                       </div>
 
                       <div
@@ -1274,7 +1230,7 @@
                             </section>
                           </section> -->
 
-                          <h4>Writing style</h4>
+                          <h4>Voices</h4>
                           <p>Select a desired writing style or create your own</p>
 
                           <!-- <button
@@ -2481,6 +2437,58 @@
             </div>
 
             <div
+              style="width: 100%; justify-content: space-between"
+              class="row"
+              v-else-if="mainView === 'social'"
+            >
+              <!-- <div style="width: 24%" v-for="(media, i) in tweetMedia.slice(0, 4)" :key="i">
+                <img
+                  @click="setOriginalArticles"
+                  :src="media"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+              </div> -->
+
+              <div
+                style="width: 24%"
+                v-for="media in tweetMedia.slice(0, 4)"
+                :key="media.media_key"
+              >
+                <div>
+                  <img
+                    @click="setOriginalArticles"
+                    v-if="media.type === 'photo'"
+                    :src="media.url"
+                    class="card-photo-header-small"
+                    alt=""
+                  />
+
+                  <video
+                    @click="setOriginalArticles"
+                    v-else-if="media.type === 'video'"
+                    class="card-photo-header-small"
+                    controls
+                  >
+                    <source :src="media.variants[1].url" type="video/mp4" />
+                  </video>
+
+                  <video
+                    @click="setOriginalArticles"
+                    v-else-if="media.type === 'animated_gif'"
+                    class="card-photo-header-small"
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                  >
+                    <source :src="media.variants[0].url" type="video/mp4" />
+                  </video>
+                </div>
+              </div>
+            </div>
+
+            <div
               v-if="
                 (!(filteredArticles && filteredArticles.length) && !summary) ||
                 (!(filteredTweets && filteredTweets.length) && !summary)
@@ -2598,6 +2606,7 @@
                       v-for="(article, i) in articlesFiltered.slice(0, 3)"
                       :key="i"
                       :src="article.image_url"
+                      @error="onImageError($event)"
                       alt=""
                       class="circle-img"
                     />
@@ -2607,9 +2616,43 @@
                       v-for="(result, i) in filteredResults.slice(0, 3)"
                       :key="i"
                       :src="result.image"
+                      @error="onImageError($event)"
                       alt=""
                       class="circle-img"
                     />
+                  </div>
+
+                  <div
+                    v-else-if="mainView === 'social'"
+                    style="margin-left: 4px"
+                    class="row"
+                    v-for="media in tweetMedia.slice(0, 3)"
+                    :key="media.media_key"
+                  >
+                    <div>
+                      <img
+                        v-if="media.type === 'photo'"
+                        :src="media.url"
+                        @error="onImageError($event)"
+                        class="circle-img"
+                        alt=""
+                      />
+
+                      <video v-else-if="media.type === 'video'" class="circle-img" controls>
+                        <source :src="media.variants[1].url" type="video/mp4" />
+                      </video>
+
+                      <video
+                        v-else-if="media.type === 'animated_gif'"
+                        class="circle-img"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                      >
+                        <source :src="media.variants[0].url" type="video/mp4" />
+                      </video>
+                    </div>
                   </div>
                 </button>
 
@@ -2663,7 +2706,49 @@
                     </div>
                   </div>
 
-                  <h2 style="margin-top: 32px; font-size: 24px" class="bold-text">
+                  <div
+                    v-else-if="summary.clips.length && mainView === 'social'"
+                    style="width: 100%; justify-content: space-between; gap: 4px"
+                    class="row"
+                  >
+                    <div
+                      v-for="media in summary.media.slice(0, 4)"
+                      :key="media.media_key"
+                      style="width: 24%"
+                    >
+                      <img
+                        v-if="media.type === 'photo'"
+                        :src="media.url"
+                        class="card-photo-header-small"
+                        @error="onImageError($event)"
+                        alt=""
+                        @click="setAndShowArticles(summary.clips)"
+                      />
+
+                      <video
+                        v-else-if="media.type === 'video'"
+                        class="card-photo-header-small"
+                        controls
+                        @click="setAndShowArticles(summary.clips)"
+                      >
+                        <source :src="media.variants[1].url" type="video/mp4" />
+                      </video>
+
+                      <video
+                        v-else-if="media.type === 'animated_gif'"
+                        class="card-photo-header-small"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                        @click="setAndShowArticles(summary.clips)"
+                      >
+                        <source :src="media.variants[0].url" type="video/mp4" />
+                      </video>
+                    </div>
+                  </div>
+
+                  <h2 style="margin-top: 32px" class="ellipsis-text-bold">
                     {{ followUps[i] }}
                   </h2>
                   <div v-if="mainView !== 'discover'" style="position: relative">
@@ -2689,7 +2774,14 @@
                     </div>
 
                     <div
-                      v-if="mainView !== 'web'"
+                      v-if="mainView === 'social'"
+                      style="margin-top: 24px"
+                      v-html="insertAltTweetCitations(summary.summary, i)"
+                      class="citation-text"
+                    ></div>
+
+                    <div
+                      v-else-if="mainView !== 'web'"
                       style="margin-top: 24px"
                       v-html="insertAltNewsCitations(summary.summary, i)"
                       class="citation-text"
@@ -2734,7 +2826,7 @@
                     v-if="
                       !showingArticles &&
                       summary.clips.length &&
-                      (mainView === 'news' || mainView === 'web')
+                      (mainView === 'news' || mainView === 'web' || mainView === 'social')
                     "
                     @click="setAndShowArticles(summary.clips)"
                     class="secondary-button-white fadein"
@@ -2766,6 +2858,38 @@
                         alt=""
                         class="circle-img"
                       />
+                    </div>
+
+                    <div
+                      v-else-if="mainView === 'social'"
+                      style="margin-left: 4px"
+                      class="row"
+                      v-for="media in summary.media.slice(0, 3)"
+                      :key="media.media_key"
+                    >
+                      <div>
+                        <img
+                          v-if="media.type === 'photo'"
+                          :src="media.url"
+                          class="circle-img"
+                          alt=""
+                        />
+
+                        <video v-else-if="media.type === 'video'" class="circle-img" controls>
+                          <source :src="media.variants[1].url" type="video/mp4" />
+                        </video>
+
+                        <video
+                          v-else-if="media.type === 'animated_gif'"
+                          class="circle-img"
+                          autoplay
+                          loop
+                          muted
+                          playsinline
+                        >
+                          <source :src="media.variants[0].url" type="video/mp4" />
+                        </video>
+                      </div>
                     </div>
                   </button>
 
@@ -2808,11 +2932,18 @@
               <div style="margin-top: 32px; width: 100%" v-else-if="secondaryLoaderAlt">
                 <div class="row">
                   <p
-                    v-if="mainView !== 'web'"
+                    v-if="mainView === 'news'"
                     style="margin: 0; margin-right: 8px"
                     class="bold-text"
                   >
                     Gathering news...
+                  </p>
+                  <p
+                    v-else-if="mainView === 'social'"
+                    style="margin: 0; margin-right: 8px"
+                    class="bold-text"
+                  >
+                    Scanning social posts...
                   </p>
                   <p v-else style="margin: 0; margin-right: 8px" class="bold-text">
                     Scanning the web...
@@ -2982,17 +3113,17 @@
                     <p>Search through real-time news outlets</p>
                   </div>
 
-                  <!-- <div
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                   >
                     <span>
-                      <img src="@/assets/images/comment.svg" height="11px" alt="" />
+                      <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
                       Social
                     </span>
 
                     <p>Search through top social post</p>
-                  </div> -->
+                  </div>
 
                   <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
                     <span>
@@ -3140,7 +3271,7 @@
               <div @click.stop="toggleShowStyles" class="drop-header">
                 <img src="@/assets/images/wand.svg" height="15px" alt="" />
 
-                <small>{{ writingStyleTitle ? writingStyleTitle : 'Writing Style' }}</small>
+                <small>{{ writingStyleTitle ? writingStyleTitle : 'Voice' }}</small>
               </div>
 
               <div
@@ -3168,7 +3299,7 @@
                             </section>
                           </section> -->
 
-                  <h4>Writing style</h4>
+                  <h4>Voices</h4>
                   <p>Select a desired writing style or create your own</p>
 
                   <!-- <button
@@ -3310,8 +3441,8 @@
               mainView === 'news'
                 ? `Articles (${sidebarArticles.length})`
                 : mainView === 'social'
-                ? `Posts (${filteredTweets.length})`
-                : `Results (${googleResults.length})`
+                ? `Posts (${sidebarArticlesSocial.length})`
+                : `Results (${sidebarArticlesWeb.length})`
             }}
           </p>
 
@@ -3398,7 +3529,7 @@
             </div>
           </div>
 
-          <div v-if="mainView === 'web'" class="cards-container">
+          <div v-else-if="mainView === 'web'" class="cards-container">
             <div v-for="(result, i) in sidebarArticlesWeb" :key="i" class="card">
               <div style="width: 100%">
                 <div class="main-body">
@@ -3443,6 +3574,52 @@
             </div>
             <!-- <div ref="contentBottom"></div> -->
           </div>
+
+          <div v-else-if="mainView === 'social'" class="cards-container">
+            <div v-for="(tweet, i) in sidebarArticlesSocial" :key="i" class="card">
+              <div style="width: 100%">
+                <div class="main-body">
+                  <div>
+                    <div style="margin: 0 0 4px -2px" class="row">
+                      <img
+                        :src="twitterPlaceholder"
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <small>{{ tweet.user.username }}</small>
+                    </div>
+
+                    <p @click="openTweet(tweet.user.username, tweet.id)" style="cursor: pointer">
+                      {{ tweet.text }}
+                    </p>
+                    <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
+                      <p class="thin-text">
+                        {{ tweet.text }}
+                      </p>
+                    </div> -->
+                  </div>
+
+                  <div @click="openTweet(tweet.user.username, tweet.id)">
+                    <img :src="tweet.user.profile_image_url" class="card-photo-header" />
+                  </div>
+                </div>
+                <div class="row" style="margin: -4px 0 0 10px">
+                  <p @click="selectJournalist(tweet)" class="turq-text">
+                    @ <span>{{ tweet.user.username }}</span>
+                  </p>
+
+                  <div class="row" style="margin-left: 12px; font-size: 12px">
+                    <img src="@/assets/images/users.svg" height="11px" alt="" />
+                    <p style="margin-left: 2px; font-size: 13px">
+                      {{ formatNumber(tweet.user.public_metrics.followers_count) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- <div ref="contentBottom"></div> -->
+          </div>
         </div>
       </div>
     </div>
@@ -3474,6 +3651,7 @@ export default {
       followUps: [],
       summaries: [],
       latestArticles: [],
+      latestMedia: [],
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
@@ -3498,6 +3676,7 @@ www.forbes.com/article-3
       journalistSvg: require('@/assets/images/profile.svg'),
       citationSvg: require('@/assets/images/info.svg'),
       globePlaceholder: require('@/assets/images/globe.svg'),
+      twitterPlaceholder: require('@/assets/images/twitter-x.svg'),
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -3559,40 +3738,61 @@ www.forbes.com/article-3
       defaultWritingStyles: [
         {
           title: 'Default',
-          style: `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`,
+          style: `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+To replicate the author's style, focus on the following guidelines:
+
+Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+Tone Adaptation: Adjust your style based on the content type:
+
+Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+Social Media Copy: Short, snappy, and aligned with trends.
+
+Blog Post: Personal, insightful, and easy to digest.
+
+Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`,
         },
-        {
-          title: 'Media Pitch',
-          style: `
-        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
-        `,
-        },
-        {
-          title: 'Blog Post',
-          style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
-        Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
-        },
-        {
-          title: 'Email',
-          style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
-        2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
-        3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
-        4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
-        5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
-        6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
-        7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
-        8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
-        9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
-        10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
-        },
+        // {
+        //   title: 'Media Pitch',
+        //   style: `
+        // 1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
+        // 2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
+        // 3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
+        // 4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
+        // 5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
+        // 6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
+        // 7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
+        // 8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
+        // 9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
+        // `,
+        // },
+        // {
+        //   title: 'Blog Post',
+        //   style: `The author's style is formal and informative, using a journalistic tone to convey complex scientific concepts in a digestible manner. The structure is linear, starting with historical context and leading to the current developments. The author uses technical jargon, but also provides explanations to ensure understanding. Credibility is established through the mention of renowned scientists, historical achievements, and the university's long-standing involvement in the field. The author avoids persuasive language, focusing on facts and achievements.
+        // Guidelines: Maintain a formal, journalistic tone. Use technical terms but provide explanations. Structure content linearly, starting with historical context. Establish credibility through mention of renowned figures and achievements. Avoid persuasive language, focusing on facts.`,
+        // },
+        // {
+        //   title: 'Email',
+        //   style: `1. Start with a friendly greeting: Use 'Hey' or 'Hi' to initiate a warm, approachable tone.
+        // 2. Be direct and concise: Avoid fluff and unnecessary details. Get straight to the point.
+        // 3. Maintain a neutral tone: Avoid persuasive or sales-oriented language. The tone should be informative, not promotional.
+        // 4. Use simple, clear language: Avoid jargon or complex terms. The goal is to be understood by all readers.
+        // 5. Structure: Use short sentences and paragraphs. Break up information into digestible chunks.
+        // 6. Credibility: Use facts and data to support points. Avoid personal opinions or assumptions.
+        // 7. Action point: End with a clear, actionable step for the reader. This should be direct and easy to understand.
+        // 8. Informality: Maintain a casual, friendly tone throughout. This helps to engage the reader and make the content more relatable.
+        // 9. Linguistic idiosyncrasies: Use common, everyday language. Avoid overly formal or academic language.
+        // 10. Objectivity: Maintain an unbiased stance. Avoid taking sides or expressing personal views.`,
+        // },
       ],
       personalStyles: true,
       writingStyle: '',
@@ -3717,7 +3917,7 @@ www.forbes.com/article-3
       tweets: [],
       filteredArticles: [],
       posts: [],
-      tweetMedia: null,
+      tweetMedia: [],
       tweetUsers: null,
       articleInstructions: null,
       showArticleRegenerate: false,
@@ -3762,8 +3962,7 @@ www.forbes.com/article-3
       contentExamples: [
         {
           name: `Craft a press release...`,
-          value: `Write a press release for {Brand}. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
-          `,
+          value: `Craft a press release for {Brand}`,
         },
         {
           name: `Help me brainstorm...`,
@@ -4204,7 +4403,7 @@ www.forbes.com/article-3
         if (newVal === 'write') {
           this.writeSetup()
         } else {
-          this.pitchStyleSetup()
+          this.writeSetup()
         }
       }
     },
@@ -4229,12 +4428,24 @@ www.forbes.com/article-3
           })
         })
       } else if (this.mainView === 'web') {
-        console.log('web here')
         journalistElements.forEach((element) => {
           element.addEventListener('click', (event) => {
             const citationIndex = event.target.getAttribute('data-citation')
             try {
               const citation = this.googleResults[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
+      } else if (this.mainView === 'social') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            try {
+              const citation = this.tweets[citationIndex]
               this.selectJournalist(citation)
             } catch (error) {
               console.error('Failed to parse citation JSON:', error)
@@ -4279,6 +4490,24 @@ www.forbes.com/article-3
                 this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
                   ? this.summaries[summaryIndex].clips[citationIndex]
                   : this.googleResults[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
+      } else if (this.mainView === 'social') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            const summaryIndex = event.target.getAttribute('summary-index')
+
+            try {
+              const citation =
+                this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
+                  ? this.summaries[summaryIndex].clips[citationIndex]
+                  : this.tweets[citationIndex]
               this.selectJournalist(citation)
             } catch (error) {
               console.error('Failed to parse citation JSON:', error)
@@ -4922,22 +5151,55 @@ www.forbes.com/article-3
       this.personalStyles = !this.personalStyles
     },
     pitchStyleSetup() {
-      const style = `
-        1. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-        2. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-        3. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-        4. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-        5. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-        6. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-        7. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-        8. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-        9. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.
-        `
+      const style = `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+To replicate the author's style, focus on the following guidelines:
+
+Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+Tone Adaptation: Adjust your style based on the content type:
+
+Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+Social Media Copy: Short, snappy, and aligned with trends.
+
+Blog Post: Personal, insightful, and easy to digest.
+
+Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`
       this.writingStyle = style
-      this.writingStyleTitle = 'Media Pitch'
+      this.writingStyleTitle = 'Default'
     },
+
     writeSetup() {
-      const style = `Begin with a precise introduction, without informal salutations. Be clear, concise, and informative, avoiding metaphors. Offer coherent data without persuasion. Aim for depth, not sensationalism and avoid commercial bias.`
+      const style = `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+To replicate the author's style, focus on the following guidelines:
+
+Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+Tone Adaptation: Adjust your style based on the content type:
+
+Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+Social Media Copy: Short, snappy, and aligned with trends.
+
+Blog Post: Personal, insightful, and easy to digest.
+
+Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`
       this.writingStyle = style
       this.writingStyleTitle = 'Default'
     },
@@ -5024,24 +5286,75 @@ www.forbes.com/article-3
     hideSources() {
       this.showingSources = false
     },
+    insertAltTweetCitations(text, i) {
+      return text.replace(/\[(\d+)\]/g, (match, p1) => {
+        const citationIndex = parseInt(p1)
+        const citation = this.summaries[i].clips.length
+          ? this.summaries[i].clips[citationIndex]
+          : this.filteredTweets[citationIndex]
+
+        if (citation) {
+          return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.user.username}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
+              </span>
+               <img src="${citation.user.profile_image_url}" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              By ${citation.user.username}
+              </span>
+             
+            </span>
+          </span>   
+        </sup>
+      `
+        }
+        return match
+      })
+    },
     insertTweetCitations(text) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
         const citationIndex = parseInt(p1)
-        const citation = this.filteredTweets[citationIndex]
+        const citation = this.tweets[citationIndex]
         if (citation) {
           return `
         <sup>
           <span class="citation-wrapper" >
-           <a  class="citation-link citation-link-alt">
+            <a  class="citation-link citation-link-alt">
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="row">
-                <img src="${citation.user.profile_image_url}" alt="">
-                   <strong> ${citation.user.username}</strong>     
+              <span class="c-elip">
+                ${citation.user.username}      
               </span>
-              <br>
-              ${citation.text.substring(0, 100)}...
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+                </span>
+               <img src="${citation.user.profile_image_url}" alt="">
+              </span>      
+            
+              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              By ${citation.user.username}
+              </span>
+             
             </span>
           </span>
         </sup>
@@ -6905,6 +7218,7 @@ www.forbes.com/article-3
       this.followUps = []
       this.summaries = []
       this.latestArticles = []
+      this.latestMedia = []
       this.addedClips = []
       this.filteredArticles = []
       this.googleResults = []
@@ -7230,7 +7544,7 @@ www.forbes.com/article-3
         this.filteredArticles = []
       }
 
-      this.tweets = []
+      // this.tweets = []
       this.googleResults = []
       this.changeSearch(null)
       this.savedSearch = null
@@ -7568,53 +7882,57 @@ www.forbes.com/article-3
       }
     },
     async getTweets(saved = false) {
-      this.summary = null
-      this.loading = true
+      // this.summary = null
+
+      if (!this.summary) {
+        this.loading = true
+      } else {
+        this.scrollToBottom()
+      }
+
       this.changeSearch({ search: this.newSearch, template: this.newTemplate })
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
         }
-        await Comms.api
-          .getTweets({
-            search: this.newSearch,
-            user_id: this.user.id,
-          })
-          .then((response) => {
-            if (this.shouldCancel) {
-              return this.stopLoading()
-            }
-            if (response.tweets) {
-              this.tweets = response.tweets
-              this.searchTweetText = ' '
-              this.searchTweetText = ''
-              this.tweetMedia = response.includes.media
-              this.booleanString = response.string
-              this.getTweetSummary()
-            }
-            // else {
-            //   const str = response.suggestions
-            //   const searches = str.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/g)
+        const res = await Comms.api.getTweets({
+          search: this.newSearch,
+          user_id: this.user.id,
+          project: this.selectedOrg,
+        })
+        console.log(res)
 
-            //   const formattedSearches = searches.map((match) => {
-            //     const matchResult = match.match(/Search\d+: "([^"]+)"|Search\d+: ([^"\n]+)/)
-            //     return matchResult[1] || matchResult[2]
-            //   })
+        if (this.summary.length) {
+          if (!res.tweets.length) {
+            this.noResultsString = res.string
+            this.tweetMedia = []
+          }
+          this.booleanString = res.string
+          this.latestArticles = res.tweets
+          this.latestMedia = res.includes.media
+          this.getTweetSummary()
+        } else {
+          if (!res.tweets.length) {
+            this.noResultsString = res.string
+          }
 
-            //   const [search1, search2, search3] = formattedSearches
+          this.latestArticles = []
+          this.latestMedia = []
+          this.tweets = res.tweets
+          this.tweetMedia = res.includes.media
+          this.getTweetSummary()
+        }
 
-            //   this.suggestions = [search1, search2, search3]
-            // }
-
-            this.showingDropdown = false
-          })
+        this.showingDropdown = false
       } catch (e) {
-        this.tweetError = e.data.error
-        this.booleanString = e.data.string
+        // this.tweetError = e.data.error
+        // this.booleanString = e.data.string
+        this.loading = false
         this.summaryLoading = false
-        this.tweets = []
-        this.tweetMedia = null
-        this.clearNewSearch()
+        console.log('ERROR IS HERE', e)
+        // this.tweets = []
+        // this.tweetMedia = null
+        // this.clearNewSearch()
       } finally {
         this.refreshUser()
         this.loading = false
@@ -7732,34 +8050,101 @@ www.forbes.com/article-3
         link: `Link: ${a.link}`,
       }))
     },
+    async regenerateTwitterSummary(clips, instructions) {
+      try {
+        const res = await Comms.api.getTweetSummary({
+          query: this.newSearch,
+          instructions: instructions,
+          previous: this.summary,
+          tweets: clips,
+          project: this.selectedOrg,
+          followUp: true,
+        })
+
+        if (res.summary.toLowerCase().includes('new search term')) {
+          this.newSearch = this.extractTerm(res.summary)
+          this.secondaryLoader = false
+          this.secondaryLoaderAlt = true
+          this.generateNewSearch(null, false)
+        } else {
+          this.summaries.push({
+            summary: res.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, ''),
+            clips: this.latestArticles.length ? this.latestArticles : [],
+            media: this.latestMedia ? this.latestMedia : [],
+          })
+          this.secondaryLoader = false
+          this.secondaryLoaderAlt = false
+
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
+
+          setTimeout(() => {
+            this.altCitationsMounted = true
+          }, 5000)
+        }
+
+        this.secondaryLoader = false
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
     async getTweetSummary(instructions = '') {
-      let tweets = this.prepareTweetSummary(this.tweets)
+      this.citationsMounted = false
+      let tweets = this.prepareTweetSummary(
+        this.latestArticles.length ? this.latestArticles : this.tweets,
+      )
       this.preparedTweets = tweets
-      this.summaryLoading = true
-      this.summary = ''
+      if (!this.summary) {
+        this.summaryLoading = true
+      }
+
+      // this.summary = ''
       try {
         if (this.shouldCancel) {
           return this.stopLoading()
         }
-        await Comms.api
-          .getTweetSummary({
-            tweets: tweets,
-            search: this.newSearch,
-            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-            company: this.selectedOrg,
-          })
-          .then((response) => {
-            if (this.shouldCancel) {
-              return this.stopLoading()
-            }
-            this.summary = response.summary
+        const res = await Comms.api.getTweetSummary({
+          tweets: tweets,
+          search: this.newSearch,
+          instructions: this.newTemplate ? this.newTemplate : this.newSearch,
+          company: this.selectedOrg,
+        })
+
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+
+        if (this.summary) {
+          this.summaries.push({
+            summary: res.summary
               .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-            if (this.searchSaved) {
-              this.updateSearch()
-            }
-            this.refreshUser()
+              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
+            clips: this.latestArticles.length ? this.latestArticles : [],
+            media: this.latestMedia ? this.latestMedia : [],
           })
+          this.secondaryLoader = false
+          this.secondaryLoaderAlt = false
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
+          setTimeout(() => {
+            this.altCitationsMounted = true
+          }, 5000)
+        } else {
+          this.summary = res.summary
+            .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+
+          this.$nextTick(() => {
+            this.scrollToTop()
+          })
+        }
+
+        this.refreshUser()
       } catch (e) {
         console.log('Error in getTweetSummary', e)
         this.$toast('Something went wrong, please try again.', {
@@ -7770,8 +8155,6 @@ www.forbes.com/article-3
           bodyClassName: ['custom'],
         })
       } finally {
-        this.scrollToTop()
-        this.summarizing = true
         this.summaryLoading = false
       }
     },
@@ -7850,7 +8233,7 @@ www.forbes.com/article-3
             true,
           )
         } else if (this.mainView === 'social') {
-          await this.getSummary(clips, instructions, true)
+          await this.regenerateTwitterSummary(clips, instructions, true)
         } else if (this.mainView === 'web') {
           this.regenerateGoogleSearch(clips, instructions)
         } else if (this.mainView === 'discover') {
@@ -7896,7 +8279,6 @@ www.forbes.com/article-3
     },
 
     async regenerateSummary() {
-      console.log(this.noResultsString)
       this.loading = true
       try {
         const res = await Comms.api.getSummary({
@@ -8166,54 +8548,6 @@ www.forbes.com/article-3
         this.loadingUrl = null
       }
     },
-    async generateContent() {
-      this.contentLoading = true
-      let selectedClip =
-        this.mainView === 'web'
-          ? this.googleResults.filter((art) => art.link === this.contentUrl)[0]
-          : this.addedArticles.length
-          ? this.addedArticles.filter((art) => art.link === this.contentUrl)[0]
-          : this.filteredArticles.filter((art) => art.link === this.contentUrl)[0]
-
-      try {
-        await Comms.api
-          .generateContent({
-            url: this.contentUrl,
-            instructions: this.contentInstructions,
-            style: '',
-          })
-          .then((response) => {
-            selectedClip['summary'] = response.content
-            if (this.mainView === 'web') {
-              this.googleResults = this.googleResults.filter(
-                (clip) => clip.link !== this.contentUrl,
-              )
-              this.googleResults.unshift(selectedClip)
-            } else if (!this.addedArticles.length) {
-              this.filteredArticles = this.filteredArticles.filter(
-                (clip) => clip.title !== selectedClip.title,
-              )
-              this.filteredArticles.unshift(selectedClip)
-            } else {
-              this.addedArticles = this.addedArticles = this.addedArticles.filter(
-                (clip) => clip.title !== selectedClip.title,
-              )
-              this.addedArticles.unshift(selectedClip)
-            }
-
-            this.refreshUser()
-            this.scrollToTopDivider()
-          })
-      } catch (e) {
-        console.log(e)
-      } finally {
-        this.contentLoading = false
-        this.contentInstructions = null
-        this.contentType = 'Content'
-        this.contentUrl = null
-        this.contentModalOpen = false
-      }
-    },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
@@ -8239,6 +8573,9 @@ www.forbes.com/article-3
     },
     sidebarArticlesWeb() {
       return this.alternateAricles.length ? this.alternateAricles : this.filteredResults
+    },
+    sidebarArticlesSocial() {
+      return this.alternateAricles.length ? this.alternateAricles : this.tweets
     },
     filteredChannels() {
       if (this.userChannelOpts) {
@@ -10610,13 +10947,17 @@ button:disabled {
 }
 
 .ellipsis-text-bold {
-  max-width: 40vw;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
   font-size: 22px;
   font-weight: 200;
   font-family: $base-font-family;
+  max-height: 40px;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 32px;
 
   @media only screen and (max-width: 600px) {
     max-width: 80%;
@@ -10627,8 +10968,13 @@ button:disabled {
 }
 
 .ellipsis-text-test {
+  max-height: 40px;
   max-width: 45vw;
-  white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   line-height: 32px;
   font-size: 22px;
   font-weight: 200;

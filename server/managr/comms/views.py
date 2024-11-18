@@ -140,6 +140,7 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
+            print('BOOLEAN IS HERE --- > :', query_input)
             news_res = Search.get_clips(query_input, date_to, date_from, is_report)
             articles = news_res["articles"]
         else:
@@ -640,6 +641,7 @@ class PRSearchViewSet(
         twitter_account = user.twitter_account
         has_error = False
         search = request.GET.get("search")
+        project = request.GET.get("project", None)
         query_input = None
         next_token = False
         tweet_list = []
@@ -650,7 +652,8 @@ class PRSearchViewSet(
                     break
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search)
+                    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
+                    print('prompt is here', prompt)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
@@ -670,10 +673,15 @@ class PRSearchViewSet(
                     query_input = query_input + " lang:en -is:retweet"
                     if "from:" not in query_input:
                         query_input = query_input + " is:verified"
+                    print('BOOLEAN IS HERE', query_input)    
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
+                
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 attempts += 1
+                if not tweets: 
+                    suggestions = twitter_account.no_results(user.email, search)
+                    query_input = suggestions.get("choices")[0].get("message").get("content")
                 if tweets:
                     if "next_token" in tweet_res["meta"].keys():
                         next_token = tweet_res["meta"]["next_token"]
@@ -732,6 +740,8 @@ class PRSearchViewSet(
         search = request.data.get("search")
         company = request.data.get("company")
         instructions = request.data.get("instructions", False)
+        follow_up = request.data.get("followUp", False)
+        previous = request.data.get("previous", None)
         twitter_account = user.twitter_account
         has_error = False
         attempts = 1
@@ -739,9 +749,14 @@ class PRSearchViewSet(
         timeout = 60.0
         while True:
             try:
-                res = twitter_account.get_summary(
-                    request.user, token_amount, timeout, tweets, search, company, instructions, True
-                )
+                if follow_up:
+                    res = twitter_account.get_summary_follow_up(
+                        request.user, token_amount, timeout, previous, tweets, company, instructions
+                    )
+                else:
+                    res = twitter_account.get_summary(
+                        request.user, token_amount, timeout, tweets, search, company, instructions, True
+                    )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("tweet_summaries")
                 break
@@ -1148,6 +1163,8 @@ class PitchViewSet(
         instructions = request.data.get("instructions")
         style = request.data.get("style")
         pitch_id = request.data.get("pitch_id", False)
+
+        print('STYLE IS HERE --- > :' , style)
         has_error = False
         attempts = 1
         token_amount = 1000
