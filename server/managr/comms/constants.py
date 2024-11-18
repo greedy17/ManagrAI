@@ -316,30 +316,22 @@ OPEN_AI_QUERY_STRING = (
     Generate a boolean search query for NewsAPI based on user input and Projects details (if provided). Follow these guidelines:
 
     If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
-    If no search term is provided and the user asks for help generating one, craft a relevant, 2-3 word search term based on Projects that is likely to yield news coverage. You can also use multiple terms with OR between them. For example, if the project is about an electric car launch by Audi, use "electric vehicles" or Cars AND sustainability or electric cars OR electric vehicles.
-  
-    Boolean Formatting:
-    1. Use quotes around exact phrases as needed.
-    2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
-    3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
-    4. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage."
-    5. Use no more than one AND in the query to keep it concise.
+    If a user submits a long conversational request or uses chat-like phrasing, identify the core topic or entity by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest.
+    Avoid including extraneous context or unrelated words. Example: "Top storylines covering Lululemon" should just come back as "Lululemon" Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles". Lastly, user may provide project details (see below) for additional context when crafting the search. Lastly, user may provide project details (see below) for additional context when crafting the search.
+    
    
-    Input Format:
+    Boolean Formatting:
+    1 .Use quotes around exact phrases as needed.
+    2 .Use only AND and OR operators, avoiding them within quotes unless part of an official name.
+    3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
+    4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".
+    5. Use no more than one AND in the query to keep it concise.
+    6. Only return the boolean, no explanataions or extra context is neccessary
+   
 
     User Request: {search}
+    Project details (campaign, media pitch, etc): {project}
 
-    Project details (campaign, media pitch, etc):
-    {project} 
-    """
-    f"""Extract the main topic, company, organization or entity from '{search}' for a NewsAPI boolean query. Follow these steps:
-    1. When quotes are present, use the exact phrase
-    2. Do not include AND or OR within quotes unless part of an entity name.
-    3. Convert negative qualifiers to boolean operators, e.g., 'not stock related' becomes 'NOT stocks', 'NOT shares', 'NOT Nasdaq'.
-    4. Ignore date references like 'last night', 'yesterday', 'latest', 'current', etc.
-    5. Omit words like 'News', 'Coverage', 'Journalists', 'Sentiment', 'Newsjacking' or anything similar. Focus only on the entity or topic.
-    6. Never use more than one AND in the boolean search
-    7. Output must only be the boolean search
     """
 )
 
@@ -465,18 +457,68 @@ def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, fo
     return body
 
 
-def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, instructions, for_client=False):
-    if not instructions:
-        instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
-    body = f"""Today's date is {date}. Summarize the twitter coverage based on the tweets below. Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' 
-    Only use this format to cite the news coverage. Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer.
+def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=False):
+    # if not instructions:
+    #     instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
+    body = f"""
 
-    You must follow these instructions: {instructions} 
+    {elma}.
+
+    Today is {date}. Please provide a concise and accurate response based on the news tweets below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets as it pertains to their search term, and identify key influencers based on follower count. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
-    Make sure that your response is properly formatted simple html with good spacing. Do not include any styling and/or <meta> tags. Do not include ```html``` in your response. Keep it brief, The response should be under 800 characters.   
+    Input Format:
 
+    User Request: {search}
     Tweets: {tweets}
+    Project details (campaign, media pitch, etc): {project}
+   
+    Output format:
+
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings,
+    Ordered or unordered lists using `<ol>` or `<ul>`,
+    Paragraphs with `<p>`, and
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Keep responses structured and consistent for easy reading in a Vue.js app.
     """
+    return body
+
+def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instructions):
+    body = f"""
+
+    {elma}.
+
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    
+    Follow these instructions carefully:
+    
+    1. The user is most likely asking a follow up question (query) based on the previous response and the tweets. Also assume the user's follow up is related to the current topic, event, entity, or company.
+    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
+    4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+    
+    Input Format:
+    Previous response: {previous}
+    User Request: {instructions}
+    Tweets: {tweets}
+    Project details (campaign, media pitch, etc): {project}
+    
+    Output format:
+    **Heading** in `<h2>` tags,
+        Sections with `<strong>` subheadings,
+        Ordered or unordered lists using `<ol>` or `<ul>`,
+        Paragraphs with `<p>`, and
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+
     return body
 
 
@@ -490,13 +532,25 @@ def OPEN_AI_INSTAGRAM_SUMMARY(date, posts, instructions, for_client=False):
 
 
 OPEN_AI_TWITTER_SEARCH_CONVERSION = (
-    lambda search: f"""Convert the Search Term below into a valid Twitter API query.
-    Follow these steps in order to create the best possible search:
-    1: Concentrate on the primary keywords or key concepts of the search term. For example, from 'why is Michael Jordan trending', extract just 'Michael Jordan'.
-    2:Only use hashtag terms when given
-    3: Only do user search when instructed
-    4: only return the converted search term
-    Search Term: {search}"""
+    lambda search, project: f"""
+    Generate a valid Twitter API query based on user input and Projects details (if provided). Follow these guidelines:
+
+    If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
+    If a user submits a long conversational request or uses chat-like phrasing, identify the core topic or entity by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest.
+    Avoid including extraneous context or unrelated words. Example: "Top storylines covering Lululemon" should just come back as "Lululemon" Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles". Lastly, user may provide project details (see below) for additional context when crafting the search.
+   
+    Boolean Formatting:
+    1. Use quotes around exact phrases as needed.
+    2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
+    3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
+    4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".
+    5. Use no more than one AND in the query to keep it concise.
+    6. Only return the boolean, no explanataions or extra context is neccessary
+   
+
+    User Request: {search}
+    Project details (campaign, media pitch, etc): {project}
+"""
 )
 
 DEFAULT_ARTICLE_INSTRUCTIONS = (

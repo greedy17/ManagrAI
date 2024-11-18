@@ -271,11 +271,12 @@ class TwitterAuthAccountAdapter:
             return self._handle_response(response)
 
     def get_summary(
-        self, user, tokens, timeout, tweets, input_text, instructions=False, for_client=False
+        self, user, tokens, timeout, tweets, input_text, project, instructions=False, for_client=False
     ):
+        elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
-            datetime.now().date(), tweets, input_text, instructions, for_client
+            datetime.now().date(), tweets, input_text, project, elma, for_client
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -291,6 +292,7 @@ class TwitterAuthAccountAdapter:
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
+    
 
     @classmethod
     def get_authorization_link(cls):
@@ -354,6 +356,7 @@ class Pitch(TimeStampModel):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, elma, style)
+        print('PROMPT IS HERE --- > :', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, model="o1-mini")
         with Variable_Client(timeout) as client:
             r = client.post(
@@ -861,11 +864,12 @@ class TwitterAccount(TimeStampModel):
         instructions=False,
         for_client=False,
     ):
+        elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         if "from:" in input_text:
             instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(company)
         prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
-            datetime.now().date(), tweets, input_text, instructions, for_client
+            datetime.now().date(), tweets, input_text, company, elma, for_client
         )
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
@@ -873,6 +877,50 @@ class TwitterAccount(TimeStampModel):
             "You are a VP of Communications",
             token_amount=tokens,
             top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
+    
+    def get_summary_follow_up(
+        self, user, tokens, timeout, previous, tweets, project, instructions
+    ):
+        elma = core_consts.ELMA
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+
+        prompt = comms_consts.TWITTER_SUMMARY_FOLLOW_UP(
+        datetime.now().date(), tweets, previous, project, elma, instructions, 
+        )
+      
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
+    
+    def no_results(cls, user, boolean):
+        timeout = 60.0
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+
+        prompt = comms_consts.OPEN_AI_NO_RESULTS(boolean)
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user,
+            prompt,
+            top_p=0.1,
+            # model="o1-mini",
         )
         with Variable_Client(timeout) as client:
             r = client.post(
