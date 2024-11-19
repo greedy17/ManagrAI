@@ -315,23 +315,29 @@ OPEN_AI_QUERY_STRING = (
     lambda search, project: f"""
     Generate a boolean search query for NewsAPI based on user input and Projects details (if provided). Follow these guidelines:
 
-    If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
-    If a user submits a long conversational request or uses chat-like phrasing, identify the core topic or entity by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest.
-    Avoid including extraneous context or unrelated words. Example: "Top storylines covering Lululemon" should just come back as "Lululemon" Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles". Lastly, user may provide project details (see below) for additional context when crafting the search. Lastly, user may provide project details (see below) for additional context when crafting the search.
-    
-   
+    1. If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
+
+    2. If a user submits a long conversational request or uses chat-like phrasing, identify the **core topic, entity, or beat** by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest. 
+       - Avoid including extraneous context or unrelated words. 
+       - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
+       - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+
+    3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
+
+       - Example 1: User requests, "What are my competitor's up to ?" for a project about Lululemon's pitch on sustainable fashion, return: `"Nike" OR "Under Armour" OR "Athleta"
+ 
+       - Example 2: User requests, "Find journalists interested in this pitch", for a project about Lululemon's pitch on sustainable fashion, return relevant topics or beats such as : `"Sustainable fashion" OR "Recycled materials".
+
     Boolean Formatting:
-    1 .Use quotes around exact phrases as needed.
-    2 .Use only AND and OR operators, avoiding them within quotes unless part of an official name.
+    1. Use quotes around exact phrases as needed.
+    2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
     3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
-    4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".
+    4. Focus on only the **core topic, beat, or industry**. Avoid extraneous terms or unrelated context. Exclude date references (like "yesterday" or "recent").
     5. Use no more than one AND in the query to keep it concise.
-    6. Only return the boolean, no explanataions or extra context is neccessary
-   
+    6. Only return the boolean, no explanations or extra context are necessary.
 
     User Request: {search}
     Project details (campaign, media pitch, etc): {project}
-
     """
 )
 
@@ -402,7 +408,7 @@ def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
     Follow these instructions carefully:
     
     1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
-    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
     
@@ -499,7 +505,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     Follow these instructions carefully:
     
     1. The user is most likely asking a follow up question (query) based on the previous response and the tweets. Also assume the user's follow up is related to the current topic, event, entity, or company.
-    2. Only if the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
     
@@ -535,10 +541,19 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
     lambda search, project: f"""
     Generate a valid Twitter API query based on user input and Projects details (if provided). Follow these guidelines:
 
-    If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
-    If a user submits a long conversational request or uses chat-like phrasing, identify the core topic or entity by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest.
-    Avoid including extraneous context or unrelated words. Example: "Top storylines covering Lululemon" should just come back as "Lululemon" Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles". Lastly, user may provide project details (see below) for additional context when crafting the search.
-   
+    1. If a specific search term is provided, use it directly in the query (e.g., Supply chain shortage, Florida State University, "Commercial Real-estate", Nike AND football).
+
+    2. If a user submits a long conversational request or uses chat-like phrasing, identify the **core topic, entity, or beat** by distilling their input into 2-3 keywords or a concise phrase likely to generate news coverage, prioritizing terms or topics with a high likelihood of media interest. 
+       - Avoid including extraneous context or unrelated words. 
+       - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
+       - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+
+    3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
+
+       - Example 1: User requests, "What are my competitor's up to ?" for a project about Lululemon's pitch on sustainable fashion, return: `"Nike" OR "Under Armour" OR "Athleta"
+ 
+       - Example 2: User requests, "Find journalists interested in this pitch", for a project about Lululemon's pitch on sustainable fashion, return relevant topics or beats such as : `"Sustainable fashion" OR "Recycled materials".
+
     Boolean Formatting:
     1. Use quotes around exact phrases as needed.
     2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
