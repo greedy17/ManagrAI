@@ -1021,6 +1021,13 @@
                 <section>
                   <div style="margin: 8px 0 0 8px; width: 100%" class="row">
                     <!-- :placeholder="placeHolderText" -->
+                    <div
+                      @click="goToIntegrations"
+                      v-if="mainView === 'social' && !hasTwitterIntegration"
+                      class="abs-input-text"
+                    >
+                      <p>Connect X here</p>
+                    </div>
                     <textarea
                       style="margin-left: -8px; width: 100%"
                       :rows="1"
@@ -1028,7 +1035,9 @@
                       @keyup.enter="generateNewSearch($event, false)"
                       class="area-input"
                       autocomplete="off"
-                      placeholder="Message Elma..."
+                      :placeholder="
+                        mainView === 'social' && !hasTwitterIntegration ? '' : 'Message Elma...'
+                      "
                       v-model="newSearch"
                       v-autoresize
                       :disabled="
@@ -4325,16 +4334,28 @@ Your goal is to create content that resonates deeply, connects authentically, an
         `"OpenAI" OR "Google Bard"`,
         `"Apple no stock related news"`,
       ],
-      pitchStyle: `Style Guidelines:
-0. Start email with "Hi {Journalist first name}", end with "Thanks,". Get right to it, no opening fluff like "I hope this message finds you well"
-1. Tone: Maintain a professional, respectful tone. Show appreciation for the journalist's work and express interest in collaboration.
-2. Formality: Use formal language, but avoid jargon. Keep sentences clear and concise.
-3. Structure: Start with a personalized greeting. Follow with a brief appreciation of the journalist's work, then introduce your topic. Provide key insights, then propose collaboration. End with a forward-looking statement and a thank you.
-4. Linguistic Idiosyncrasies: Use active voice and precise, impactful words. Include statistics and expert opinions for credibility.
-5. Credibility: Establish credibility by referencing recent research, expert opinions, and relevant industry trends.
-6. Engagement: Engage the reader by offering exclusive insights and proposing collaboration.
-7. Non-Promotional: Avoid promotional language. Focus on providing valuable, informative content.
-8. Stylistic Techniques: Use a mix of short and long sentences for rhythm. Use rhetorical questions to engage the reader and provoke thought.`,
+      pitchStyle: `You are an AI PR assistant with the ability to create perfect, engaging content for any format. Your writing is modern, informal, and conversational—ideal for Millennial and Gen Z audiences. You excel at storytelling, using subtle persuasion without ever sounding salesy, and can adapt your tone and structure seamlessly to fit different content types.
+
+      To replicate the author's style, focus on the following guidelines:
+
+      Language: Relatable and conversational, never robotic or overly formal. Avoid jargon but maintain a polished feel.
+      Storytelling: Start with a strong hook, craft a compelling narrative, and conclude with an impactful ending.
+
+      Tone Adaptation: Adjust your style based on the content type:
+
+      Media Pitch: Short, under 150 words, breezy, intriguing, and tailored to the recipient. Open with Hi {journalist} followed by a relevant observation about the author and why this story is a fit for their readers.
+
+      Press Release: Professional yet warm and accessible. Emphasize key statistics and link them to industry trends. Use an attention-grabbing headline, crucial details early on, and compelling quotes. Aim for an engaging narrative that appeals to journalists.
+
+      Social Media Copy: Short, snappy, and aligned with trends.
+
+      Blog Post: Personal, insightful, and easy to digest.
+
+      Avoid Hard Sells: Focus on authenticity and building trust through storytelling rather than direct calls to action.
+
+      Persuasion: Use emotional and logical appeals subtly, guiding the reader naturally to a conclusion.
+
+      Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`,
       dropdownLoading: false,
     }
   },
@@ -4794,8 +4815,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } catch (e) {
         console.log(e)
       } finally {
-        this.writingStyleTitle = ''
-        this.writingStyle = ''
+        this.writeSetup()
         this.getWritingStyles()
         this.refreshUser()
       }
@@ -14407,5 +14427,21 @@ select {
 }
 .lesserTop {
   top: -24px !important;
+}
+.abs-input-text {
+  position: absolute;
+  left: 20px;
+  background-color: white;
+  cursor: pointer;
+  color: $lite-blue;
+  font-family: $base-font-family;
+
+  p {
+    padding-bottom: 4px;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 </style>
