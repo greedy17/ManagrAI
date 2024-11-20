@@ -631,7 +631,7 @@ def _send_social_summary(news_alert_id):
                 break
             for user in user_data:
                 if user["id"] == tweet["author_id"]:
-                    if user["public_metrics"]["followers_count"] > 1000:
+                    if user["public_metrics"]["followers_count"] > 10000:
                         tweet["tweet_link"] = (
                             f"https://twitter.com/{user['username']}/status/{tweet['id']}"
                         )

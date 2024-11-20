@@ -8943,7 +8943,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 .s-tooltip {
   visibility: hidden;
   width: 100px;
-  background-color: $graper;
+  background-color: $dark-black-blue;
   color: white;
   text-align: center;
   border-radius: 4px;
