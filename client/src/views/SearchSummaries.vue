@@ -1077,7 +1077,7 @@
 
                   <div class="row">
                     <div style="margin: 12px 12px 0 18px" class="source-dropdown fadein">
-                      <div @click.stop="toggleSources" class="drop-header img-blue">
+                      <div @click.stop="toggleSources" class="drop-header img-blue s-wrapper">
                         <img
                           v-if="mainView === 'write'"
                           src="@/assets/images/brain.svg"
@@ -1125,6 +1125,8 @@
                         height="15px"
                         alt=""
                       /> -->
+
+                        <div class="s-tooltip">Mode</div>
                       </div>
 
                       <div
@@ -1207,12 +1209,13 @@
                     >
                       <div
                         @click.stop="toggleShowStyles"
-                        class="drop-header"
+                        class="drop-header s-wrapper"
                         :class="{ 'soft-gray-bg': showingStyles }"
                       >
                         <img src="@/assets/images/wand.svg" height="15px" alt="" />
 
                         <small>{{ writingStyleTitle ? writingStyleTitle : 'Voice' }}</small>
+                        <div class="s-tooltip">Voices</div>
                       </div>
 
                       <div
@@ -1328,7 +1331,7 @@
                           'drop-header padding-right-x': detailTitle,
                           'soft-gray-bg': showingMainDetails,
                         }"
-                        class="image-container"
+                        class="image-container s-wrapper"
                       >
                         <img src="@/assets/images/folder.svg" height="15px" alt="" />
 
@@ -1340,6 +1343,7 @@
                         >
                           <img src="@/assets/images/close.svg" height="12px" alt="" />
                         </div>
+                        <div class="s-tooltip">Projects</div>
                       </div>
 
                       <div
@@ -1409,7 +1413,7 @@
                       <div
                         @click.stop="toggleDate"
                         :class="{ 'soft-gray-bg': showDateSelection }"
-                        class="image-container"
+                        class="image-container s-wrapper"
                       >
                         <img
                           v-if="mainView === 'news'"
@@ -1418,7 +1422,7 @@
                           alt=""
                         />
 
-                        <!-- <small class="bold-text"> Date </small> -->
+                        <div class="s-tooltip">Date</div>
                       </div>
 
                       <div
@@ -3063,7 +3067,7 @@
             <div style="margin: 12px 12px 0 8px" class="source-dropdown fadein">
               <div
                 @click.stop="toggleSources"
-                class="drop-header"
+                class="drop-header s-wrapper"
                 style="padding: 5px 10px 5px 4px; background"
               >
                 <img
@@ -3098,6 +3102,8 @@
                 />
 
                 <small>{{ mainView === 'discover' ? 'Contacts' : toCamelCase(mainView) }}</small>
+
+                <div class="s-tooltip">Mode</div>
               </div>
 
               <div
@@ -3177,13 +3183,19 @@
             >
               <div
                 @click.stop="toggleMainDetails"
-                :class="detailTitle ? 'drop-header padding-right-x' : 'image-container'"
+                :class="
+                  detailTitle
+                    ? 'drop-header padding-right-x s-wrapper'
+                    : 'image-container s-wrapper'
+                "
               >
                 <img src="@/assets/images/folder.svg" height="15px" alt="" />
                 <small v-if="detailTitle" :title="detailTitle">{{ detailTitle }}</small>
                 <div class="image-container abs-right-img" @click="clearDetails" v-if="detailTitle">
                   <img src="@/assets/images/close.svg" height="12px" alt="" />
                 </div>
+
+                <div class="s-tooltip">Projects</div>
               </div>
 
               <div
@@ -3277,10 +3289,11 @@
               v-if="mainView === 'write'"
               class="source-dropdown fadein"
             >
-              <div @click.stop="toggleShowStyles" class="drop-header">
+              <div @click.stop="toggleShowStyles" class="drop-header s-wrapper">
                 <img src="@/assets/images/wand.svg" height="15px" alt="" />
 
                 <small>{{ writingStyleTitle ? writingStyleTitle : 'Voice' }}</small>
+                <div class="s-tooltip">Voices</div>
               </div>
 
               <div
@@ -3390,7 +3403,7 @@
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
-                class="image-container"
+                class="image-container s-wrapper"
               >
                 <img
                   v-if="mainView === 'news'"
@@ -3399,6 +3412,8 @@
                   height="15px"
                   alt=""
                 />
+
+                <div class="s-tooltip">Date</div>
               </div>
 
               <div
@@ -5091,7 +5106,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           journalist: this.currentJournalist,
         })
 
-        this.targetEmail = res.email
+        // this.targetEmail = res.email
 
         const body = res.body
 
@@ -5335,7 +5350,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.user.username}
               </span>
              
@@ -5413,9 +5428,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
                <img src="${citation.image_url}" alt="">
               </span>
               
-              
             
-              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -5462,7 +5476,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" data-citation='${citationIndex}'>
+              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
