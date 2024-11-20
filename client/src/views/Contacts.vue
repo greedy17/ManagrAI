@@ -3084,7 +3084,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async sendEmail() {
-      console.log('EMAIL IS HERE --- > ', this.emailTo)
       this.sendingEmail = true
 
       try {
