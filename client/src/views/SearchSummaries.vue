@@ -3473,8 +3473,10 @@
           </div>
 
           <div v-else style="position: relative" class="containered__top">
-            <div @click="showingAnalytics = false" class="image-container abs-top-right">
-              <img src="@/assets/images/close.svg" height="16px" alt="" />
+            <div style="position: sticky; top: 0">
+              <div @click="showingAnalytics = false" class="image-container abs-top-right">
+                <img src="@/assets/images/close.svg" height="16px" alt="" />
+              </div>
             </div>
 
             <div style="margin-bottom: 12px">
@@ -3487,28 +3489,23 @@
 
             <div class="space-between-top no-letter-margin">
               <div class="col">
-                <p style="margin: 0; font-size: 14px" class="bold-font">
+                <p style="margin: 0" class="bold-font">
                   {{
                     currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
                   }}
                 </p>
-                <div style="margin-top: 8px" class="row">
-                  <img
-                    style="margin-right: 4px"
-                    src="@/assets/images/profile.svg"
-                    height="10px"
-                    alt=""
-                  />
-                  <p style="font-size: 14px">{{ currentArticle.author }}</p>
+                <div style="margin-top: 8px; color: #3b8ec0" class="row">
+                  <span>by</span>
+                  <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
                 </div>
               </div>
               <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
             </div>
 
             <div>
-              <div class="elipsis-text" style="margin: 20px 0; font-size: 15px">
-                <a target="_blank" class="bold-txt">
-                  {{ currentArticle.description }}
+              <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
+                <a :href="currentArticle.link" target="_blank" class="bold-txt a-text">
+                  {{ currentArticle.title }}
                 </a>
               </div>
             </div>
@@ -3517,7 +3514,7 @@
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="12px" alt="" />
                 <p style="font-size: 14px" class="bold-font">
-                  {{ currentArticle.traffic ? formatNumber(currentArticle.traffic.users) : 0 }}
+                  {{ currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.users) : 0 }}
                 </p>
               </div>
 
@@ -3526,9 +3523,9 @@
                   <img src="@/assets/images/facebook.png" height="12px" alt="" />
                   <p style="font-size: 14px" class="bold-font">
                     {{
-                      formatNumber(
-                        currentArticle.social['total_facebook_shares']
-                          ? currentArticle.social['total_facebook_shares']
+                      formatNumberAlt(
+                        currentArticle.social[0]
+                          ? currentArticle.social[0]['total_facebook_shares']
                           : 0,
                       )
                     }}
@@ -3544,10 +3541,8 @@
                   />
                   <p style="font-size: 14px" class="bold-font">
                     {{
-                      formatNumber(
-                        currentArticle.social['twitter_shares']
-                          ? currentArticle.social['twitter_shares']
-                          : 0,
+                      formatNumberAlt(
+                        currentArticle.social[0] ? currentArticle.social[0]['twitter_shares'] : 0,
                       )
                     }}
                   </p>
@@ -3557,8 +3552,8 @@
                   <img src="@/assets/images/reddit.svg" height="12px" alt="" />
                   <p style="font-size: 14px" class="bold-font">
                     {{
-                      formatNumber(
-                        currentArticle.social['total_reddit_engagements']
+                      formatNumberAlt(
+                        currentArticle.social[0]
                           ? currentArticle.social['total_reddit_engagements']
                           : 0,
                       )
@@ -3575,10 +3570,8 @@
                   />
                   <p style="font-size: 14px" class="bold-font">
                     {{
-                      formatNumber(
-                        currentArticle.social['pinterest_shares']
-                          ? currentArticle.social['pinterest_shares']
-                          : 0,
+                      formatNumberAlt(
+                        currentArticle.social[0] ? currentArticle.social[0]['pinterest_shares'] : 0,
                       )
                     }}
                   </p>
@@ -4783,22 +4776,21 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
 
     combineArticleWithTraffic() {
-      // Extract the domain only
-      const domain = this.currentArticle.link
-        .replace(/^https?:\/\//, '') // Remove http:// or https://
-        .replace(/^www\./, '') // Remove www.
-        .split('/')[0] // Take only the part before the first slash
+      // const domain = this.currentArticle.link
+      //   .replace(/^https?:\/\//, '')
+      //   .replace(/^www\./, '')
+      //   .split('/')[0]
 
-      // Get traffic data for the extracted domain
-      const traffic = this.traffic[domain] || null
+      const traffic = Object.values(this.traffic)[0] || {}
       const social = Object.values(this.socialData)[0] || {}
 
-      // Update currentArticle with traffic data
       this.currentArticle = {
         ...this.currentArticle,
         traffic,
         social,
       }
+
+      console.log('CURRENT ARTICLE IS HERE --- >', this.currentArticle)
 
       this.getArticleSummary(this.currentArticle.link)
     },
@@ -4838,11 +4830,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
 
-    formatNumber(number) {
-      // Round the number up using Math.ceil to remove decimals
+    formatNumberAlt(number) {
+      if (number === '0' || number === 0 || !number) {
+        return 0
+      }
+
       const roundedNumber = Math.ceil(number)
 
-      // Convert the number to a string and format it with commas
       return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     },
 
@@ -5628,7 +5622,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
                
               <a class="inline-link c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
               </span>
-               <img src="${citation.user.profile_image_url}" alt="">
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -5665,8 +5659,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
                 <span class="col">
                
               <a class="inline-link c-elip" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              
                 </span>
-               <img src="${citation.user.profile_image_url}" alt="">
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>      
             
               <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
@@ -5692,23 +5687,25 @@ Your goal is to create content that resonates deeply, connects authentically, an
           return `
         <sup>
 
-
           <span class="citation-wrapper-alt" >
+
             <a  class="citation-link citation-link-alt">
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
+
             <span class="citation-tooltip">
+
               <span class="c-elip">
                 ${citation.source.name}      
               </span>
 
               <span class="row">
-                <span class="col">
-               
-              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                <span class="col">   
+                  <a class="inline-link c-elip" href="${citation.link}" target="_blank">${citation.title}</a>
+                  <span class="c-elip" >${citation.description}</span>
                 </span>
-               <img src="${citation.image_url}" alt="">
+
+               <img src="${citation.image_url}" height="40px" width="40px" alt="">
               </span>
               
             
@@ -5717,10 +5714,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               </span>
              
             </span>
+
           </span>
-
-
-       
+    
         </sup>
       `
         }
@@ -5751,10 +5747,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                 <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+
+                <span class="c-elip" >${citation.title}</span>
+
+
                 </span>
-               <img src="${citation.image}" alt="">
+               <img src="${citation.image}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -5792,12 +5791,17 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
               <span class="row">
                 <span class="col">
-               
-              <strong class="c-elip" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                
+                <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+
+                <span class="c-elip" >${citation.description}</span>
+
                 </span>
-               <img src="${citation.image_url}" alt="">
-              </span>
+
+
+                <img src="${citation.image_url}" height="40px" width="40px" alt="">
+
+                </span>
               
               
             
@@ -5833,10 +5837,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip">${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+
+               <span class="c-elip" >${citation.title}</span>
+
+
                 </span>
-               <img src="${citation.image}" alt="">
+               <img src="${citation.image}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -9289,7 +9296,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   }
 
   .inline-link {
-    // font-family: $base-font-family;
+    font-family: $base-font-family;
     display: inline-block;
     font-size: 14px;
     color: $dark-gray-blue;
@@ -9374,8 +9381,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       font-size: 12px !important;
     }
     img {
-      width: 40px;
-      height: 40px;
+      width: 40px !important;
+      height: 40px !important;
       margin-left: 8px;
       vertical-align: middle;
       border-radius: 4px;
@@ -11190,6 +11197,18 @@ button:disabled {
   }
 
   @media only screen and (min-width: 601px) and (max-width: 1024px) {
+  }
+}
+
+.a-text {
+  text-decoration: none;
+  color: #333333;
+  font-family: $base-font-family;
+  margin-top: 0 !important;
+
+  &:hover {
+    color: $lite-blue;
+    text-decoration: underline;
   }
 }
 
@@ -13726,11 +13745,12 @@ textarea::placeholder {
 }
 
 .photo-header-small {
-  height: 250px;
+  height: 40vh;
   width: 100%;
   margin: 0;
-  object-fit: cover; /* Ensures the image covers the area while maintaining aspect ratio */
-  object-position: top; /* Crops only from the bottom if necessary */
+  object-fit: cover;
+  // vertical-align: middle;
+  object-position: top;
   border-radius: 5px;
 }
 
@@ -14202,7 +14222,7 @@ textarea::placeholder {
 
 .scrolltainer {
   &::-webkit-scrollbar {
-    width: 32px !important;
+    width: 2px;
     height: 0px;
   }
   &::-webkit-scrollbar-thumb {
@@ -14705,16 +14725,17 @@ select {
 .containered {
   z-index: 100000;
   position: absolute;
-  top: 72px;
-  right: 20vw;
-  width: 60vw;
+  top: 96px;
+  right: 25vw;
+  width: 50vw;
   background-color: white;
-  padding: 16px;
-  border-radius: 9px;
+  padding: 16px 12px 16px 16px;
+  border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 9px 11px rgba(0, 0, 0, 0.1);
   margin-bottom: 32px;
   font-family: $thin-font-family;
+  height: 80vh;
   overflow-y: scroll;
   p {
     margin: 8px 0;
@@ -14728,6 +14749,28 @@ select {
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 12px;
   }
+
+  &::-webkit-scrollbar {
+    width: 4px; /* Width of the scrollbar */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Default: invisible */
+    box-shadow: none; /* No shadow when not scrolling */
+    border-radius: 6px;
+    height: 24px; /* Ensures the thumb is always 24px in height */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Smooth visibility change */
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:active::-webkit-scrollbar-thumb {
+    background-color: #d3d3d3; /* Clean light gray when scrolling */
+    box-shadow: inset 2px 2px 4px 0 rgba(0, 0, 0, 0.1); /* Subtle shadow for visibility */
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-top: 12px; /* Top margin for the track */
+  }
 }
 
 .bold-font {
@@ -14739,6 +14782,11 @@ select {
   top: -12px;
   right: -12px;
   cursor: pointer;
+  background-color: $dark-black-blue;
+
+  img {
+    filter: invert(100%);
+  }
 }
 .img-mar {
   img {
