@@ -576,11 +576,28 @@ DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
 )
 
 
-def OPEN_AI_ARTICLE_SUMMARY(date, article, search, length, instructions=False, for_client=False):
+def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_client=False):
     if not instructions:
         instructions = DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS(search)
     if not search:
-        body = f"Today's date is {date}. Read the article below, then follow these instructions: {instructions}. Output cannot exceed 800 characters.\n Article: {article} \n"
+        body = f"""
+        Today's date is {date}. Read the article below, then provide a summary and the sentiment of the article below.
+
+        Here's the Article: {article}
+
+        Output format must be:
+
+        <strong>Summary:</strong>
+        summary here
+
+
+        <strong>Sentiment:</strong>
+        sentiment here
+
+        Keep responses structured and consistent for easy reading in a Vue.js app.   
+
+      
+    """
     else:
         body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
     return body
