@@ -3473,10 +3473,13 @@
           </div>
 
           <div v-else style="position: relative" class="containered__top">
-            <div style="margin-bottom: 12px; position: sticky; top: 0">
+            <div style="position: sticky; top: 0">
               <div @click="showingAnalytics = false" class="image-container abs-top-right">
                 <img src="@/assets/images/close.svg" height="16px" alt="" />
               </div>
+            </div>
+
+            <div style="margin-bottom: 12px">
               <img
                 @error="onImageError($event)"
                 :src="currentArticle.image_url"
@@ -3491,14 +3494,9 @@
                     currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
                   }}
                 </p>
-                <div style="margin-top: 8px" class="row">
-                  <img
-                    style="margin-right: 4px"
-                    src="@/assets/images/profile.svg"
-                    height="10px"
-                    alt=""
-                  />
-                  <p style="font-size: 14px">{{ currentArticle.author }}</p>
+                <div style="margin-top: 8px; color: #3b8ec0" class="row">
+                  <span>by</span>
+                  <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
                 </div>
               </div>
               <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
@@ -3507,7 +3505,7 @@
             <div>
               <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
                 <a :href="currentArticle.link" target="_blank" class="bold-txt a-text">
-                  {{ currentArticle.description }}
+                  {{ currentArticle.title }}
                 </a>
               </div>
             </div>
@@ -4833,8 +4831,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
 
     formatNumberAlt(number) {
-      console.log(number)
-
       if (number === '0' || number === 0 || !number) {
         return 0
       }
@@ -11207,6 +11203,7 @@ button:disabled {
 .a-text {
   text-decoration: none;
   color: #333333;
+  font-family: $base-font-family;
   margin-top: 0 !important;
 
   &:hover {
@@ -14729,10 +14726,10 @@ select {
   z-index: 100000;
   position: absolute;
   top: 96px;
-  right: 20vw;
-  width: 60vw;
+  right: 25vw;
+  width: 50vw;
   background-color: white;
-  padding: 16px;
+  padding: 16px 12px 16px 16px;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 9px 11px rgba(0, 0, 0, 0.1);
@@ -14751,6 +14748,28 @@ select {
   &__top {
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 12px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px; /* Width of the scrollbar */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Default: invisible */
+    box-shadow: none; /* No shadow when not scrolling */
+    border-radius: 6px;
+    height: 24px; /* Ensures the thumb is always 24px in height */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Smooth visibility change */
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:active::-webkit-scrollbar-thumb {
+    background-color: #d3d3d3; /* Clean light gray when scrolling */
+    box-shadow: inset 2px 2px 4px 0 rgba(0, 0, 0, 0.1); /* Subtle shadow for visibility */
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-top: 12px; /* Top margin for the track */
   }
 }
 
