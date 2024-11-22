@@ -3444,7 +3444,163 @@
       </div>
     </div>
 
-    <div style="width: 100vw" v-if="selectedSearch">
+    <div style="width: 100vw; height: 100vh" v-if="selectedSearch">
+      <div v-if="showingAnalytics" style="position: relative">
+        <div class="containered">
+          <div v-if="loadingAnalytics" style="position: relative" class="containered__top">
+            <div @click="showingAnalytics = false" class="image-container abs-top-right">
+              <img src="@/assets/images/close.svg" height="16px" alt="" />
+            </div>
+            <div style="margin-bottom: 12px">
+              <img
+                @error="onImageError($event)"
+                :src="currentArticle.image_url"
+                class="photo-header-small"
+              />
+            </div>
+
+            <div style="padding: 12px 0" class="row">
+              <p style="margin: 0; margin-right: 8px; font-size: 14px" class="bold-text">
+                Analyzing article...
+              </p>
+              <img
+                class="rotation innvert"
+                height="14px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div v-else style="position: relative" class="containered__top">
+            <div @click="showingAnalytics = false" class="image-container abs-top-right">
+              <img src="@/assets/images/close.svg" height="16px" alt="" />
+            </div>
+
+            <div style="margin-bottom: 12px">
+              <img
+                @error="onImageError($event)"
+                :src="currentArticle.image_url"
+                class="photo-header-small"
+              />
+            </div>
+
+            <div class="space-between-top no-letter-margin">
+              <div class="col">
+                <p style="margin: 0; font-size: 14px" class="bold-font">
+                  {{
+                    currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
+                  }}
+                </p>
+                <div style="margin-top: 8px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/profile.svg"
+                    height="10px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px">{{ currentArticle.author }}</p>
+                </div>
+              </div>
+              <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
+            </div>
+
+            <div>
+              <div class="elipsis-text" style="margin: 20px 0; font-size: 15px">
+                <a target="_blank" class="bold-txt">
+                  {{ currentArticle.description }}
+                </a>
+              </div>
+            </div>
+
+            <div class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <p style="font-size: 14px" class="bold-font">
+                  {{ currentArticle.traffic ? formatNumber(currentArticle.traffic.users) : 0 }}
+                </p>
+              </div>
+
+              <section class="row img-mar img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/facebook.png" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumber(
+                        currentArticle.social['total_facebook_shares']
+                          ? currentArticle.social['total_facebook_shares']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/twitter-x.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumber(
+                        currentArticle.social['twitter_shares']
+                          ? currentArticle.social['twitter_shares']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/reddit.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumber(
+                        currentArticle.social['total_reddit_engagements']
+                          ? currentArticle.social['total_reddit_engagements']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/pinterest.png"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumber(
+                        currentArticle.social['pinterest_shares']
+                          ? currentArticle.social['pinterest_shares']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div v-if="currentArticle.summary">
+            <div
+              style="margin-top: 12px; font-size: 15px !important"
+              v-html="currentArticle.summary"
+              class="pre-text"
+            ></div>
+          </div>
+
+          <div v-if="loadingAnalytics">
+            <div style="margin-top: 12px"></div>
+          </div>
+        </div>
+      </div>
+
       <div
         v-if="summary && showingArticles"
         :class="['sidebar-aside fadein', { open: showingArticles }]"
@@ -3474,6 +3630,7 @@
             <img src="@/assets/images/close.svg" height="16px" alt="" />
           </div>
         </div>
+
         <div class="section">
           <div v-if="mainView === 'news'" class="cards-container">
             <div v-for="(article, i) in sidebarArticles" :key="article.id" class="card">
@@ -3515,10 +3672,24 @@
                     />
                   </div>
                 </div>
-                <div style="margin: -4px 0 0 10px">
+                <div class="space-between" style="margin: -4px 0 0 10px">
                   <p @click="selectJournalist(article)" class="turq-text">
                     By <span>{{ extractJournalist(article.author) }}</span>
                   </p>
+
+                  <button
+                    @click="getTrafficData(article.link, article)"
+                    style="margin-right: 16px"
+                    class="secondary-button alt-btn"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+                  </button>
                 </div>
                 <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
                   <button
@@ -3669,6 +3840,9 @@ export default {
   },
   data() {
     return {
+      loadingAnalytics: false,
+      showingAnalytics: false,
+      currentArticle: {},
       noResultsString: '',
       alternateAricles: [],
       originalSearch: '',
@@ -4372,6 +4546,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`,
       dropdownLoading: false,
+      traffic: null,
+      socialData: null,
     }
   },
   created() {
@@ -4563,6 +4739,113 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.abortFunctions()
   },
   methods: {
+    removeDomain(url) {
+      const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
+
+      return url.replace(domainRegex, '')
+    },
+    async getTrafficData(url, article) {
+      this.loadingAnalytics = true
+      this.showingAnalytics = true
+
+      this.currentArticle = article
+      try {
+        const res = await Comms.api.getTrafficData({
+          urls: [url],
+        })
+        this.traffic = res
+        console.log('1', res)
+        this.getSocialData(url)
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+        // this.$toast('Error uploading clips, try again', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+      }
+    },
+    async getSocialData(url) {
+      try {
+        const res = await Comms.api.getSocialData({
+          urls: [url],
+        })
+        this.socialData = res
+        console.log('2', res)
+        this.combineArticleWithTraffic()
+      } catch (e) {
+        console.error(e)
+        this.loadingAnalytics = false
+      }
+    },
+
+    combineArticleWithTraffic() {
+      // Extract the domain only
+      const domain = this.currentArticle.link
+        .replace(/^https?:\/\//, '') // Remove http:// or https://
+        .replace(/^www\./, '') // Remove www.
+        .split('/')[0] // Take only the part before the first slash
+
+      // Get traffic data for the extracted domain
+      const traffic = this.traffic[domain] || null
+      const social = Object.values(this.socialData)[0] || {}
+
+      // Update currentArticle with traffic data
+      this.currentArticle = {
+        ...this.currentArticle,
+        traffic,
+        social,
+      }
+
+      this.getArticleSummary(this.currentArticle.link)
+    },
+
+    async getArticleSummary(url, instructions = null) {
+      try {
+        const response = await Comms.api.getArticleSummary({
+          url: url,
+          search: this.newSearch,
+          instructions: instructions,
+        })
+
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+
+        this.currentArticle['summary'] = response.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+
+        this.loadingAnalytics = false
+        this.refreshUser()
+      } catch (e) {
+        console.log(e)
+        this.$toast('Article analysis not available', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
+        this.loadingAnalytics = false
+      } finally {
+        // this.showArticleRegenerate = false
+        // this.loadingUrl = null
+      }
+    },
+
+    formatNumber(number) {
+      // Round the number up using Math.ceil to remove decimals
+      const roundedNumber = Math.ceil(number)
+
+      // Convert the number to a string and format it with commas
+      return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    },
+
     setOriginalArticles() {
       this.alternateAricles = []
       this.showingArticles = true
@@ -8511,76 +8794,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
     extractTerm(input) {
       const match = input.match(/\[(.*?)\]/)
       return match ? match[1] : ''
-    },
-    async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = []
-      if (this.mainView === 'web') {
-        selectedClip = this.googleResults.length
-          ? this.googleResults.filter((art) => art.link === url)[0]
-          : this.googleResults.filter((art) => art.link === url)[0]
-      } else {
-        selectedClip = this.addedArticles.length
-          ? this.addedArticles.filter((art) => art.link === url)[0]
-          : this.filteredArticles.filter((art) => art.link === url)[0]
-      }
-
-      this.articleSummaryLoading = true
-      this.loadingUrl = url
-
-      try {
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        const response = await Comms.api.getArticleSummary({
-          url: url,
-          search: this.newSearch,
-          instructions: instructions,
-          length: length,
-        })
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        selectedClip['summary'] = response.summary
-
-        if (!this.addedArticles.length && this.mainView !== 'web') {
-          this.filteredArticles = this.filteredArticles.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.filteredArticles.unshift(selectedClip)
-        } else if (this.mainView === 'web') {
-          this.googleResults = this.googleResults.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.googleResults.unshift(selectedClip)
-        } else {
-          this.addedArticles = this.addedArticles.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.addedArticles.unshift(selectedClip)
-        }
-        this.searchArticleText = ' '
-        this.searchArticleText = ''
-
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        this.refreshUser()
-        this.scrollToTopDivider()
-        return response.summary
-      } catch (e) {
-        console.log(e)
-        this.$toast('Request blocked by article source', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.showArticleRegenerate = false
-        this.articleSummaryLoading = false
-        this.loadingUrl = null
-      }
     },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
@@ -13512,6 +13725,15 @@ textarea::placeholder {
   width: 22%;
 }
 
+.photo-header-small {
+  height: 250px;
+  width: 100%;
+  margin: 0;
+  object-fit: cover; /* Ensures the image covers the area while maintaining aspect ratio */
+  object-position: top; /* Crops only from the bottom if necessary */
+  border-radius: 5px;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -14456,6 +14678,71 @@ select {
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+.alt-btn {
+  padding: 5px 10px;
+
+  &:hover {
+    background-color: $dark-black-blue;
+    color: white;
+
+    img {
+      filter: invert(100%);
+    }
+  }
+}
+
+.space-between-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.containered {
+  z-index: 100000;
+  position: absolute;
+  top: 72px;
+  right: 20vw;
+  width: 60vw;
+  background-color: white;
+  padding: 16px;
+  border-radius: 9px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 9px 11px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+  font-family: $thin-font-family;
+  overflow-y: scroll;
+  p {
+    margin: 8px 0;
+  }
+
+  small {
+    color: $base-gray;
+  }
+
+  &__top {
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 12px;
+  }
+}
+
+.bold-font {
+  font-family: $base-font-family !important;
+}
+
+.abs-top-right {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  cursor: pointer;
+}
+.img-mar {
+  img {
+    margin-right: 4px;
   }
 }
 </style>
