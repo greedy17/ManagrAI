@@ -552,6 +552,11 @@ urlpatterns = [
         comms_views.rewrite_report,
         name="rewrite-report",
     ),
+    path(
+        "youtube-search/",
+        comms_views.get_youtube_data,
+        name="youtube-search",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

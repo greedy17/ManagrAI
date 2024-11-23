@@ -1112,3 +1112,21 @@ def get_trend_articles(topics, countries):
                 results = {"error": "There was an error process your request"}
     except Exception as e:
         return {"error": str(e)}
+
+
+def get_youtube_data(query):
+    headers = {"Accept": "application/json"}
+    youtube_data = {}
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query)
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
+            res = res.json()
+            if res.status_code == 200:
+                youtube_data["videos"] = res["items"]
+            else:
+                youtube_data["error"] = res["error"]["message"]
+                print(vars(res))
+    except Exception as e:
+        print(e)
+    return youtube_data

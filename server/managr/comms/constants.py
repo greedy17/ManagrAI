@@ -57,6 +57,15 @@ TWITTER_AUTHORIZATION_QUERY_PARAMS = {
 GOOGLE_SEARCH_URI = "https://www.googleapis.com/customsearch/v1"
 GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
+YOUTUBE_SEARCH_URI = "https://www.googleapis.com/youtube/v3/search"
+YOUTUBE_SEARCH_PARAMS = lambda query: {
+    "part": "snippet",
+    "q": query,
+    "order": "viewCount",
+    "type": "video",
+    "maxResults": 50,
+    "key": GOOGLE_SEARCH_KEY,
+}
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
@@ -492,6 +501,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
     Keep responses structured and consistent for easy reading in a Vue.js app.
     """
     return body
+
 
 def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instructions):
     body = f"""
