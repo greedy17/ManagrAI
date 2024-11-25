@@ -97,7 +97,7 @@ from managr.comms.utils import (
     get_article_data,
     get_social_data,
     get_trend_articles,
-    get_youtube_data
+    get_youtube_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -654,7 +654,6 @@ class PRSearchViewSet(
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
-                    print("prompt is here", prompt)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
@@ -674,9 +673,7 @@ class PRSearchViewSet(
                     query_input = query_input + " lang:en -is:retweet"
                     if "from:" not in query_input:
                         query_input = query_input + " is:verified"
-                    print("BOOLEAN IS HERE", query_input)
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
-
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 attempts += 1

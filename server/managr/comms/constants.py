@@ -62,6 +62,7 @@ YOUTUBE_SEARCH_PARAMS = lambda query: {
     "part": "snippet",
     "q": query,
     "order": "viewCount",
+    "relevanceLanguage": "en",
     "type": "video",
     "maxResults": 50,
     "key": GOOGLE_SEARCH_KEY,

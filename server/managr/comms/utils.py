@@ -1121,10 +1121,11 @@ def get_youtube_data(query):
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
-            res = res.json()
             if res.status_code == 200:
+                res = res.json()
                 youtube_data["videos"] = res["items"]
             else:
+                res = res.json()
                 youtube_data["error"] = res["error"]["message"]
                 print(vars(res))
     except Exception as e:
