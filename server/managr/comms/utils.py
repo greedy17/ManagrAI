@@ -19,7 +19,7 @@ from dateutil import parser
 from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
-from .exceptions import _handle_response
+from . import exceptions as comms_exceptions
 from .models import NewsSource, Journalist, JournalistContact
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
@@ -494,7 +494,7 @@ def get_news_api_sources():
     news_url = comms_consts.NEW_API_URI + "/" + "sources"
     with Variable_Client() as client:
         new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
-    return _handle_response(new_res)
+    return comms_exceptions._handle_response(new_res)
 
 
 def remove_api_sources():
@@ -1114,8 +1114,86 @@ def get_trend_articles(topics, countries):
         return {"error": str(e)}
 
 
-def get_youtube_data(query):
+def get_tweet_data(request):
+    user = User.objects.get(id=request.GET.get("user_id"))
+    twitter_account = user.twitter_account
+    search = request.GET.get("search")
+    project = request.GET.get("project", None)
+    query_input = None
+    next_token = False
+    tweet_data = {}
+    tweet_list = []
+    attempts = 1
+    while True:
+        try:
+            if attempts >= 10:
+                break
+            if query_input is None:
+                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+                prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
+                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                    user.email,
+                    prompt,
+                    token_amount=500,
+                    top_p=0.1,
+                )
+
+                with Variable_Client() as client:
+                    r = client.post(
+                        url,
+                        data=json.dumps(body),
+                        headers=core_consts.OPEN_AI_HEADERS,
+                    )
+                r = open_ai_exceptions._handle_response(r)
+                query_input = r.get("choices")[0].get("message").get("content")
+                query_input = query_input.replace("AND", " ")
+                query_input = query_input + " lang:en -is:retweet"
+                if "from:" not in query_input:
+                    query_input = query_input + " is:verified"
+            tweet_res = twitter_account.get_tweets(query_input, next_token)
+            tweets = tweet_res.get("data", None)
+            includes = tweet_res.get("includes", None)
+            attempts += 1
+            if not tweets:
+                suggestions = twitter_account.no_results(user.email, search)
+                query_input = suggestions.get("choices")[0].get("message").get("content")
+            if tweets:
+                if "next_token" in tweet_res["meta"].keys():
+                    next_token = tweet_res["meta"]["next_token"]
+                user_data = tweet_res["includes"].get("users")
+                for tweet in tweets:
+                    if len(tweet_list) > 39:
+                        break
+                    for user in user_data:
+                        if user["id"] == tweet["author_id"]:
+                            if user["public_metrics"]["followers_count"] > 10000:
+                                tweet["user"] = user
+                                tweet_list.append(tweet)
+                            break
+            if len(tweet_list) < 40 and tweets:
+                continue
+            tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
+            break
+        except KeyError as e:
+            tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
+        except comms_exceptions.TooManyRequestsError:
+            if len(tweet_list):
+                break
+            else:
+                tweet_data = {
+                    "error": f"We've hit an issue contacting Twitter for {query_input}",
+                    "string": query_input,
+                }
+        except Exception as e:
+            has_error = True
+            tweet_data["error"] = str(e)
+            break
+    return tweet_data
+
+
+def get_youtube_data(request):
     headers = {"Accept": "application/json"}
+    query = request.data.get("query")
     youtube_data = {}
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query)
     try:
@@ -1123,7 +1201,11 @@ def get_youtube_data(query):
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
             if res.status_code == 200:
                 res = res.json()
-                youtube_data["videos"] = res["items"]
+                videos = res["items"]
+                for video in videos:
+                    video["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
+                    video["created_at"] = video["publishedAt"]
+                youtube_data["data"] = videos
             else:
                 res = res.json()
                 youtube_data["error"] = res["error"]["message"]
