@@ -98,6 +98,7 @@ from managr.comms.utils import (
     get_social_data,
     get_trend_articles,
     get_youtube_data,
+    get_tweet_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -3588,9 +3589,26 @@ def rewrite_report(request):
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
-def get_youtube_videos(request):
-    query = request.data.get("query")
-    data = get_youtube_data(query)
-    if "error" in data.keys():
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
-    return Response(status=status.HTTP_200_OK, data=data)
+def get_social_media_data(request):
+    user = request.data.user
+    return_data = {}
+    social_data_list = []
+    errors = []
+    youtube_data = get_youtube_data(request)
+    if "error" in youtube_data.keys():
+        errors.append(youtube_data["error"])
+    else:
+        social_data_list.extend(youtube_data["data"])
+    if user.has_twitter_integration:
+        twitter_data = get_tweet_data(request)
+        if "error" in twitter_data.keys():
+            errors.append(twitter_data["error"])
+        else:
+            return_data["query_string"] = twitter_data["query_string"]
+            return_data["includes"] = twitter_data["includes"]
+            social_data_list.extend(twitter_data)
+    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
+    return_data["data"] = sorted_social_data
+    if errors:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+    return Response(status=status.HTTP_200_OK, data=return_data)
