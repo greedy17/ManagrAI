@@ -1191,10 +1191,24 @@ def get_tweet_data(request):
     return tweet_data
 
 
+def normalize_youtube_data(data):
+    normalized_data = []
+    for video in data:
+        video_data = {}
+        video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
+        video_data["text"] = video["title"]
+        video_data["created_at"] = video["publishedAt"]
+        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
+        video_data["author"] = video["snippet"]["channelTitle"]
+        normalized_data.append(video_data)
+    return normalized_data
+
+
 def get_youtube_data(request):
     headers = {"Accept": "application/json"}
     query = request.data.get("query")
     youtube_data = {}
+
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query)
     try:
         with Variable_Client(30) as client:
@@ -1202,10 +1216,8 @@ def get_youtube_data(request):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"]
-                for video in videos:
-                    video["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-                    video["created_at"] = video["publishedAt"]
-                youtube_data["data"] = videos
+                normalized_data = normalize_youtube_data(videos)
+                youtube_data["data"] = normalized_data
             else:
                 res = res.json()
                 youtube_data["error"] = res["error"]["message"]
