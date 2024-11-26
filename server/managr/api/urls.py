@@ -553,9 +553,14 @@ urlpatterns = [
         name="rewrite-report",
     ),
     path(
-        "youtube-search/",
-        comms_views.get_youtube_data,
-        name="youtube-search",
+        "youtube-stats/",
+        comms_views.get_youtube_stats,
+        name="youtube-stats",
+    ),
+    path(
+        "social-data/",
+        comms_views.get_social_media_data,
+        name="socal-data",
     ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),

@@ -58,6 +58,7 @@ GOOGLE_SEARCH_URI = "https://www.googleapis.com/customsearch/v1"
 GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 YOUTUBE_SEARCH_URI = "https://www.googleapis.com/youtube/v3/search"
+YOUTUBE_VIDEO_URI = "https://www.googleapis.com/youtube/v3/videos"
 YOUTUBE_SEARCH_PARAMS = lambda query: {
     "part": "snippet",
     "q": query,
@@ -65,6 +66,12 @@ YOUTUBE_SEARCH_PARAMS = lambda query: {
     "relevanceLanguage": "en",
     "type": "video",
     "maxResults": 50,
+    "key": GOOGLE_SEARCH_KEY,
+}
+
+YOUTUBE_VIDEO_PARAMS = lambda video_id: {
+    "part": "statistics",
+    "id": video_id,
     "key": GOOGLE_SEARCH_KEY,
 }
 

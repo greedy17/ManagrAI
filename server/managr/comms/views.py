@@ -3612,3 +3612,27 @@ def get_social_media_data(request):
     if errors:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
     return Response(status=status.HTTP_200_OK, data=return_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_youtube_stats(request):
+    video_id = request.data.get("video_id")
+    headers = {"Accept": "application/json"}
+
+    params = comms_consts.YOUTUBE_VIDEO_PARAMS(video_id)
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                videos = res["items"][0]["statistics"]
+            else:
+                res = res.json()
+                videos = {"error": res["error"]["message"]}
+                print(vars(res))
+    except Exception as e:
+        print(e)
+        videos = {"error": str(e)}
+    return videos
