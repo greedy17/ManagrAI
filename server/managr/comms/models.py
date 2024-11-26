@@ -356,7 +356,6 @@ class Pitch(TimeStampModel):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, elma, style)
-        print('PROMPT IS HERE --- > :', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, model="o1-mini")
         with Variable_Client(timeout) as client:
             r = client.post(

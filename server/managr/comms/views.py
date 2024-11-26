@@ -652,7 +652,6 @@ class PRSearchViewSet(
                 if query_input is None:
                     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                     prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
-                    print('prompt is here', prompt)
                     body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                         user.email,
                         prompt,
@@ -1162,8 +1161,6 @@ class PitchViewSet(
         instructions = request.data.get("instructions")
         style = request.data.get("style")
         pitch_id = request.data.get("pitch_id", False)
-
-        print('STYLE IS HERE --- > :' , style)
         has_error = False
         attempts = 1
         token_amount = 1000

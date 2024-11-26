@@ -594,7 +594,7 @@
             </button>
 
             <button
-              v-else
+              v-else-if="hasGoogleIntegration || hasMicrosoftIntegration"
               :disabled="loadingPitch || sendingEmail || !revisedPitch"
               class="primary-button"
               @click="sendEmail"
@@ -608,6 +608,18 @@
                 alt=""
               />
               Send Email
+            </button>
+
+            <button v-else class="primary-button" @click="goToIntegrations">
+              <img
+                v-if="sendingEmail"
+                style="margin-right: 4px"
+                class="invert rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+              Connect Email
             </button>
           </div>
         </footer>
@@ -2200,6 +2212,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
     }
   },
   computed: {
+    hasGoogleIntegration() {
+      return !!this.$store.state.user.hasGoogleIntegration
+    },
+    hasMicrosoftIntegration() {
+      return !!this.$store.state.user.hasMicrosoftIntegration
+    },
     emailTo: {
       get() {
         return this.currentContact.email
@@ -2333,6 +2351,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.getWritingStyles()
   },
   methods: {
+    goToIntegrations() {
+      this.$router.push({ name: 'PRIntegrations' })
+    },
     updateEmail() {
       this.editingEmail = true
     },

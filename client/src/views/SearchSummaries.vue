@@ -211,7 +211,7 @@
               Cancel
             </button>
 
-            <button
+            <!-- <button
               v-if="mainView === 'write'"
               @click="savePitch"
               :disabled="savingSearch"
@@ -223,9 +223,9 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
-            </button>
+            </button> -->
 
-            <button
+            <!-- <button
               v-else-if="mainView === 'discover'"
               @click="saveDiscovery"
               :disabled="savingSearch"
@@ -237,9 +237,9 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
-            </button>
+            </button> -->
 
-            <button v-else @click="createSearch" :disabled="savingSearch" class="save-button">
+            <button @click="saveThread" :disabled="savingSearch" class="save-button">
               {{ savingSearch ? 'Saving' : 'Save' }}
               <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
                 <div class="dot"></div>
@@ -682,7 +682,7 @@
               <div class="dot"></div>
             </div>
             <button
-              v-else
+              v-else-if="hasGoogleIntegration || hasMicrosoftIntegration"
               @click="sendEmail"
               :disabled="
                 loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
@@ -692,6 +692,15 @@
               :class="{ opaque: loadingPitch || !subject || !targetEmail }"
             >
               <span> Send</span>
+            </button>
+
+            <button
+              v-else-if="!hasGoogleIntegration && !hasMicrosoftIntegration"
+              @click="goToIntegrations"
+              style="margin-right: 4px"
+              class="primary-button"
+            >
+              <span> Connect Email</span>
             </button>
           </div>
         </div>
@@ -718,7 +727,7 @@
               :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
-              <div style="right: 120%" class="s-tooltip-below">Save to network</div>
+              <div style="right: 120%" class="s-tooltip-below">Save to contacts</div>
             </button>
           </div>
         </header>
@@ -1196,7 +1205,7 @@
                               Contacts
                             </span>
 
-                            <p>Discover relevant media contacts</p>
+                            <p>Find the right media contacts for your story</p>
                           </div>
                         </section>
                       </div>
@@ -1735,8 +1744,10 @@
                   (filteredArticles && filteredArticles.length) ||
                   tweets.length ||
                   (mainView === 'write' && summary) ||
-                  (mainView === 'discover' && summary)
+                  (mainView === 'discover' && summary) ||
+                  (mainView === 'web' && summary)
                 "
+                :disabled="searchSaved"
               >
                 <!-- <img
                   v-if="
@@ -1775,7 +1786,7 @@
 
                 <img v-else height="14px" src="@/assets/images/disk.svg" alt="" /> -->
 
-                <div
+                <!-- <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
@@ -1793,9 +1804,9 @@
                   "
                 >
                   Disable Digest
-                </div>
+                </div> -->
 
-                <div v-else>Save</div>
+                <div>Save</div>
               </button>
 
               <div
@@ -2031,7 +2042,7 @@
                 </div>
                 <div v-else class="dropdown-small-header">Save this search</div>
 
-                <div v-if="mainView === 'write'" class="dropdown-small-section">
+                <!-- <div v-if="mainView === 'write'" class="dropdown-small-section">
                   <label
                     :class="{ opaquest: savedPitch }"
                     style="font-size: 13px"
@@ -2066,9 +2077,9 @@
                       Save
                     </button>
                   </div>
-                </div>
+                </div> -->
 
-                <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
+                <!-- <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
                   <label
                     :class="{ opaquest: savedDiscovery }"
                     style="font-size: 13px"
@@ -2108,9 +2119,9 @@
                       Save
                     </button>
                   </div>
-                </div>
+                </div> -->
 
-                <div v-else class="dropdown-small-section dropdown-small-bb">
+                <div class="dropdown-small-section dropdown-small-bb">
                   <label
                     :class="{ opaquest: searchSaved || savedSearch }"
                     style="font-size: 13px"
@@ -2122,14 +2133,14 @@
                     style="width: 100%"
                     class="area-input-outline"
                     type="text"
-                    placeholder="Name your search..."
+                    placeholder="Thread name..."
                     v-model="searchName"
-                    :disabled="savedSearch"
+                    :disabled="searchSaved"
                   />
 
                   <div>
                     <button
-                      @click="createSearch"
+                      @click="saveThread"
                       class="primary-button"
                       :disabled="
                         articleSummaryLoading ||
@@ -2137,8 +2148,8 @@
                         summaryLoading ||
                         savingSearch ||
                         savedSearch ||
-                        mainView === 'web' ||
-                        !searchName
+                        !searchName ||
+                        searchSaved
                       "
                     >
                       <img
@@ -2153,7 +2164,7 @@
                   </div>
                 </div>
 
-                <div
+                <!-- <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     !notifiedList.includes(searchId)
@@ -2177,12 +2188,7 @@
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
-                  <!-- 
-                     :class="{ 'has-placeholder': !alertTIme }"
-                    :data-placeholder="placeholderTime"
-                     @focus="clearPlaceholder"
-                    @blur="setPlaceholder"
-                     -->
+           
 
                   <div style="margin: 8px 0" class="space-between">
                     <div class="row">
@@ -2324,37 +2330,8 @@
                         </div>
                       </div>
                     </div>
-                    <!-- <select
-                      style="width: 100%"
-                      v-model="alertChannel"
-                      class="area-input-outline dropdown-select"
-                    >
-                      <option value="" disabled>Select a Slack channel</option>
-                      <option
-                        v-for="channel in userChannelOpts.channels"
-                        :key="channel.id"
-                        :value="channel.id"
-                      >
-                        {{ channel.name }}
-                      </option>
-                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
-                      <option
-                        v-if="userChannelOpts.nextCursor"
-                        @click="listUserChannels(userChannelOpts.nextCursor)"
-                        class="load-more-option"
-                      >
-                        Load More Channels...
-                      </option>
-                    </select> -->
+                  
                   </div>
-
-                  <!-- <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
-                    >Get daily emails with news clips and summary</small
-                  >
-                  <small class="opaquer" v-else-if="isPaid"
-                    >Get daily emails with news clips and summary</small
-                  >
-                  <small v-else>Upgrade your plan to activate alerts</small> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -2376,20 +2353,13 @@
                       Schedule
                     </button>
 
-                    <!-- <button
-                      style="margin-left: 8px"
-                      v-else
-                      class="primary-button fadein"
-                      @click="testEmailAlert"
-                    >
-                      Send Preview
-                    </button> -->
+               
                   </div>
                 </div>
 
                 <div
                   class="dropdown-small-section"
-                  v-else-if="
+                  v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     notifiedList.includes(searchId)
@@ -2414,7 +2384,7 @@
                       Disable Digest
                     </button>
                   </div>
-                </div>
+                </div> -->
               </div>
             </div>
           </header>
@@ -3170,7 +3140,7 @@
                       Contacts
                     </span>
 
-                    <p>Discover relevant media contacts</p>
+                    <p>Find the right media contacts for your story</p>
                   </div>
                 </section>
               </div>
@@ -3833,6 +3803,7 @@ export default {
   },
   data() {
     return {
+      searchSaved: false,
       loadingAnalytics: false,
       showingAnalytics: false,
       currentArticle: {},
@@ -4104,7 +4075,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       buttonText: 'Article Summary',
       AllUserTweets: {},
       mainView: 'news',
-      savedSearch: null,
+      savedSearch: {},
       tweets: [],
       filteredArticles: [],
       posts: [],
@@ -4170,8 +4141,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `Top storylines about {Topic}`,
         },
         {
-          name: `List top journalists covering...`,
-          value: `List top journalists covering {Topic}`,
+          name: `Industry news I should know ..`,
+          value: `Find relevant industry news I should be staying on top of`,
         },
         {
           name: `Analyze media coverage...`,
@@ -4732,6 +4703,45 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.abortFunctions()
   },
   methods: {
+    async saveThread() {
+      this.savingSearch = true
+      try {
+        const res = await Comms.api.saveThread({
+          user: this.user.id,
+          title: this.searchName,
+          meta_data: {
+            searchTerm: this.newSearch,
+            summary: this.summary,
+            list: this.discoverList,
+            articlesFiltered: this.articlesFiltered,
+            filteredResults: this.filteredResults,
+            tweetMedia: this.tweetMedia,
+            summaries: this.summaries,
+            followUps: this.followUps,
+            preparedTweets: this.preparedTweets,
+            googleResults: this.googleResults,
+            filteredArticles: this.filteredArticles,
+            type: this.mainView,
+            originalSearch: this.originalSearch,
+          },
+        })
+        this.showingSave = false
+        this.savingSearch = false
+        this.$toast('Thread Saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.searchSaved = true
+        this.refreshUser()
+        this.$store.dispatch('getThreads')
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
     removeDomain(url) {
       const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 
@@ -4799,7 +4809,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       try {
         const response = await Comms.api.getArticleSummary({
           url: url,
-          search: this.newSearch,
+          search: this.booleanString,
           instructions: instructions,
         })
 
@@ -7563,6 +7573,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.relatedTopics = []
       this.showingSources = false
       this.journalisListtData = ''
+      this.searchSaved = false
     },
     resetSearch() {
       this.clearNewSearch()
@@ -7600,53 +7611,73 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
-      this.showSummaryInstructions = true
-      this.summarizing = false
+      this.citationsMounted = false
+      this.altCitationsMounted = false
       this.savedSearch = search
       this.searchId = search.id
-      this.searchName = search.name
-      this.setAlertTime()
+      this.newSearch = search.meta_data.searchTerm
+      this.summary = search.meta_data.summary
+      this.discoverList = search.meta_data.list
+      this.summaries = search.meta_data.summaries
+      this.followUps = search.meta_data.followUps
+      this.preparedTweets = search.meta_data.preparedTweets
+      this.googleResults = search.meta_data.googleResults
+      this.articlesFiltered = search.meta_data.articlesFiltered
+      this.filteredArticles = search.meta_data.filteredArticles
+      this.filteredResults = search.meta_data.filteredResults
+      this.tweetMedia = search.meta_data.tweetMedia
+      this.originalSearch = search.meta_data.originalSearch
+      this.mainView = search.meta_data.type
+      this.searchSaved = true
+      this.changeSearch({ search: this.booleanString, template: this.newTemplate })
 
-      if (search.hasOwnProperty('audience')) {
-        this.newTemplate = search.instructions
-        this.summary = search.generated_pitch
-        this.newSearch = search.type
-        this.savedPitch = true
-      } else if (search.hasOwnProperty('location')) {
-        console.log(search)
-        this.newTemplate = search.content
-        this.summary = search.list
-        this.discoverList = search.results
-        this.newSearch = search.type || search.name
-        this.savedDiscovery = true
-      } else {
-        this.newSearch = search.input_text
-        this.newTemplate = search.instructions
-        this.booleanString = search.search_boolean
-        this.metaData = search.meta_data
-        this.summary = ''
-        this.addedClips = this.$store.state.currentReportClips
-      }
+      setTimeout(() => {
+        this.citationsMounted = true
+        this.altCitationsMounted = true
+      }, 3000)
+      // this.summarizing = false
+      // this.searchName = search.name
+      // this.setAlertTime()
+      // this.showSummaryInstructions = true
+      // if (search.hasOwnProperty('audience')) {
+      //   this.newTemplate = search.instructions
+      //   this.summary = search.generated_pitch
+      //   this.newSearch = search.type
+      //   this.savedPitch = true
+      // } else if (search.hasOwnProperty('location')) {
+      //   console.log(search)
+      //   this.newTemplate = search.content
+      //   this.summary = search.list
+      //   this.discoverList = search.results
+      //   this.newSearch = search.type || search.name
+      //   this.savedDiscovery = true
+      // } else {
+      //   this.newSearch = search.input_text
+      //   this.newTemplate = search.instructions
+      //   this.booleanString = search.search_boolean
+      //   this.metaData = search.meta_data
+      //   this.summary = ''
+      //   this.addedClips = this.$store.state.currentReportClips
+      // }
 
-      // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
-      this.mainView =
-        search.search_boolean === 'Ig'
-          ? 'instagram'
-          : search.type === 'SOCIAL_MEDIA'
-          ? 'social'
-          : search.type === 'NEWS'
-          ? 'news'
-          : search.hasOwnProperty('audience')
-          ? 'write'
-          : search.hasOwnProperty('location')
-          ? 'discover'
-          : ''
-      if (this.mainView !== 'write' && this.mainView !== 'discover') {
-        this.generateNewSearch(null, true, search.search_boolean)
-      } else {
-        this.changeSearch(search.type)
-      }
-      this.setCurrentAlert()
+      // this.mainView =
+      //   search.search_boolean === 'Ig'
+      //     ? 'instagram'
+      //     : search.type === 'SOCIAL_MEDIA'
+      //     ? 'social'
+      //     : search.type === 'NEWS'
+      //     ? 'news'
+      //     : search.hasOwnProperty('audience')
+      //     ? 'write'
+      //     : search.hasOwnProperty('location')
+      //     ? 'discover'
+      //     : ''
+      // if (this.mainView !== 'write' && this.mainView !== 'discover') {
+      //   this.generateNewSearch(null, true, search.search_boolean)
+      // } else {
+      //   this.changeSearch(search.type)
+      // }
+      // this.setCurrentAlert()
     },
     changeIndex() {
       setTimeout(() => {
@@ -8822,6 +8853,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
   },
   computed: {
+    hasGoogleIntegration() {
+      return !!this.$store.state.user.hasGoogleIntegration
+    },
+    hasMicrosoftIntegration() {
+      return !!this.$store.state.user.hasMicrosoftIntegration
+    },
     sidebarArticles() {
       return this.alternateAricles.length ? this.alternateAricles : this.filteredArticles
     },
@@ -9039,19 +9076,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
       return arr.length
     },
-    searchSaved() {
-      if (
-        this.newSearch &&
-        this.currentSearch &&
-        this.currentSearch.input_text === this.newSearch
-      ) {
-        return true
-      } else if (this.savedSearch && this.newSearch === this.savedSearch.input_text) {
-        return true
-      } else {
-        return false
-      }
-    },
+    // searchSaved() {
+    //   if (
+    //     this.newSearch &&
+    //     this.currentSearch &&
+    //     this.currentSearch.input_text === this.newSearch
+    //   ) {
+    //     return true
+    //   } else if (this.savedSearch && this.newSearch === this.savedSearch.input_text) {
+    //     return true
+    //   } else {
+    //     return false
+    //   }
+    // },
     fromNav() {
       return this.$store.state.fromNav
     },
