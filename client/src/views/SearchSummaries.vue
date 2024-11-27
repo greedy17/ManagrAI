@@ -1381,7 +1381,7 @@
                             :class="{ activesquareTile: detailTitle === detail.title }"
                             :title="detail.title"
                           >
-                            <span class="">
+                            <span style="max-width: 140px" class="ellipsis-text-s">
                               {{ detail.title }}
                             </span>
                             <p class="">{{ detail.details }}</p>
@@ -1699,22 +1699,15 @@
                 </div>
               </div> -->
 
-              <div
+              <!-- <div
                 v-if="mainView === 'news'"
                 @click.stop="showShare"
                 class="secondary-button"
                 :class="{ 'soft-gray-bg': showingShare }"
               >
                 Share
-                <!-- <img
-                  style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/upload2.svg"
-                  height="14px"
-                  alt=""
-                />
-
-                <div class="s-tooltip">Share</div> -->
-              </div>
+              
+              </div> -->
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
@@ -1850,12 +1843,6 @@
                       :title="detail.title"
                     >
                       <span class="">
-                        <img
-                          class="blue-filter"
-                          src="@/assets/images/logo.png"
-                          height="11px"
-                          alt=""
-                        />
                         {{ detail.title }}
                       </span>
                       <p class="">{{ detail.details }}</p>
@@ -2478,6 +2465,44 @@
               "
             >
               <div class="citation-text" v-html="noResultsString"></div>
+              <div
+                style="margin: 12px 0"
+                class="row"
+                v-if="mainView === 'news' || mainView === 'social'"
+              >
+                <div
+                  @click="toggleType(mainView === 'news' ? 'social' : 'news')"
+                  class="s-wrapper"
+                  style="margin-right: 12px; cursor: pointer"
+                >
+                  <img
+                    v-if="mainView === 'news'"
+                    src="@/assets/images/twitter-x.svg"
+                    height="16px"
+                    alt=""
+                  />
+                  <img
+                    v-else-if="mainView === 'social'"
+                    src="@/assets/images/globe.svg"
+                    height="16px"
+                    alt=""
+                  />
+                  <div class="s-tooltip">
+                    {{
+                      mainView === 'news'
+                        ? !hasTwitterIntegration
+                          ? 'Connect Twiiter'
+                          : 'Switch to Social'
+                        : 'Switch to News'
+                    }}
+                  </div>
+                </div>
+
+                <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
+                  <img src="@/assets/images/google.svg" height="16px" alt="" />
+                  <div class="s-tooltip">Switch to Web</div>
+                </div>
+              </div>
             </div>
 
             <div v-else class="content-padding relative">
@@ -2571,6 +2596,7 @@
 
               <!-- class="gradient-border-btm" -->
               <div
+                class="row"
                 style="margin: 8px 0 16px 0; padding-bottom: 24px"
                 v-if="mainView !== 'write' && mainView !== 'discover'"
               >
@@ -2649,6 +2675,59 @@
                     mainView === 'news' ? `Articles` : mainView === 'social' ? `Posts` : `Results`
                   }}
                 </button>
+
+                <div class="row" v-if="mainView === 'news' || mainView === 'social'">
+                  <div
+                    @click="toggleType(mainView === 'news' ? 'social' : 'news')"
+                    class="s-wrapper"
+                    style="margin: 0 12px; cursor: pointer"
+                  >
+                    <img
+                      v-if="mainView === 'news'"
+                      src="@/assets/images/twitter-x.svg"
+                      height="16px"
+                      alt=""
+                    />
+                    <img
+                      v-else-if="mainView === 'social'"
+                      src="@/assets/images/globe.svg"
+                      height="16px"
+                      alt=""
+                    />
+                    <div class="s-tooltip">
+                      {{
+                        mainView === 'news'
+                          ? !hasTwitterIntegration
+                            ? 'Connect Twiiter'
+                            : 'Switch to Social'
+                          : 'Switch to News'
+                      }}
+                    </div>
+                  </div>
+
+                  <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
+                    <img src="@/assets/images/google.svg" height="16px" alt="" />
+                    <div class="s-tooltip">Switch to Web</div>
+                  </div>
+                </div>
+
+                <div class="row" v-if="mainView === 'web'">
+                  <div
+                    @click="toggleType('news')"
+                    class="s-wrapper"
+                    style="margin: 0 12px; cursor: pointer"
+                  >
+                    <img src="@/assets/images/globe.svg" height="16px" alt="" />
+                    <div class="s-tooltip">Switch to News</div>
+                  </div>
+
+                  <div @click="toggleType('social')" style="cursor: pointer" class="s-wrapper">
+                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+                    <div class="s-tooltip">
+                      {{ !hasTwitterIntegration ? 'Connect Twiiter' : 'Switch to Social' }}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div v-if="summaries.length">
@@ -3217,7 +3296,7 @@
                     :class="{ activesquareTile: detailTitle === detail.title }"
                     :title="detail.title"
                   >
-                    <span class="">
+                    <span style="max-width: 140px" class="ellipsis-text-s">
                       {{ detail.title }}
                     </span>
                     <p class="">{{ detail.details }}</p>
@@ -4757,7 +4836,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           urls: [url],
         })
         this.traffic = res
-        console.log('1', res)
         this.getSocialData(url)
       } catch (e) {
         console.error(e)
@@ -4777,7 +4855,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           urls: [url],
         })
         this.socialData = res
-        console.log('2', res)
         this.combineArticleWithTraffic()
       } catch (e) {
         console.error(e)
@@ -4799,8 +4876,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
         traffic,
         social,
       }
-
-      console.log('CURRENT ARTICLE IS HERE --- >', this.currentArticle)
 
       this.getArticleSummary(this.currentArticle.link)
     },
@@ -5879,7 +5954,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.dateStart = minDate
       }
     },
+    modeReset() {
+      this.loading = true
+      this.summary = ''
+      this.originalSearch = ''
+      this.noResultsString = ''
+      this.alternateAricles = []
+      this.followUps = []
+      this.summaries = []
+      this.latestArticles = []
+      this.latestMedia = []
+      this.addedClips = []
+      this.filteredArticles = []
+      this.googleResults = []
+      this.addedArticles = []
+      this.tweets = []
+      this.posts = []
+      this.searchSaved = false
+    },
     toggleType(type) {
+      this.modeReset()
       if (type === 'social') {
         if (this.hasTwitterIntegration) {
           this.mainView = type
