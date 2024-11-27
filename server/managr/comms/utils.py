@@ -408,7 +408,9 @@ def normalize_article_data(api_data, article_models, is_report, for_test=False):
     normalized_list.extend(normalized_api_list)
     normalized_model_list = [article.fields_to_dict(for_test) for article in article_models]
     normalized_list.extend(normalized_model_list)
+    print(normalized_list)
     sorted_arr = merge_sort_dates(normalized_list)
+    print(sorted_arr)
     ordered_dict = OrderedDict()
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
@@ -1161,6 +1163,7 @@ def get_tweet_data(request):
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
                 user_data = tweet_res["includes"].get("users")
+                media_ref = {d["media_key"]: d for d in tweet_res["includes"]["users"]}
                 for tweet in tweets:
                     if len(tweet_list) > 39:
                         break
@@ -1168,6 +1171,15 @@ def get_tweet_data(request):
                         if user["id"] == tweet["author_id"]:
                             if user["public_metrics"]["followers_count"] > 10000:
                                 tweet["user"] = user
+                                if "attachments" in tweet.keys():
+                                    media_key = tweet["attachments"]["media_keys"][0]
+                                    media_obj = media_ref[media_key]
+                                    media_url = (
+                                        media_obj["variants"][0]["url"]
+                                        if "variants" in media_obj.keys()
+                                        else media_obj["url"]
+                                    )
+                                    tweet["image_url"] = media_url
                                 tweet_list.append(tweet)
                             break
             if len(tweet_list) < 40 and tweets:
