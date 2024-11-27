@@ -222,4 +222,5 @@ class ThreadSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "user",
+            "meta_data"
         )

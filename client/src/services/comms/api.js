@@ -759,6 +759,33 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getThreads() {
+        try {
+            const res = await this.client.get('threads')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async saveThread(data) {
+        try {
+            const res = await this.client.post('threads/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async deleteThread(data) {
+        try {
+            const res = await this.client.delete(`threads/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
 }
 
 class TwitterAccountAPI extends ModelAPI {

@@ -48,6 +48,7 @@ const state = {
   chatTitle: 'All Open Opportunities',
   currentTask: null,
   meetingBeingProcessed: '',
+  allThreads: [],
   allSearches: [],
   allPitches: [],
   allAssist: [],
@@ -162,6 +163,9 @@ const mutations = {
   },
   SAVE_SEARCHES(state, searches) {
     state.allSearches = searches
+  },
+  SAVE_THREADS(state, threads) {
+    state.allThreads = threads
   },
   SAVE_PITCHES(state, pitches) {
     state.allPitches = pitches
@@ -323,6 +327,16 @@ const actions = {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
       commit('SAVE_MEETINGS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async getThreads({ commit }) {
+    try {
+      await Comms.api.getThreads().then((response) => {
+        console.log('get thread resuls', response)
+        commit('SAVE_THREADS', response.results)
+      })
     } catch (e) {
       console.log(e)
     }

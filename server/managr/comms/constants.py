@@ -572,7 +572,7 @@ DEFAULT_ARTICLE_INSTRUCTIONS = (
     lambda search: f"*Context: \n Sentiment: \n Impact: as it pertains to {search}.* Output can not exceed 400 characters"
 )
 DEFAULT_CLIENT_ARTICLE_INSTRUCTIONS = (
-    lambda boolean: f"Summary: summarize the article and its relation to any of these terms {boolean} in under 250 characters. \n Sentiment: what is the sentiment of any of these terms {boolean} within the article, keep under 200 characters"
+    lambda boolean: f"Summary: summarize the article and its relation to any of these terms {boolean} . \n Sentiment: what is the sentiment of any of these terms {boolean} within the article"
 )
 
 
@@ -599,7 +599,24 @@ def OPEN_AI_ARTICLE_SUMMARY(date, article, search, instructions=False, for_clien
       
     """
     else:
-        body = f"Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. \nBoolean Search: {search} \n Instructions: {instructions} \n News Article: {article}"
+        body = f"""Today's date is {date}. At least one of the terms in the boolean search were mentioned in the provided news article. Follow the instructions carefully. 
+        
+        Boolean Search: {search} \n 
+        
+        Instructions: {instructions}
+        
+        News Article: {article}
+
+        Output format must be:
+
+        <strong>Summary:</strong>
+        summary here
+
+        <strong>Sentiment:</strong>
+        sentiment here
+
+        Keep responses structured and consistent for easy reading in a Vue.js app.
+"""
     return body
 
 

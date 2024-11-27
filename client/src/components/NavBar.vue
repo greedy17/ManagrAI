@@ -234,14 +234,14 @@
           :to="{ name: 'PRSummaries' }"
           id="router-summarize"
         >
-          <p>Assist</p>
+          <p>Threads</p>
         </router-link>
         <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
-          <p>Network</p>
+          <p>Contacts</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Track</p>
+          <p>Emails</p>
         </router-link>
         <router-link active-class="active-mobile" :to="{ name: 'PRSettings' }" id="router-pitch">
           <p>Settings</p>
@@ -256,51 +256,9 @@
             @click.stop="toggleShowSearches"
             class="row pointer nav-text"
           >
-            Saved Searches
+            Saved Threads
             <img
               v-if="!showSavedSearches"
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-
-          <div
-            v-else-if="listName === 'write'"
-            @click.stop="toggleShowPitches"
-            class="row pointer nav-text"
-          >
-            Saved Content
-            <img
-              v-if="!showSavedPitches"
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-            <img
-              class="rotate-img"
-              v-else
-              src="@/assets/images/downArrow.svg"
-              height="14px"
-              alt=""
-            />
-          </div>
-
-          <div
-            v-else-if="listName === 'discover'"
-            @click.stop="toggleShowDiscoveries"
-            class="row pointer nav-text"
-          >
-            Saved Lists
-            <img
-              v-if="!showSavedDiscoveries"
               src="@/assets/images/downArrow.svg"
               height="14px"
               alt=""
@@ -346,179 +304,50 @@
               >
                 <img
                   class="search-icon invert"
-                  v-if="search.type === 'NEWS'"
-                  src="@/assets/images/memo.svg"
+                  v-if="search.meta_data.type === 'news'"
+                  src="@/assets/images/globe.svg"
                   height="12px"
                   alt=""
                   @click="selectSearch(search)"
                 />
                 <img
                   class="search-icon"
-                  v-else-if="search.type === 'SOCIAL_MEDIA'"
-                  src="@/assets/images/comment.svg"
+                  v-else-if="search.meta_data.type === 'social'"
+                  src="@/assets/images/twitter-x.svg"
                   height="12px"
                   alt=""
                   @click="selectSearch(search)"
                 />
-                <p :title="search.name" @click="selectSearch(search)">
-                  {{ search.name }}
+                <img
+                  class="search-icon"
+                  v-else-if="search.meta_data.type === 'web'"
+                  src="@/assets/images/google.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
+                <img
+                  class="search-icon"
+                  v-else-if="search.meta_data.type === 'discover'"
+                  src="@/assets/images/users.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
+                <img
+                  class="search-icon"
+                  v-else-if="search.meta_data.type === 'write'"
+                  src="@/assets/images/brain.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
+                <p :title="search.title" @click="selectSearch(search)">
+                  {{ search.title }}
                 </p>
 
                 <img
                   @click="toggleDeleteModal(search)"
-                  v-if="hoverIndex === i"
-                  class="absolute-icon"
-                  src="@/assets/images/trash.svg"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-          <div v-show="showSavedPitches" class="search-dropdown">
-            <div class="input">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-              <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
-              <img
-                v-show="pitchText"
-                @click="clearText"
-                src="@/assets/images/close.svg"
-                class="invert pointer"
-                height="12px"
-                alt=""
-              />
-            </div>
-            <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
-
-            <div class="searches-container">
-              <div
-                @mouseenter="setIndex(i)"
-                @mouseLeave="removeIndex"
-                class="row relative"
-                v-for="(pitch, i) in pitches"
-                :key="pitch.id"
-              >
-                <img
-                  class="search-icon invert"
-                  v-if="pitch.type === 'NEWS'"
-                  src="@/assets/images/memo.svg"
-                  height="12px"
-                  alt=""
-                  @click="selectSearch(pitch)"
-                />
-                <img
-                  class="search-icon"
-                  v-else-if="pitch.type === 'SOCIAL_MEDIA'"
-                  src="@/assets/images/comment.svg"
-                  height="12px"
-                  alt=""
-                  @click="selectSearch(pitch)"
-                />
-                <p @click="selectSearch(pitch)">
-                  {{ pitch.name }}
-                </p>
-
-                <img
-                  @click="togglePitchDeleteModal(pitch)"
-                  v-if="hoverIndex === i"
-                  class="absolute-icon"
-                  src="@/assets/images/trash.svg"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-
-          <div v-show="showSavedAssist" class="search-dropdown">
-            <div class="input">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-              <input class="search-input" v-model="assistText" :placeholder="`Search...`" />
-              <img
-                v-show="assistText"
-                @click="clearText"
-                src="@/assets/images/close.svg"
-                class="invert pointer"
-                height="12px"
-                alt=""
-              />
-            </div>
-            <p class="v-margin" v-if="!assists.length">Nothing here...</p>
-
-            <div class="searches-container">
-              <div
-                @mouseenter="setIndex(i)"
-                @mouseLeave="removeIndex"
-                class="row relative"
-                v-for="(assist, i) in assists"
-                :key="assist.id"
-              >
-                <p @click="selectAssist(assist)">
-                  {{ assist.name }}
-                </p>
-
-                <img
-                  @click="toggleAssistDeleteModal(assist)"
-                  v-if="hoverIndex === i"
-                  class="absolute-icon"
-                  src="@/assets/images/trash.svg"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-            </div>
-          </div>
-
-          <div v-show="showSavedDiscoveries" class="search-dropdown">
-            <div class="input">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                  fill="currentColor"
-                ></path>
-              </svg>
-              <input class="search-input" v-model="discoveryText" :placeholder="`Search...`" />
-              <img
-                v-show="discoveryText"
-                @click="clearText"
-                src="@/assets/images/close.svg"
-                class="invert pointer"
-                height="12px"
-                alt=""
-              />
-            </div>
-            <p class="v-margin" v-if="!discoveries.length">Nothing here...</p>
-
-            <div class="searches-container">
-              <div
-                @mouseenter="setIndex(i)"
-                @mouseLeave="removeIndex"
-                class="row relative"
-                v-for="(discovery, i) in discoveries"
-                :key="discovery.id"
-              >
-                <p @click="selectDiscovery(discovery)">
-                  {{ discovery.name }}
-                </p>
-
-                <img
-                  @click="toggleDiscoveryDeleteModal(discovery)"
                   v-if="hoverIndex === i"
                   class="absolute-icon"
                   src="@/assets/images/trash.svg"
@@ -539,19 +368,19 @@
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
-          <p>Assist</p>
+          <p>Threads</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
-          <p>Network</p>
+          <p>Contacts</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
-          <p>Track</p>
+          <p>Emails</p>
         </router-link>
 
         <router-link active-class="active" :to="{ name: 'Reports' }" id="router-pitch">
-          <p>Report</p>
+          <p>Reports</p>
         </router-link>
 
         <div class="auto-left">
@@ -630,77 +459,10 @@
           </div>
 
           <div v-if="$route.name === 'PRSummaries'" class="relative">
-            <div
-              v-if="listName === 'news' || listName === 'social'"
-              @click.stop="toggleShowSearches"
-              class="row pointer nav-text"
-            >
-              Saved Searches
+            <div @click.stop="toggleShowSearches" class="row pointer nav-text">
+              Saved Threads
               <img
                 v-if="!showSavedSearches"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img
-                class="rotate-img"
-                v-else
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-
-            <div
-              v-else-if="listName === 'write'"
-              @click.stop="toggleShowPitches"
-              class="row pointer nav-text"
-            >
-              Saved Content
-              <img
-                v-if="!showSavedPitches"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img
-                class="rotate-img"
-                v-else
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-
-            <div
-              v-else-if="$route.name === 'Assist'"
-              @click.stop="toggleShowAssist"
-              class="row pointer nav-text"
-            >
-              Saved Assists
-              <img
-                v-if="!showSavedAssist"
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-              <img
-                class="rotate-img"
-                v-else
-                src="@/assets/images/downArrow.svg"
-                height="14px"
-                alt=""
-              />
-            </div>
-
-            <div
-              v-else-if="listName === 'discover'"
-              @click.stop="toggleShowDiscoveries"
-              class="row pointer nav-text"
-            >
-              Saved Lists
-              <img
-                v-if="!showSavedDiscoveries"
                 src="@/assets/images/downArrow.svg"
                 height="14px"
                 alt=""
@@ -746,22 +508,46 @@
                 >
                   <img
                     class="search-icon invert"
-                    v-if="search.type === 'NEWS'"
-                    src="@/assets/images/memo.svg"
+                    v-if="search.meta_data.type === 'news'"
+                    src="@/assets/images/globe.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"
                   />
                   <img
                     class="search-icon"
-                    v-else-if="search.type === 'SOCIAL_MEDIA'"
-                    src="@/assets/images/comment.svg"
+                    v-else-if="search.meta_data.type === 'social'"
+                    src="@/assets/images/twitter-x.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"
                   />
-                  <p :title="search.name" @click="selectSearch(search)">
-                    {{ search.name }}
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'web'"
+                    src="@/assets/images/google.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'discover'"
+                    src="@/assets/images/users.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'write'"
+                    src="@/assets/images/brain.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+                  <p style="margin-left: 0" :title="search.title" @click="selectSearch(search)">
+                    {{ search.title }}
                   </p>
 
                   <img
@@ -775,7 +561,7 @@
                 </div>
               </div>
 
-              <div class="h-padding">
+              <!-- <div class="h-padding">
                 <div @click="togglePersonal" class="toggle">
                   <div :class="{ 'active-toggle': personalSearches }" class="toggle-side">
                     <small>Personal</small>
@@ -785,71 +571,10 @@
                     <small>Group</small>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div v-outside-click="hidePitches" v-show="showSavedPitches" class="search-dropdown">
-              <div class="input">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <input class="search-input" v-model="pitchText" :placeholder="`Search...`" />
-                <img
-                  v-show="pitchText"
-                  @click="clearText"
-                  src="@/assets/images/close.svg"
-                  class="invert pointer"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-              <p class="v-margin" v-if="!pitches.length">Nothing here...</p>
-
-              <div class="searches-container">
-                <div
-                  @mouseenter="setIndex(i)"
-                  @mouseLeave="removeIndex"
-                  class="row relative"
-                  v-for="(pitch, i) in pitches"
-                  :key="pitch.id"
-                >
-                  <img
-                    class="search-icon invert"
-                    v-if="pitch.type === 'NEWS'"
-                    src="@/assets/images/memo.svg"
-                    height="12px"
-                    alt=""
-                    @click="selectSearch(pitch)"
-                  />
-                  <img
-                    class="search-icon"
-                    v-else-if="pitch.type === 'SOCIAL_MEDIA'"
-                    src="@/assets/images/comment.svg"
-                    height="12px"
-                    alt=""
-                    @click="selectSearch(pitch)"
-                  />
-                  <p :title="pitch.name" @click="selectSearch(pitch)">
-                    {{ pitch.name }}
-                  </p>
-
-                  <img
-                    @click="togglePitchDeleteModal(pitch)"
-                    v-if="hoverIndex === i"
-                    class="absolute-icon"
-                    src="@/assets/images/trash.svg"
-                    height="12px"
-                    alt=""
-                  />
-                </div>
-              </div>
+              </div> -->
             </div>
 
-            <div v-outside-click="hideAssists" v-show="showSavedAssist" class="search-dropdown">
+            <!-- <div v-outside-click="hideAssists" v-show="showSavedAssist" class="search-dropdown">
               <div class="input">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path
@@ -893,69 +618,7 @@
                   />
                 </div>
               </div>
-            </div>
-
-            <div
-              v-outside-click="hideDiscoveries"
-              v-show="showSavedDiscoveries"
-              class="search-dropdown"
-            >
-              <div class="input">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    fill-rule="evenodd"
-                    clip-rule="evenodd"
-                    d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-                <input class="search-input" v-model="discoveryText" :placeholder="`Search...`" />
-                <img
-                  v-show="discoveryText"
-                  @click="clearText"
-                  src="@/assets/images/close.svg"
-                  class="invert pointer"
-                  height="12px"
-                  alt=""
-                />
-              </div>
-              <p class="v-margin" v-if="!discoveries.length">Nothing here...</p>
-
-              <div class="searches-container">
-                <div
-                  @mouseenter="setIndex(i)"
-                  @mouseLeave="removeIndex"
-                  class="row relative"
-                  v-for="(discovery, i) in discoveries"
-                  :key="discovery.id"
-                >
-                  <p :title="discovery.name" @click="selectSearch(discovery)">
-                    {{ discovery.name }}
-                  </p>
-
-                  <img
-                    @click="toggleDiscoveryDeleteModal(discovery)"
-                    v-if="hoverIndex === i"
-                    class="absolute-icon"
-                    src="@/assets/images/trash.svg"
-                    height="12px"
-                    alt=""
-                  />
-                </div>
-              </div>
-
-              <div class="h-padding">
-                <div @click="togglePersonalDiscoveries" class="toggle">
-                  <div :class="{ 'active-toggle': personalDiscoveries }" class="toggle-side">
-                    <small>Personal</small>
-                  </div>
-
-                  <div :class="{ 'active-toggle': !personalDiscoveries }" class="toggle-side">
-                    <small>Group</small>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </div> -->
           </div>
 
           <div class="row right-mar avatar-container">
@@ -1046,6 +709,7 @@ export default {
     }
   },
   async created() {
+    this.getThreads()
     this.getSearches()
     this.getPitches()
     this.getAssist()
@@ -1224,13 +888,13 @@ export default {
     async deleteSearch() {
       try {
         await Comms.api
-          .deleteSearch({
+          .deleteThread({
             id: this.selectedSearch.id,
           })
           .then(() => {
-            this.$store.dispatch('getSearches')
+            this.$store.dispatch('getThreads')
             this.deleteModelOpen = false
-            this.$toast('Search removed', {
+            this.$toast('Thread removed', {
               timeout: 2000,
               position: 'top-left',
               type: 'success',
@@ -1241,9 +905,6 @@ export default {
       } catch (e) {
         console.log('ERROR DELETING SEARCH', e)
       } finally {
-        setTimeout(() => {
-          this.showUpdateBanner = false
-        }, 2000)
       }
     },
     async deletePitch() {
@@ -1405,6 +1066,9 @@ export default {
     getSearches() {
       this.$store.dispatch('getSearches')
     },
+    getThreads() {
+      this.$store.dispatch('getThreads')
+    },
     getPitches() {
       this.$store.dispatch('getPitches')
     },
@@ -1457,9 +1121,9 @@ export default {
   computed: {
     unfilteredSearches() {
       if (this.personalSearches) {
-        return this.$store.state.allSearches.filter((search) => search.user === this.user.id)
+        return this.$store.state.allThreads.filter((thread) => thread.user === this.user.id)
       } else {
-        return this.$store.state.allSearches
+        return this.$store.state.allThreads
       }
     },
     listName() {
@@ -1489,7 +1153,7 @@ export default {
     searches() {
       if (this.unfilteredSearches.length) {
         return this.unfilteredSearches.filter((search) =>
-          search.name.toLowerCase().includes(this.searchText.toLowerCase()),
+          search.title.toLowerCase().includes(this.searchText.toLowerCase()),
         )
       } else return []
     },
