@@ -347,7 +347,7 @@ class NewsSpider(scrapy.Spider):
                 source.save()
         else:
             self.process_new_url(source, response)
-
+        source.check_if_stopped()
         self.urls_processed += 1
         return
 
