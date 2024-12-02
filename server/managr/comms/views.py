@@ -140,7 +140,7 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            print('BOOLEAN IS HERE --- > :', query_input)
+            print("BOOLEAN IS HERE --- > :", query_input)
             news_res = Search.get_clips(query_input, date_to, date_from, is_report)
             articles = news_res["articles"]
         else:
@@ -313,7 +313,7 @@ class PRSearchViewSet(
             return Response(status=status.HTTP_426_UPGRADE_REQUIRED)
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
-        instructions = request.data["params"]["instructions"]   
+        instructions = request.data["params"]["instructions"]
         has_error = False
         attempts = 1
         token_amount = 2000
@@ -671,13 +671,13 @@ class PRSearchViewSet(
                     query_input = query_input + " lang:en -is:retweet"
                     if "from:" not in query_input:
                         query_input = query_input + " is:verified"
-                    print('BOOLEAN IS HERE', query_input)    
+                    print("BOOLEAN IS HERE", query_input)
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
-                
+
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 attempts += 1
-                if not tweets: 
+                if not tweets:
                     suggestions = twitter_account.no_results(user.email, search)
                     query_input = suggestions.get("choices")[0].get("message").get("content")
                 if tweets:
@@ -753,7 +753,14 @@ class PRSearchViewSet(
                     )
                 else:
                     res = twitter_account.get_summary(
-                        request.user, token_amount, timeout, tweets, search, company, instructions, True
+                        request.user,
+                        token_amount,
+                        timeout,
+                        tweets,
+                        search,
+                        company,
+                        instructions,
+                        True,
                     )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("tweet_summaries")
@@ -2702,11 +2709,10 @@ class ThreadViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -2723,7 +2729,7 @@ class ThreadViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
-    
+
     @action(
         methods=["get"],
         permission_classes=[permissions.AllowAny],
@@ -2732,19 +2738,22 @@ class ThreadViewSet(
     )
     def get_shared_thread(self, request, *args, **kwargs):
         encrypted_code = request.GET.get("code")
-        print('code',encrypted_code)
+        print("code", encrypted_code)
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
-            print('decrypt here : ', decrypted_dict)
+            print("decrypt here : ", decrypted_dict)
             id = decrypted_dict.get("id")
-            print('id here : ',id)
+            print("id here : ", id)
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)
-            print('report here : ',report)
+            print("report here : ", report)
             serializer = self.get_serializer(report)
         except Exception as e:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "There was an issue retrieving this thread"},
+            )
         return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
 
 
