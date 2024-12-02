@@ -1699,15 +1699,17 @@
                 </div>
               </div> -->
 
-              <!-- <div
-                v-if="mainView === 'news'"
+              <div
                 @click.stop="showShare"
-                class="secondary-button"
+                class="secondary-button s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
               >
                 Share
-              
-              </div> -->
+                <div v-if="!searchSaved" style="width: 150px" class="s-tooltip">
+                  Save to enable sharing
+                </div>
+                <div v-else class="s-tooltip">Share thread</div>
+              </div>
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
@@ -1869,9 +1871,12 @@
               </div>
 
               <div class="dropdown-small" v-outside-click="hideShare" v-show="showingShare">
-                <div class="dropdown-small-header">Share with others</div>
+                <div class="dropdown-small-header">
+                  Share Thread
+                  <!-- <p>Generate a shareable link to this thread</p> -->
+                </div>
                 <div class="dropdown-small-section dropdown-small-bb">
-                  <label for="shareEmail">Email</label>
+                  <!-- <label for="shareEmail">Email</label>
                   <input
                     class="area-input-outline"
                     name="shareEmail"
@@ -1895,9 +1900,9 @@
                       <img v-else src="@/assets/images/email-round.svg" height="14px" alt="" /> Send
                       Email
                     </button>
-                  </div>
+                  </div> -->
                 </div>
-                <div class="dropdown-small-section">
+                <!-- <div class="dropdown-small-section">
                   <label for="slackChannel">Slack</label>
 
                   <div>
@@ -1998,6 +2003,15 @@
                       Connect Slack
                     </button>
                   </div>
+                </div> -->
+
+                <div style="margin-top: 1rem" class="flex-end">
+                  <div class="row">
+                    <button style="margin: 0" class="secondary-button">Cancel</button>
+                    <button style="margin: 0" @click="shareThread" class="primary-button">
+                      Generate Link
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2025,9 +2039,9 @@
                   "
                   class="dropdown-small-header opaquest"
                 >
-                  Save this search
+                  Save Thread
                 </div>
-                <div v-else class="dropdown-small-header">Save this search</div>
+                <div v-else class="dropdown-small-header">Save Thread</div>
 
                 <!-- <div v-if="mainView === 'write'" class="dropdown-small-section">
                   <label
@@ -3882,6 +3896,7 @@ export default {
   },
   data() {
     return {
+      currentThread: {},
       searchSaved: false,
       loadingAnalytics: false,
       showingAnalytics: false,
@@ -4782,6 +4797,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.abortFunctions()
   },
   methods: {
+    async shareThread() {
+      try {
+        const res = await Comms.api.shareThread({
+          code: this.searchId,
+        })
+        console.log(res)
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async saveThread() {
       this.savingSearch = true
       try {

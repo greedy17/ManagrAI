@@ -2732,12 +2732,16 @@ class ThreadViewSet(
     )
     def get_shared_thread(self, request, *args, **kwargs):
         encrypted_code = request.GET.get("code")
+        print('code',encrypted_code)
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
+            print('decrypt here : ', decrypted_dict)
             id = decrypted_dict.get("id")
+            print('id here : ',id)
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)
+            print('report here : ',report)
             serializer = self.get_serializer(report)
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
