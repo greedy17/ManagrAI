@@ -197,6 +197,7 @@ class NewsSpider(scrapy.Spider):
         self.no_report = kwargs.get("no_report")
         self.article_only = kwargs.get("article_only")
         self.urls_processed = 0
+        self.articles_to_process = 0
         self.error_log = []
         self.start_time = time.time()
         self.blocked_urls = 0
@@ -328,6 +329,7 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
+                        self.articles_to_process += 1
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,
@@ -459,6 +461,9 @@ class NewsSpider(scrapy.Spider):
         if not source.is_crawling:
             source.crawling
         self.urls_processed += 1
+        self.articles_to_process -= 1
+        if self.articles_to_process == 0:
+            source.check_if_stopped()
         return
 
     def process_new_url(self, source, response):
