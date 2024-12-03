@@ -1600,7 +1600,7 @@ class Thread(TimeStampModel):
         data = {"created_at": date, "id": str(self.id)}
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
-        return f"{base_url}/api/threads/shared/{encrypted_data}"
+        return f"{base_url}/summaries/{encrypted_data}"
 
 
 class ThreadMessage(TimeStampModel):
