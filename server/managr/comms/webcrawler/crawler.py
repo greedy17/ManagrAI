@@ -423,7 +423,10 @@ class NewsSpider(scrapy.Spider):
                 cleaned_data = data_cleaner(meta_tag_data)
                 if isinstance(cleaned_data, dict):
                     if self.article_only:
-                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                        try:
+                            serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                        except Article.DoesNotExist:
+                            serializer = ArticleSerializer(data=cleaned_data)
                     else:
                         serializer = ArticleSerializer(data=cleaned_data)
                     serializer.is_valid(raise_exception=True)

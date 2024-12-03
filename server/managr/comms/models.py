@@ -671,6 +671,8 @@ class NewsSource(TimeStampModel):
         return self.save()
 
     def check_if_stopped(self):
+        if self.posting_frequency == 0:
+            return
         newest_article = self.newest_article_date()
         if newest_article:
             article_date = newest_article.date()
@@ -678,7 +680,9 @@ class NewsSource(TimeStampModel):
             days_since_last_article = (today - article_date).days
             if days_since_last_article > self.posting_frequency:
                 self.is_stopped = True
-                self.save()
+            else:
+                self.is_stopped = False
+        self.save()
         return self.is_stopped
 
 
