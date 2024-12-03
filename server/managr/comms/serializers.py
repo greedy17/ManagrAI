@@ -216,11 +216,12 @@ class CompanyDetailsSerializer(serializers.ModelSerializer):
 
 
 class ThreadSerializer(serializers.ModelSerializer):
+    share_url = serializers.SerializerMethodField("get_share_url")
+
     class Meta:
         model = Thread
-        fields = (
-            "id",
-            "title",
-            "user",
-            "meta_data"
-        )
+        fields = ("id", "title", "user", "share_url", "meta_data")
+
+    def get_share_url(self, instance):
+        url = instance.generate_url()
+        return url

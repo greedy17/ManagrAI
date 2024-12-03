@@ -2036,6 +2036,7 @@
                   <div style="width: 10%">Emails Drafted</div>
                   <div style="width: 10%">Saved News</div>
                   <div style="width: 10%">Saved Social</div>
+                  <div style="width: 10%">Shared Threads</div>
                 </div>
                 <div style="height: 95%">
                   <div
@@ -2102,6 +2103,9 @@
                       {{
                         user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length
                       }}
+                    </div>
+                    <div style="width: 10%">
+                      {{ user.meta_data.shared_thread ? user.meta_data.shared_thread.total : 0 }}
                     </div>
                   </div>
                 </div>
@@ -2647,6 +2651,7 @@ export default {
         discoveries: user.meta_data.discovery ? user.meta_data.discovery.total : 0,
         savedNews: user.searches_ref.filter((search) => search.type === 'NEWS').length,
         savedSocial: user.searches_ref.filter((search) => search.type === 'SOCIAL_MEDIA').length,
+        sharedThreads: user.meta_data.shared_thread ? user.meta_data.shared_thread.total : 0,
       }))
 
       this.arrayToCSV(csvData)

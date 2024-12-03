@@ -14,7 +14,7 @@ export default new Router({
       component: () => import('@/views/SearchSummaries')
     },
     {
-      path: '/summaries',
+      path: '/summaries/:code?',
       name: 'PRSummaries',
       beforeEnter: Auth.requireAuth,
       component: () => import('@/views/SearchSummaries')

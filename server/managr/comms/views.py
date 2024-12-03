@@ -2708,11 +2708,10 @@ class ThreadViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -2729,6 +2728,30 @@ class ThreadViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="shared",
+    )
+    def get_shared_thread(self, request, *args, **kwargs):
+        user = request.user
+        encrypted_code = request.GET.get("code")
+        # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
+        try:
+            decrypted_dict = decrypt_dict(encrypted_code)
+            id = decrypted_dict.get("id")
+            date = decrypted_dict.get("created_at")
+            report = Thread.objects.get(id=id)
+            serializer = self.get_serializer(report)
+            user.add_meta_data("shared_thread")
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "There was an issue retrieving this thread"},
+            )
+        return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
 
 
 # ENDPOINTS
