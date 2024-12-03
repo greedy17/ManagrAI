@@ -2737,11 +2737,11 @@ class ThreadViewSet(
         url_path="shared",
     )
     def get_shared_thread(self, request, *args, **kwargs):
+        user = request.user
         encrypted_code = request.GET.get("code")
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
-            print('dict is here',decrypted_dict)
             id = decrypted_dict.get("id")
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)

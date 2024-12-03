@@ -67,10 +67,14 @@ const state = {
   generatedContent: null,
   abortControllers: {},
   stripeKey: null,
-  listName: 'news'
+  listName: 'news',
+  viewOnly: false,
 }
 
 const mutations = {
+  VIEW_ONLY: (state, payload) => {
+    state.viewOnly = payload
+  },
   UPDATE_LIST: (state, payload) => {
     state.listName = payload
   },
@@ -302,6 +306,9 @@ const actions = {
     const res = await Status.api.list({})
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
+  },
+  updateViewOnly({ commit }, bool) {
+    commit('VIEW_ONLY', bool)
   },
   updateListName({ commit }, title) {
     commit('UPDATE_LIST', title)
