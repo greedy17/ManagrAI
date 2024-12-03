@@ -140,7 +140,6 @@ def getclips(request):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            print("BOOLEAN IS HERE --- > :", query_input)
             news_res = Search.get_clips(query_input, date_to, date_from, is_report)
             articles = news_res["articles"]
         else:
