@@ -354,8 +354,17 @@ class NewsSpider(scrapy.Spider):
     def parse_article(self, response, source=False):
         xpath_copy = copy(XPATH_STRING_OBJ)
         if source is False:
-            instance = Article.objects.get(link=response.url)
-            source = instance.source
+            try:
+                instance = Article.objects.get(link=response.url)
+                source = instance.source
+            except Article.DoesNotExist:
+                instance = None
+                try:
+                    domain = get_domain(response.request.url, True)
+                    source = NewsSource.objects.get(domain__contains=domain)
+                except NewsSource.DoesNotExist:
+                    logger.exception(f"Failed to find source with domain: {domain}")
+                    return
         meta_tag_data = {"link": response.url, "source": source.id}
         article_selectors = source.article_selectors()
         fields_dict = {}
@@ -422,11 +431,8 @@ class NewsSpider(scrapy.Spider):
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
                 if isinstance(cleaned_data, dict):
-                    if self.article_only:
-                        try:
-                            serializer = ArticleSerializer(instance=instance, data=cleaned_data)
-                        except Article.DoesNotExist:
-                            serializer = ArticleSerializer(data=cleaned_data)
+                    if self.article_only and instance:
+                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
                     else:
                         serializer = ArticleSerializer(data=cleaned_data)
                     serializer.is_valid(raise_exception=True)
