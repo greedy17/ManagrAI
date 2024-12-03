@@ -787,7 +787,7 @@ class CommsApi extends ModelAPI {
     }
     async shareThread(data) {
         try {
-            const res = await this.client.get(`threads/shared/`, { params: data })
+            const res = await this.client.get(`threads/shared`, { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

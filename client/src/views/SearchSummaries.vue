@@ -1871,11 +1871,22 @@
               </div>
 
               <div class="dropdown-small" v-outside-click="hideShare" v-show="showingShare">
-                <div class="dropdown-small-header">
-                  Share Thread
-                  <!-- <p>Generate a shareable link to this thread</p> -->
+                <div style="padding-bottom: 12px" class="dropdown-small-header dropdown-small-bb">
+                  <p style="margin: 0">Share Thread</p>
+                  <small style="color: #555f71">Below is a shareable link to this thread</small>
                 </div>
-                <div class="dropdown-small-section dropdown-small-bb">
+                <div class="dropdown-small-section">
+                  <div class="row">
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/link.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    <p style="max-width: 250px; margin: 0" class="ellipsis-text-s">
+                      loremipsumlinkishereloremipsumlinkishereloremipsumlinkishere
+                    </p>
+                  </div>
                   <!-- <label for="shareEmail">Email</label>
                   <input
                     class="area-input-outline"
@@ -2005,11 +2016,11 @@
                   </div>
                 </div> -->
 
-                <div style="margin-top: 1rem" class="flex-end">
-                  <div class="row">
-                    <button style="margin: 0" class="secondary-button">Cancel</button>
+                <div class="flex-end">
+                  <div style="width: fit-content; padding-bottom: 12px" class="row">
+                    <button style="margin: 0 8px" class="secondary-button">Cancel</button>
                     <button style="margin: 0" @click="shareThread" class="primary-button">
-                      Generate Link
+                      Copy Link
                     </button>
                   </div>
                 </div>
@@ -4798,6 +4809,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   },
   methods: {
     async shareThread() {
+      console.log(this.searchId)
       try {
         const res = await Comms.api.shareThread({
           code: this.searchId,
