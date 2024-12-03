@@ -667,7 +667,7 @@ class NewsSource(TimeStampModel):
             avg_interval_days = sum(time_diffs) / len(time_diffs)
         else:
             avg_interval_days = 0
-        self.posting_frequency = math.floor(avg_interval_days)
+        self.posting_frequency = math.ceil(avg_interval_days)
         return self.save()
 
     def check_if_stopped(self):
