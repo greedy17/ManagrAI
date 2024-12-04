@@ -289,7 +289,7 @@
                     style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
                   >
                     <p style="font-size: 15px !important" class="mobile-text-hide">
-                      {{ selectedSearch ? selectedSearch.name : 'Select a search' }}
+                      {{ selectedSearch ? selectedSearch.title : 'Select a thread' }}
                     </p>
 
                     <img
@@ -322,19 +322,15 @@
                     class="container-left-below"
                   >
                     <section>
-                      <h3>Select a search</h3>
+                      <h3>Select a thread</h3>
                     </section>
 
-                    <div v-if="savedSearches.length">
-                      <p
-                        v-for="(search, i) in savedSearches"
-                        :key="i"
-                        @click="selectSearch(search)"
-                      >
-                        {{ search.name }}
+                    <div v-if="savedThreads.length">
+                      <p v-for="(search, i) in savedThreads" :key="i" @click="selectSearch(search)">
+                        {{ search.title }}
                       </p>
                     </div>
-                    <div v-else>You dont have any saved searches...</div>
+                    <div v-else>You dont have any saved threads...</div>
                   </div>
                 </div>
               </div>
@@ -1056,7 +1052,7 @@ export default {
       sourceType: null,
       sources: [
         { name: 'Upload URLs', value: 'url' },
-        { name: 'Saved Search', value: 'saved' },
+        { name: 'Saved Thread', value: 'saved' },
         { name: 'Both', value: 'both' },
       ],
       editSummary: false,
@@ -1108,7 +1104,7 @@ export default {
       ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
-      savedText: `Got it, pick one of your saved searches`,
+      savedText: `Got it, pick one of your saved threads`,
       urlText: 'Where would you like us to pull the clips from ?',
       reportUrls: '',
       urlsSet: false,
@@ -1138,8 +1134,10 @@ www.forbes.com/article-3
     reports() {
       return this.$store.state.allReports
     },
-    savedSearches() {
-      return this.$store.state.allSearches.filter((search) => search.type === 'NEWS')
+    savedThreads() {
+      return this.$store.state.allThreads.filter(
+        (thread) => thread.meta_data.type && thread.meta_data.type === 'news',
+      )
     },
     user() {
       return this.$store.state.user
@@ -1154,41 +1152,29 @@ www.forbes.com/article-3
     this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
-    async getClips() {
+    getClips() {
       this.loadingClips = true
-      try {
-        const res = await Comms.api.getClips({
-          search: this.selectedSearch.input_text,
-          boolean: this.selectedSearch.search_boolean,
-          user_id: this.user.id,
-          date_from: this.dateStart,
-          date_to: this.dateEnd,
-          is_report: true,
+
+      let articles = []
+      articles = this.selectedSearch.meta_data.filteredArticles
+
+      if (this.sourceType !== 'both') {
+        this.urls = articles.map((art) => {
+          return art.link
         })
-        let articles = []
-        articles = res.articles
+        this.urlCount = this.urls.length
+        this.useSearchUrls = true
+        this.setUrls()
+      } else {
+        this.reportUrls = articles.map((art) => {
+          return art.link
+        })
 
-        if (this.sourceType !== 'both') {
-          this.urls = articles.map((art) => {
-            return art.link
-          })
-          this.urlCount = this.urls.length
-          this.useSearchUrls = true
-          this.setUrls()
-        } else {
-          this.reportUrls = articles.map((art) => {
-            return art.link
-          })
-
-          this.urlCount = this.reportUrls.length
-          this.useSearchUrls = true
-        }
-      } catch (e) {
-        this.reportUrls = []
-        console.log(e)
-      } finally {
-        this.loadingClips = false
+        this.urlCount = this.reportUrls.length
+        this.useSearchUrls = true
       }
+
+      this.loadingClips = false
     },
     toggleSource() {
       this.showSource = true
@@ -1211,6 +1197,7 @@ www.forbes.com/article-3
       this.selectedSearch = val
       this.hideSearches()
       this.scrollToChatTop()
+      console.log(val)
       this.getClips()
     },
     closeSummaryEdit() {
