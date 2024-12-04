@@ -4859,7 +4859,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.pitchStyleSetup()
     this.setPlaceholder()
 
-    const path = this.$route.path
+    const path = this.$route.path.replace(/\/$/, '') // Remove trailing slash
     const matches = path.match(/\/summaries\/(.+)/)
     if (matches && matches[1]) {
       const code = matches[1]
