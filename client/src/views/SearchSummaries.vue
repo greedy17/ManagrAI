@@ -1052,7 +1052,8 @@
                       :disabled="
                         loading ||
                         summaryLoading ||
-                        (mainView === 'social' && !hasTwitterIntegration)
+                        (mainView === 'social' && !hasTwitterIntegration) ||
+                        isViewOnly
                       "
                     />
 
@@ -1135,7 +1136,7 @@
                         alt=""
                       /> -->
 
-                        <div class="s-tooltip">Mode</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Mode' }}</div>
                       </div>
 
                       <div
@@ -1352,7 +1353,7 @@
                         >
                           <img src="@/assets/images/close.svg" height="12px" alt="" />
                         </div>
-                        <div class="s-tooltip">Projects</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Projects' }}</div>
                       </div>
 
                       <div
@@ -1408,6 +1409,7 @@
                         <footer class="space-between">
                           <span></span>
                           <button
+                            :disabled="isViewOnly"
                             @click="toggleDetailsInputModal"
                             class="primary-button"
                             style="margin-right: 4px"
@@ -1431,7 +1433,7 @@
                           alt=""
                         />
 
-                        <div class="s-tooltip">Date</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
                       </div>
 
                       <div
@@ -1621,7 +1623,12 @@
         >
           <header class="content-header-test">
             <div class="row-top">
-              <div style="margin-top: 16px" class="image-container xxl-margin" @click="resetAll">
+              <div
+                v-if="!isViewOnly"
+                style="margin-top: 16px"
+                class="image-container xxl-margin"
+                @click="resetAll"
+              >
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
               </div>
 
@@ -1699,15 +1706,20 @@
                 </div>
               </div> -->
 
-              <!-- <div
-                v-if="mainView === 'news'"
+              <button
+                v-if="!isViewOnly"
                 @click.stop="showShare"
-                class="secondary-button"
+                class="secondary-button s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
+                :disabled="!searchSaved"
               >
                 Share
-              
-              </div> -->
+                <div v-if="!searchSaved && !isViewOnly" style="width: 150px" class="s-tooltip">
+                  Save to enable sharing
+                </div>
+                <div v-else-if="isViewOnly" class="s-tooltip">Locked</div>
+                <div v-else class="s-tooltip">Share thread</div>
+              </button>
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
@@ -1734,11 +1746,12 @@
                 }"
                 @click.stop="showSave"
                 v-if="
-                  (filteredArticles && filteredArticles.length) ||
-                  tweets.length ||
-                  (mainView === 'write' && summary) ||
-                  (mainView === 'discover' && summary) ||
-                  (mainView === 'web' && summary)
+                  ((filteredArticles && filteredArticles.length) ||
+                    tweets.length ||
+                    (mainView === 'write' && summary) ||
+                    (mainView === 'discover' && summary) ||
+                    (mainView === 'web' && summary)) &&
+                  !isViewOnly
                 "
                 :disabled="searchSaved"
               >
@@ -1869,9 +1882,40 @@
               </div>
 
               <div class="dropdown-small" v-outside-click="hideShare" v-show="showingShare">
-                <div class="dropdown-small-header">Share with others</div>
-                <div class="dropdown-small-section dropdown-small-bb">
-                  <label for="shareEmail">Email</label>
+                <div style="padding-bottom: 12px" class="dropdown-small-header dropdown-small-bb">
+                  <p style="margin: 0">Share Thread</p>
+                  <small style="color: #555f71">Below is a shareable link to this thread</small>
+                </div>
+                <div class="dropdown-small-section">
+                  <div v-if="savedSearch" class="row">
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/link.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    <a
+                      :href="savedSearch.share_url"
+                      target="_blank"
+                      style="max-width: 250px; margin: 0"
+                      class="ellipsis-text-s share-link"
+                    >
+                      {{ savedSearch.share_url }}
+                    </a>
+                  </div>
+
+                  <div v-else class="row">
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/link.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    <small style="max-width: 250px; margin: 0" class="ellipsis-text-s share-link">
+                      link not generated
+                    </small>
+                  </div>
+                  <!-- <label for="shareEmail">Email</label>
                   <input
                     class="area-input-outline"
                     name="shareEmail"
@@ -1895,9 +1939,9 @@
                       <img v-else src="@/assets/images/email-round.svg" height="14px" alt="" /> Send
                       Email
                     </button>
-                  </div>
+                  </div> -->
                 </div>
-                <div class="dropdown-small-section">
+                <!-- <div class="dropdown-small-section">
                   <label for="slackChannel">Slack</label>
 
                   <div>
@@ -1998,6 +2042,17 @@
                       Connect Slack
                     </button>
                   </div>
+                </div> -->
+
+                <div class="flex-end">
+                  <div style="width: fit-content; padding-bottom: 12px" class="row">
+                    <button @click="hideSave" style="margin: 0 8px" class="secondary-button">
+                      Cancel
+                    </button>
+                    <button style="margin: 0" @click="copyShareThread" class="primary-button">
+                      {{ copyShareTip }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2025,9 +2080,9 @@
                   "
                   class="dropdown-small-header opaquest"
                 >
-                  Save this search
+                  Save Thread
                 </div>
-                <div v-else class="dropdown-small-header">Save this search</div>
+                <div v-else class="dropdown-small-header">Save Thread</div>
 
                 <!-- <div v-if="mainView === 'write'" class="dropdown-small-section">
                   <label
@@ -2489,7 +2544,9 @@
                   />
                   <div class="s-tooltip">
                     {{
-                      mainView === 'news'
+                      isViewOnly
+                        ? 'Locked'
+                        : mainView === 'news'
                         ? !hasTwitterIntegration
                           ? 'Connect Twiiter'
                           : 'Switch to Social'
@@ -2500,7 +2557,7 @@
 
                 <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
                   <img src="@/assets/images/google.svg" height="16px" alt="" />
-                  <div class="s-tooltip">Switch to Web</div>
+                  <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to Web' }}</div>
                 </div>
               </div>
             </div>
@@ -2588,8 +2645,13 @@
                   <p><span>Name</span>: {{ j.name }}</p>
                   <p><span>Publication</span>: {{ j.publication }}</p>
                   <p><span>Reason for selection</span>: {{ j.reason }}</p>
-                  <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                  <button
+                    :disabled="isViewOnly"
+                    @click="grabJournalist(j.name, j.pub)"
+                    class="secondary-button s-wrapper"
+                  >
                     View bio
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
                   </button>
                 </div>
               </div>
@@ -2696,7 +2758,9 @@
                     />
                     <div class="s-tooltip">
                       {{
-                        mainView === 'news'
+                        isViewOnly
+                          ? 'Locked'
+                          : mainView === 'news'
                           ? !hasTwitterIntegration
                             ? 'Connect Twiiter'
                             : 'Switch to Social'
@@ -2707,7 +2771,7 @@
 
                   <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
                     <img src="@/assets/images/google.svg" height="16px" alt="" />
-                    <div class="s-tooltip">Switch to Web</div>
+                    <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to Web' }}</div>
                   </div>
                 </div>
 
@@ -2718,13 +2782,19 @@
                     style="margin: 0 12px; cursor: pointer"
                   >
                     <img src="@/assets/images/globe.svg" height="16px" alt="" />
-                    <div class="s-tooltip">Switch to News</div>
+                    <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to News' }}</div>
                   </div>
 
                   <div @click="toggleType('social')" style="cursor: pointer" class="s-wrapper">
                     <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
                     <div class="s-tooltip">
-                      {{ !hasTwitterIntegration ? 'Connect Twiiter' : 'Switch to Social' }}
+                      {{
+                        isViewOnly
+                          ? 'Locked'
+                          : !hasTwitterIntegration
+                          ? 'Connect Twiiter'
+                          : 'Switch to Social'
+                      }}
                     </div>
                   </div>
                 </div>
@@ -2878,8 +2948,13 @@
                       <p><span>Name</span>: {{ j.name }}</p>
                       <p><span>Publication</span>: {{ j.publication }}</p>
                       <p><span>Reason for selection</span>: {{ j.reason }}</p>
-                      <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                      <button
+                        :disabled="isViewOnly"
+                        @click="grabJournalist(j.name, j.pub)"
+                        class="secondary-button s-wrapper"
+                      >
                         View bio
+                        <div v-if="isViewOnly" class="s-tooltip">Locked</div>
                       </button>
                     </div>
                   </div>
@@ -3031,7 +3106,7 @@
       </section>
 
       <div
-        v-if="!loading && !summaryLoading"
+        v-if="!loading && !summaryLoading && !isViewOnly"
         style="
           background: white;
           position: sticky;
@@ -3462,7 +3537,7 @@
                   alt=""
                 />
 
-                <div class="s-tooltip">Date</div>
+                <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
               </div>
 
               <div
@@ -3722,7 +3797,8 @@
                   <button
                     @click="getTrafficData(article.link, article)"
                     style="margin-right: 16px"
-                    class="secondary-button alt-btn"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
                   >
                     <img
                       style="margin-right: 8px"
@@ -3731,6 +3807,8 @@
                       alt=""
                     />
                     Analyze
+
+                    <div class="s-tooltip">Locked</div>
                   </button>
                 </div>
                 <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
@@ -3882,6 +3960,8 @@ export default {
   },
   data() {
     return {
+      shareUrl: '',
+      currentThread: {},
       searchSaved: false,
       loadingAnalytics: false,
       showingAnalytics: false,
@@ -4216,16 +4296,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       newsExamples: [
         {
-          name: `Top storylines about...`,
-          value: `Top storylines about {Topic}`,
+          name: `Top storylines...`,
+          value: `Top storylines, influential journalists, and sentiment covering {Topic}`,
         },
         {
-          name: `Industry news I should know ..`,
-          value: `Find relevant industry news I should be staying on top of`,
+          name: `News roundup...`,
+          value: `Provide a news roundup for {Brand}, include brand, competitors and industry updates`,
         },
         {
-          name: `Analyze media coverage...`,
-          value: `Analyze media coverage about {Brand}`,
+          name: `Who's writing about...`,
+          value: `Who’s writing about {Topic} ? List the 5 most influential, recognizable journalists.`,
         },
       ],
       discoveryExamples: [
@@ -4545,6 +4625,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
+      copyShareTip: 'Copy Link',
       searchSuggestions: [
         `What is the PR impact of this coverage`,
         `Find me the most positive / negative article`,
@@ -4777,11 +4858,36 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.getEmailAlerts()
     this.pitchStyleSetup()
     this.setPlaceholder()
+
+    const path = this.$route.path
+    const matches = path.match(/\/summaries\/(.+)/)
+    if (matches && matches[1]) {
+      const code = matches[1]
+      this.shareThread(code)
+    }
   },
   beforeDestroy() {
     this.abortFunctions()
   },
   methods: {
+    async shareThread(code) {
+      try {
+        const res = await Comms.api.shareThread({
+          code: code,
+        })
+        this.setSearch(res.data)
+        this.$store.dispatch('updateViewOnly', true)
+      } catch (e) {
+        console.log(e)
+        this.$toast('Thread does not exist', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
     async saveThread() {
       this.savingSearch = true
       try {
@@ -4802,8 +4908,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
             filteredArticles: this.filteredArticles,
             type: this.mainView,
             originalSearch: this.originalSearch,
+            tweets: this.tweets,
           },
         })
+        this.savedSearch = res
         this.showingSave = false
         this.savingSearch = false
         this.$toast('Thread Saved', {
@@ -5488,18 +5596,20 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     addDetails(title, deets) {
-      if (title === this.detailTitle) {
-        this.detailTitle = ''
-        this.selectedOrg = ''
+      if (!this.isViewOnly) {
+        if (title === this.detailTitle) {
+          this.detailTitle = ''
+          this.selectedOrg = ''
+          this.showingDetails = false
+          this.showingMainDetails = false
+          this.showingAllDetails = false
+        }
+        this.selectedOrg = deets
+        this.detailTitle = title
         this.showingDetails = false
         this.showingMainDetails = false
         this.showingAllDetails = false
       }
-      this.selectedOrg = deets
-      this.detailTitle = title
-      this.showingDetails = false
-      this.showingMainDetails = false
-      this.showingAllDetails = false
     },
     addDetailsAlt(title, deets) {
       if (title === this.detailTitle) {
@@ -5635,7 +5745,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingDetailsEmail = !this.showingDetailsEmail
     },
     toggleMainDetails() {
-      this.showingMainDetails = !this.showingMainDetails
+      if (!this.isViewOnly) {
+        this.showingMainDetails = !this.showingMainDetails
+      }
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -5665,9 +5777,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showArticleGenerateDropdown = false
     },
     toggleDate() {
-      this.showDateSelection = !this.showDateSelection
-      this.showingSources = false
-      this.showCompanySelection = false
+      if (!this.isViewOnly) {
+        this.showDateSelection = !this.showDateSelection
+        this.showingSources = false
+        this.showCompanySelection = false
+      }
     },
     toggleCompany() {
       this.showCompanySelection = !this.showCompanySelection
@@ -5973,25 +6087,27 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.searchSaved = false
     },
     toggleType(type) {
-      this.modeReset()
-      if (type === 'social') {
-        if (this.hasTwitterIntegration) {
+      if (!this.isViewOnly) {
+        this.modeReset()
+        if (type === 'social') {
+          if (this.hasTwitterIntegration) {
+            this.mainView = type
+            this.generateNewSearch(null, false)
+            this.clearSearchText()
+            this.notifiedList = []
+          } else {
+            this.goToIntegrations()
+          }
+        } else if (type === 'write') {
+          this.getWritingStyles()
+          this.mainView = type
+          this.generateNewSearch(null, false)
+        } else {
           this.mainView = type
           this.generateNewSearch(null, false)
           this.clearSearchText()
           this.notifiedList = []
-        } else {
-          this.goToIntegrations()
         }
-      } else if (type === 'write') {
-        this.getWritingStyles()
-        this.mainView = type
-        this.generateNewSearch(null, false)
-      } else {
-        this.mainView = type
-        this.generateNewSearch(null, false)
-        this.clearSearchText()
-        this.notifiedList = []
       }
     },
     async getWritingStyles() {
@@ -6585,53 +6701,56 @@ Your goal is to create content that resonates deeply, connects authentically, an
       return { name, publication, tip }
     },
     selectJournalist(article, web = false) {
-      if (this.mainView === 'web') {
-        const author = article.author
-        const outlet = article.source
-        const headline = article.title
-        const description = article.snippet
-        const rawDate = new Date()
-        const date = this.getTimeDifferenceInMinutes(rawDate)
+      if (!this.isViewOnly) {
+        if (this.mainView === 'web') {
+          const author = article.author
+          const outlet = article.source
+          const headline = article.title
+          const description = article.snippet
+          const rawDate = new Date()
+          const date = this.getTimeDifferenceInMinutes(rawDate)
 
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
 
-        this.googleModalOpen = true
-        this.getJournalistBio()
+          this.googleModalOpen = true
+          this.getJournalistBio()
 
-        // this.draftPitch(author, outlet, headline, description, date)
-      } else if (this.mainView === 'news') {
-        const author = this.extractJournalist(article.author)
-        const outlet = article.source.name
-        const headline = article.title
-        const description = article.description
-        const date = this.getTimeDifferenceInMinutes(article.publish_date)
-        this.googleModalOpen = true
-        // this.emailJournalistModalOpen = true
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
-        this.getJournalistBio()
-        // this.draftPitch(author, outlet, headline, description, date)
+          // this.draftPitch(author, outlet, headline, description, date)
+        } else if (this.mainView === 'news') {
+          const author = this.extractJournalist(article.author)
+          const outlet = article.source.name
+          const headline = article.title
+          const description = article.description
+          const date = this.getTimeDifferenceInMinutes(article.publish_date)
+          this.googleModalOpen = true
+          // this.emailJournalistModalOpen = true
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
+          this.getJournalistBio()
+          // this.draftPitch(author, outlet, headline, description, date)
+        } else {
+          const author = article.user.name + ' ' + '@' + article.user.username
+          const outlet = 'not available'
+          const headline = 'X/Twitter User'
+          const description = article.text
+          const date = this.getTimeDifferenceInMinutes(article.created_at)
+          this.googleModalOpen = true
+          // this.emailJournalistModalOpen = true
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
+          this.getJournalistBio(true)
+        }
       } else {
-        const author = article.user.name + ' ' + '@' + article.user.username
-        const outlet = 'not available'
-        const headline = 'X/Twitter User'
-        const description = article.text
-        const date = this.getTimeDifferenceInMinutes(article.created_at)
-        this.googleModalOpen = true
-        // this.emailJournalistModalOpen = true
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
-        this.getJournalistBio(true)
       }
     },
     extractJournalist(author) {
@@ -6778,8 +6897,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSummaryMenu = !this.showSummaryMenu
     },
     setNewSearch(txt) {
-      this.newSearch = txt
-      this.highlightCurlyBracketText()
+      if (!this.isViewOnly) {
+        this.newSearch = txt
+        this.highlightCurlyBracketText()
+      }
     },
     highlightCurlyBracketText() {
       this.$nextTick(() => {
@@ -7609,6 +7730,17 @@ Your goal is to create content that resonates deeply, connects authentically, an
         console.error('Failed to copy text: ', err)
       }
     },
+    async copyShareThread() {
+      try {
+        await navigator.clipboard.writeText(this.savedSearch.share_url)
+        this.copyShareTip = 'Copied!'
+        setTimeout(() => {
+          this.copyShareTip = 'Copy Link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async copyArticleSummary(article) {
       try {
         const cleanedSummary = article.replace(/<\/?[^>]+(>|$)/g, '')
@@ -7679,11 +7811,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.summary = ''
     },
     switchMainView(view) {
-      this.resetAll()
-      this.clearDetails()
-      if (view !== this.mainView) {
-        this.mainView = view
-        this.$store.dispatch('updateListName', view)
+      if (!this.isViewOnly) {
+        this.resetAll()
+        this.clearDetails()
+        if (view !== this.mainView) {
+          this.mainView = view
+          this.$store.dispatch('updateListName', view)
+        }
       }
     },
     formatNumber(num) {
@@ -7708,6 +7842,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.citationsMounted = false
       this.altCitationsMounted = false
       this.savedSearch = search
+      this.shareUrl = search.share_url
       this.searchId = search.id
       this.newSearch = search.meta_data.searchTerm
       this.summary = search.meta_data.summary
@@ -7715,6 +7850,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.summaries = search.meta_data.summaries
       this.followUps = search.meta_data.followUps
       this.preparedTweets = search.meta_data.preparedTweets
+      this.tweets = search.meta_data.tweets ? search.meta_data.tweets : []
       this.googleResults = search.meta_data.googleResults
       this.articlesFiltered = search.meta_data.articlesFiltered
       this.filteredArticles = search.meta_data.filteredArticles
@@ -8947,6 +9083,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
   },
   computed: {
+    isViewOnly() {
+      return this.$store.state.viewOnly
+    },
     hasGoogleIntegration() {
       return !!this.$store.state.user.hasGoogleIntegration
     },
@@ -14310,6 +14449,17 @@ textarea::placeholder {
   }
 }
 
+.share-link {
+  text-decoration: none;
+  font-size: 13px;
+  color: $dark-black-blue;
+
+  &:hover {
+    color: $lite-blue;
+    text-decoration: underline;
+  }
+}
+
 .active-toggle {
   background-color: white;
   border-radius: 16px;
@@ -14842,6 +14992,14 @@ select {
     img {
       filter: invert(100%);
     }
+  }
+
+  &:disabled {
+    color: $dark-black-blue !important;
+    img {
+      filter: none !important;
+    }
+    opacity: 0.9 !important;
   }
 }
 

@@ -220,7 +220,7 @@
     <div v-if="userIsLoggedIn">
       <div id="hamburger">
         <img
-          v-if="!mobileMenuOpen"
+          v-if="!mobileMenuOpen && !isViewOnly"
           src="@/assets/images/menu-burger.svg"
           height="24px"
           @click="toggleMobileMenu"
@@ -228,7 +228,7 @@
         <div class="close-menu" @click="toggleMobileMenu" v-else>X</div>
       </div>
 
-      <div class="mobile-nav" v-if="mobileMenuOpen">
+      <div class="mobile-nav" v-if="mobileMenuOpen && !isViewOnly">
         <router-link
           active-class="active-mobile"
           :to="{ name: 'PRSummaries' }"
@@ -249,7 +249,7 @@
         <p style="text-align: center" @click="logOut">Logout</p>
       </div>
 
-      <div v-if="$route.name === 'PRSummaries'" id="relative-mobile">
+      <div v-if="$route.name === 'PRSummaries' && !isViewOnly" id="relative-mobile">
         <div>
           <div
             v-if="listName === 'news' || listName === 'social'"
@@ -361,29 +361,48 @@
       </div>
 
       <nav id="nav">
-        <router-link :to="{ name: 'PRSummaries' }">
+        <div style="margin-left: 12px" @click="goHome" class="row">
           <div class="logo">
-            <img @click="goHome" style="height: 28px" src="@/assets/images/newLogo.png" />
+            <img style="height: 28px" src="@/assets/images/newLogo.png" />
           </div>
-        </router-link>
+        </div>
 
         <router-link active-class="active" :to="{ name: 'PRSummaries' }" id="router-summarize">
           <p>Threads</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Contacts' }" id="router-pitch">
+        <router-link
+          v-if="!isViewOnly"
+          active-class="active"
+          :to="{ name: 'Contacts' }"
+          id="router-pitch"
+        >
           <p>Contacts</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'EmailTracking' }" id="router-pitch">
+        <router-link
+          v-if="!isViewOnly"
+          active-class="active"
+          :to="{ name: 'EmailTracking' }"
+          id="router-pitch"
+        >
           <p>Emails</p>
         </router-link>
 
-        <router-link active-class="active" :to="{ name: 'Reports' }" id="router-pitch">
+        <router-link
+          v-if="!isViewOnly"
+          active-class="active"
+          :to="{ name: 'Reports' }"
+          id="router-pitch"
+        >
           <p>Reports</p>
         </router-link>
 
-        <div class="auto-left">
+        <div style="margin-right: 12px" v-if="isViewOnly" class="auto-left guest-text">
+          <p>You're in guest mode. Visit <span @click="goToDemo">ManagrAI</span> to learn more.</p>
+        </div>
+
+        <div v-if="!isViewOnly" class="auto-left">
           <div v-if="$route.name === 'Reports'" class="row">
             <p class="searches-used-text">Report credits: {{ reportCredits }}</p>
           </div>
@@ -1082,7 +1101,14 @@ export default {
       this.$store.dispatch('getReports')
     },
     goHome() {
-      this.$router.go()
+      if (this.isViewOnly) {
+        // window.open('https://managr.ai', '_blank')
+      } else {
+        this.$router.go()
+      }
+    },
+    goToDemo() {
+      window.open('https://managr.ai', '_blank')
     },
     logOut() {
       this.$store.dispatch('logoutUser')
@@ -1119,6 +1145,9 @@ export default {
     },
   },
   computed: {
+    isViewOnly() {
+      return this.$store.state.viewOnly
+    },
     unfilteredSearches() {
       if (this.personalSearches) {
         return this.$store.state.allThreads.filter((thread) => thread.user === this.user.id)
@@ -1474,18 +1503,28 @@ export default {
 .beta-tag-small {
   letter-spacing: 1px;
   margin-left: 8px;
+  opacity: 1 !important;
 
   p {
-    background-color: $white-blue;
-    color: $dark-black-blue;
+    background-color: $graper;
+    color: white;
     border-radius: 6px;
-    padding: 2px 6px 2px 6px;
+    padding: 4px 6px;
     font-size: 11px;
+    font-family: $base-font-family;
     cursor: text;
 
-    &:hover {
-      color: white;
-    }
+    // &:hover {
+    //   opacity: 0.8;
+    //   cursor: pointer;
+    // }
+  }
+}
+
+.guest-text {
+  span {
+    color: $lite-blue;
+    cursor: pointer;
   }
 }
 
@@ -1795,7 +1834,6 @@ nav {
   }
 }
 .logo {
-  cursor: pointer;
   display: flex;
   flex-direction: row;
   align-items: center;
