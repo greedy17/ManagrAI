@@ -11,7 +11,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>Help me create a coverage report</p>
+              <p>Create a report based on a Thread</p>
             </div>
           </div>
 
@@ -263,7 +263,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>{{ sourceType === 'url' ? 'Upload URLs' : 'Saved Search' }}</p>
+              <p>{{ sourceType === 'url' ? 'Upload URLs' : 'Saved Thread' }}</p>
             </div>
           </div>
 
@@ -340,8 +340,8 @@
                 style="margin: 0 0 8px 14px"
               >
                 <p style="margin-top: 24px" v-if="sourceType === 'both'" class="">
-                  {{ urlCount }} URLs added from saved search. Add additional URLs below, separated
-                  by commas or new lines.
+                  {{ urlCount }} URLs added from the saved thread. Add additional URLs below,
+                  separated by commas or new lines.
                 </p>
 
                 <p v-else class="thin-font">
@@ -1086,7 +1086,7 @@ export default {
       view: 'home',
       creating: true,
       reportName: '',
-      brandText: 'Next, tell us which brand this report is for (e.g. Nike, Tesla, FSU)',
+      brandText: 'Next, tell us which brands are included in this report (e.g. Nike, Tesla, FSU)',
       nameText: 'Using the message bar below, provide a name for your report',
       loading: false,
       brand: '',
@@ -1157,6 +1157,14 @@ www.forbes.com/article-3
 
       let articles = []
       articles = this.selectedSearch.meta_data.filteredArticles
+
+      let additionalClips = this.selectedSearch.meta_data.summaries
+        ? this.selectedSearch.meta_data.summaries.map((summary) => summary.clips)
+        : []
+
+      articles = [articles, ...additionalClips].flat()
+
+      console.log('artices', articles)
 
       if (this.sourceType !== 'both') {
         this.urls = articles.map((art) => {

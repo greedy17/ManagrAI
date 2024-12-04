@@ -3483,6 +3483,7 @@ def get_trending_articles(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_clip_report_summary(request):
+    elma = core_consts.ELMA
     user = request.user
     clips = request.data.get("clips")
     brand = request.data.get("brand")
@@ -3492,7 +3493,7 @@ def get_clip_report_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REPORT_SUMMARY(brand, clips)
+            prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
