@@ -2046,8 +2046,8 @@
 
                 <div class="flex-end">
                   <div style="width: fit-content; padding-bottom: 12px" class="row">
-                    <button @click="hideSave" style="margin: 0 8px" class="secondary-button">
-                      Cancel
+                    <button @click="hideShare" style="margin: 0 8px" class="secondary-button">
+                      Close
                     </button>
                     <button style="margin: 0" @click="copyShareThread" class="primary-button">
                       {{ copyShareTip }}
@@ -3808,7 +3808,7 @@
                     />
                     Analyze
 
-                    <div class="s-tooltip">Locked</div>
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
                   </button>
                 </div>
                 <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
@@ -7800,6 +7800,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingSources = false
       this.journalisListtData = ''
       this.searchSaved = false
+      this.hideShare()
     },
     resetSearch() {
       this.clearNewSearch()
