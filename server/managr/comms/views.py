@@ -2741,12 +2741,16 @@ class ThreadViewSet(
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
+            print('DICT IS HERE --- >',decrypt_dict)
             id = decrypted_dict.get("id")
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)
+            print('REPORT IS HERE --- >',report)
             serializer = self.get_serializer(report)
-            user.add_meta_data("shared_thread")
+            print('SERIALIZER IS HERE --- >',serializer)
+            # user.add_meta_data("shared_thread")
         except Exception as e:
+            print('exception is here --- >',e)
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={"error": "There was an issue retrieving this thread"},

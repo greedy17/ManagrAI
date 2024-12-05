@@ -16,7 +16,13 @@ export default new Router({
     {
       path: '/summaries/:code?',
       name: 'PRSummaries',
-      beforeEnter: Auth.requireAuth,
+      beforeEnter: (to, from, next) => {
+        if (to.params.code) {
+          next();
+        } else {
+          Auth.requireAuth(to, from, next);
+        }
+      },
       component: () => import('@/views/SearchSummaries')
     },
     // {
