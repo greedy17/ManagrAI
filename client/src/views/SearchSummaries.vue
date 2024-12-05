@@ -4697,12 +4697,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
 
     this.$store.dispatch('updateListName', 'news')
-    this.getWritingStyles()
-    this.getCompanyDetails()
-    this.shareEmail = this.user.email
 
-    if (this.user.slackRef) {
-      this.listUserChannels()
+    if (!this.$route.params.code) {
+      this.getWritingStyles()
+      this.getCompanyDetails()
+      this.shareEmail = this.user.email
+
+      if (this.user.slackRef) {
+        this.listUserChannels()
+      }
     }
   },
   watch: {
@@ -4855,9 +4858,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
     }
   },
   mounted() {
-    this.getEmailAlerts()
-    this.pitchStyleSetup()
-    this.setPlaceholder()
+    if (!this.$route.params.code) {
+      this.getEmailAlerts()
+      this.pitchStyleSetup()
+      this.setPlaceholder()
+    }
 
     const path = this.$route.path.replace(/\/$/, '') // Remove trailing slash
     const matches = path.match(/\/summaries\/(.+)/)
@@ -9289,7 +9294,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     isPaid() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!this.$store.state.user.organizationRef.isPaid
+      return !!this.$store.state.user && this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
       let arr = []

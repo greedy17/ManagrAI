@@ -341,7 +341,7 @@ const actions = {
   async getThreads({ commit }) {
     try {
       await Comms.api.getThreads().then((response) => {
-        console.log('get thread resuls', response)
+
         commit('SAVE_THREADS', response.results)
       })
     } catch (e) {
