@@ -255,7 +255,7 @@
       <!-- height: 80vh -->
       <div
         style="width: 55vw; min-width: 500px; max-height: 1000px; height: 80vh"
-        class="regen-container"
+        class="regen-container mobile-min"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
@@ -290,6 +290,7 @@
 
             <div style="position: relative">
               <p
+                class="mobile-top"
                 style="
                   margin: 0;
                   padding: 0;
@@ -342,6 +343,7 @@
             <div style="width: 100%" class="row">
               <div style="position: relative; width: 50%">
                 <p
+                  class="mobile-top-s"
                   style="
                     margin: 0;
                     padding: 0;
@@ -365,6 +367,7 @@
 
               <div style="position: relative; width: 50%">
                 <p
+                  class="mobile-top-s"
                   style="
                     margin: 0;
                     padding: 0;
@@ -397,6 +400,7 @@
                   left: 0;
                   top: 20px;
                 "
+                class="mobile-top"
               >
                 Subject:
               </p>
@@ -583,7 +587,7 @@
               <div
                 v-outside-click="hideDetailsEmail"
                 v-show="showingDetailsEmail"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile-m"
               >
                 <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
                   <!-- <section class="h-padding">
@@ -667,13 +671,13 @@
             >
               <img
                 v-if="drafting"
-                style="margin-right: 4px"
+                style="margin-left: 4px"
                 class="invert rotation"
                 src="@/assets/images/loading.svg"
                 height="14px"
                 alt=""
               />
-              Save draft
+              {{ isMobile ? 'Save' : 'Save Draft' }}
             </button>
 
             <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
@@ -698,9 +702,9 @@
               v-else-if="!hasGoogleIntegration && !hasMicrosoftIntegration"
               @click="goToIntegrations"
               style="margin-right: 4px"
-              class="primary-button"
+              class="primary-button no-mar-mobile"
             >
-              <span> Connect Email</span>
+              <span> {{ isMobile ? 'Connect' : ' Connect Email' }}</span>
             </button>
           </div>
         </div>
@@ -1000,31 +1004,9 @@
             <div class="centered">
               <h1>Your AI-powered PR assistant, Elma</h1>
             </div>
-            <!-- <div class="rows">
-              <div
-                v-for="(example, i) in searchExamples"
-                :key="i"
-                @click="setAndChat(example)"
-                class="example fadein"
-              >
-                <div class="example__header">
-                  <div class="row">
-                    <img :src="example.imgSource" height="14px" alt="" />
-                    <p>{{ example.title }}</p>
-                  </div>
-
-                  <div :class="`${example.tagClass} example__tag`">
-                    {{ example.tag }}
-                  </div>
-                </div>
-                <p>
-                  {{ example.text }}
-                </p>
-              </div>
-            </div> -->
           </div>
 
-          <div style="width: 100%; padding: 0 10vw">
+          <div class="mobile-padding" style="width: 100%; padding: 0 10vw">
             <div class="large-input-container-alt">
               <div class="input-container-gray" :class="{ lbborder: newSearch }">
                 <section>
@@ -1231,7 +1213,7 @@
                       <div
                         v-outside-click="hideStyles"
                         v-show="showingStyles"
-                        class="drop-options-alt"
+                        class="drop-options-alt left-mobile"
                       >
                         <header>
                           <!-- <section class="h-padding">
@@ -1360,6 +1342,7 @@
                         v-outside-click="hideMainDetails"
                         v-if="showingMainDetails"
                         class="drop-options-alt"
+                        :class="mainView === 'write' ? 'left-mobile-l' : 'left-mobile'"
                       >
                         <header>
                           <h4>Projects</h4>
@@ -1373,7 +1356,7 @@
                           </button> -->
                         </header>
 
-                        <section v-if="allCompanyDetails.length">
+                        <section v-if="allCompanyDetails.length && !editingProjects">
                           <div
                             style="position: relative"
                             @click="addDetails(detail.title, detail.details)"
@@ -1382,15 +1365,34 @@
                             :class="{ activesquareTile: detailTitle === detail.title }"
                             :title="detail.title"
                           >
-                            <span style="max-width: 140px" class="ellipsis-text-s">
-                              {{ detail.title }}
-                            </span>
-                            <p class="">{{ detail.details }}</p>
+                            <main v-if="!editingProjects">
+                              <span style="max-width: 140px" class="ellipsis-text-s">
+                                {{ detail.title }}
+                              </span>
+                              <p class="">{{ detail.details }}</p>
 
-                            <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
-                              <img src="@/assets/images/close.svg" height="10px" alt="" />
-                            </span>
+                              <span @click.stop="selectProject(detail)" class="absolute-icon">
+                                <img src="@/assets/images/edit.svg" height="10px" alt="" />
+                              </span>
+                            </main>
                           </div>
+                        </section>
+
+                        <section v-else-if="editingProjects">
+                          <textarea
+                            v-model="selectedProject.details"
+                            rows="3"
+                            class="area-input text-area-input"
+                            :class="{ opaquest: loadingPitch }"
+                            v-autoresize
+                            :placeholder="selectedProject.details"
+                            style="
+                              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                              border-radius: 8px;
+                              padding: 16px 8px;
+                            "
+                            maxlength="800"
+                          ></textarea>
                         </section>
 
                         <section style="padding: 16px" v-else>
@@ -1406,7 +1408,7 @@
                           >
                         </section>
 
-                        <footer class="space-between">
+                        <footer v-if="!editingProjects" class="space-between">
                           <span></span>
                           <button
                             :disabled="isViewOnly"
@@ -1417,10 +1419,26 @@
                             Add Project
                           </button>
                         </footer>
+
+                        <footer v-else class="space-between">
+                          <button
+                            @click="deleteCompanyDetails(selectedProject.id)"
+                            class="primary-button pinkbg"
+                          >
+                            Delete
+                          </button>
+
+                          <main class="row">
+                            <button @click="editingProjects = false" class="secondary-button">
+                              Cancel
+                            </button>
+                            <button @click="updateProject" class="primary-button">Update</button>
+                          </main>
+                        </footer>
                       </div>
                     </div>
 
-                    <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+                    <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
                       <div
                         @click.stop="toggleDate"
                         :class="{ 'soft-gray-bg': showDateSelection }"
@@ -1438,7 +1456,7 @@
 
                       <div
                         v-outside-click="hideDate"
-                        class="container-left-above"
+                        class="container-left-above left-mobile"
                         v-show="showDateSelection"
                         style="top: 40px"
                       >
@@ -3325,7 +3343,7 @@
               <div
                 v-outside-click="hideMainDetails"
                 v-if="showingMainDetails"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile"
               >
                 <header>
                   <h4>Projects</h4>
@@ -3362,7 +3380,7 @@
                   </button>
                 </header> -->
 
-                <section v-if="allCompanyDetails.length">
+                <section v-if="allCompanyDetails.length && !editingProjects">
                   <div
                     style="position: relative"
                     @click="addDetails(detail.title, detail.details)"
@@ -3382,6 +3400,23 @@
                   </div>
                 </section>
 
+                <section v-else-if="editingProjects">
+                  <textarea
+                    v-model="selectedProject.details"
+                    rows="3"
+                    class="area-input text-area-input"
+                    :class="{ opaquest: loadingPitch }"
+                    v-autoresize
+                    :placeholder="selectedProject.details"
+                    style="
+                      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                      border-radius: 8px;
+                      padding: 16px 8px;
+                    "
+                    maxlength="800"
+                  ></textarea>
+                </section>
+
                 <section style="padding: 16px" v-else>
                   Your saved projects
                   <span>
@@ -3395,7 +3430,7 @@
                   >
                 </section>
 
-                <footer class="space-between">
+                <footer v-if="!editingProjects" class="space-between">
                   <span></span>
                   <button
                     @click="toggleDetailsInputModal"
@@ -3404,6 +3439,22 @@
                   >
                     Add Project
                   </button>
+                </footer>
+
+                <footer v-else class="space-between">
+                  <button
+                    @click="deleteCompanyDetails(selectedProject.id)"
+                    class="primary-button pinkbg"
+                  >
+                    Delete
+                  </button>
+
+                  <main class="row">
+                    <button @click="editingProjects = false" class="secondary-button">
+                      Cancel
+                    </button>
+                    <button @click="updateProject" class="primary-button">Update</button>
+                  </main>
                 </footer>
               </div>
             </div>
@@ -3423,7 +3474,7 @@
               <div
                 v-outside-click="hideStyles"
                 v-show="showingStyles"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile"
                 style="bottom: 48px"
               >
                 <header>
@@ -3523,7 +3574,7 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+            <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
@@ -3542,7 +3593,7 @@
 
               <div
                 v-outside-click="hideDate"
-                class="container-left-above"
+                class="container-left-above left-mobile"
                 v-show="showDateSelection"
               >
                 <header>
@@ -3960,6 +4011,10 @@ export default {
   },
   data() {
     return {
+      // hasWatchedOnce: false,
+      editingProjects: false,
+      selectedProject: null,
+      projectId: '',
       shareUrl: '',
       currentThread: {},
       searchSaved: false,
@@ -4314,12 +4369,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `U.S journalist covering {Topic}`,
         },
         {
-          name: `Podcasters interested in...`,
-          value: `Podcasters interested in {Topic}`,
-        },
-        {
           name: `Journalist similar to...`,
           value: `Journalist similar to...`,
+        },
+        {
+          name: `Podcasters interested in...`,
+          value: `Podcasters interested in {Topic}`,
         },
       ],
       socialExamples: [
@@ -4328,12 +4383,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `Top storylines about {Topic}`,
         },
         {
-          name: `List top influencers covering...`,
-          value: `List top influencers covering {Topic}`,
-        },
-        {
           name: `Analyze post about...`,
           value: `Analyze post about {Topic}`,
+        },
+        {
+          name: `List top influencers covering...`,
+          value: `List top influencers covering {Topic}`,
         },
       ],
       webExamples: [
@@ -4342,7 +4397,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `List upcoming awards...`,
         },
         {
-          name: `Create a briefing sheet...`,
+          name: `Create briefing sheet...`,
           value: `Create a briefing sheet for {journalist name} from {outlet}`,
         },
         {
@@ -4746,6 +4801,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         }
       }
     },
+    // summaries(newVal, oldVal) {
+    //   if (!this.hasWatchedOnce) {
+    //     // Ignore the first change and set the flag
+    //     this.hasWatchedOnce = true
+    //     return
+    //   }
+
+    //   if (newVal !== oldVal) {
+    //     console.log('values', newVal, oldVal)
+    //     this.searchSaved = false
+    //   }
+    // },
   },
   updated() {
     if (!this.citationsMounted) {
@@ -5310,12 +5377,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.refreshUser()
       }
     },
+    selectProject(project) {
+      console.log('here', project)
+      this.selectedProject = project
+      this.editingProjects = true
+      console.log(this.selectedProject)
+    },
     async deleteCompanyDetails(id) {
       try {
         const res = await Comms.api.deleteCompanyDetails({
           id: id,
         })
-        this.$toast('Details removed', {
+        this.$toast('Project removed', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -5323,13 +5396,41 @@ Your goal is to create content that resonates deeply, connects authentically, an
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        conosole.log(e)
+        console.log(e)
       } finally {
         this.detailTitle = ''
         this.currentDetails = ''
         this.selectedOrg = ''
         this.getCompanyDetails()
         this.refreshUser()
+        this.editingProjects = false
+        this.selectedProject = null
+      }
+    },
+
+    async updateProject() {
+      try {
+        const res = await Comms.api.updateCompanyDetails({
+          id: this.selectedProject.id,
+          details: this.selectedProject.details,
+        })
+        this.$toast('Project updated', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.detailTitle = ''
+        this.currentDetails = ''
+        this.selectedOrg = ''
+        this.getCompanyDetails()
+        this.refreshUser()
+        this.editingProjects = false
+        this.selectedProject = null
       }
     },
     async getCompanyDetails(newDeets = false) {
@@ -8262,30 +8363,31 @@ Your goal is to create content that resonates deeply, connects authentically, an
         console.log('ERROR UPDATING SEARCH', e)
       }
     },
-    async updateSearch() {
-      try {
-        await Comms.api
-          .upateSearch({
-            id: this.searchId,
-            name: this.searchName,
-            input_text: this.newSearch,
-            meta_data: this.metaData,
-            search_boolean: this.booleanString,
-            instructions: this.newTemplate,
-          })
-          .then((response) => {
-            this.savedSearch = {
-              name: this.searchName,
-              input_text: this.newSearch,
-              meta_data: this.metaData,
-              search_boolean: this.booleanString,
-              instructions: this.newTemplate,
-            }
-            // this.$store.dispatch('setSearch', this.savedSearch)
-          })
-      } catch (e) {
-        console.log('ERROR UPDATING SEARCH', e)
-      }
+    updateSearch() {
+      this.searchSaved = false
+      // try {
+      //   await Comms.api
+      //     .upateSearch({
+      //       id: this.searchId,
+      //       name: this.searchName,
+      //       input_text: this.newSearch,
+      //       meta_data: this.metaData,
+      //       search_boolean: this.booleanString,
+      //       instructions: this.newTemplate,
+      //     })
+      //     .then((response) => {
+      //       this.savedSearch = {
+      //         name: this.searchName,
+      //         input_text: this.newSearch,
+      //         meta_data: this.metaData,
+      //         search_boolean: this.booleanString,
+      //         instructions: this.newTemplate,
+      //       }
+
+      //     })
+      // } catch (e) {
+      //   console.log('ERROR UPDATING SEARCH', e)
+      // }
     },
     clearNewSearch() {
       // this.summary = null
@@ -8799,7 +8901,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
         } else {
           this.regenerateSummary()
         }
-
         return
       }
 
@@ -9506,7 +9607,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 ::v-deep .ql-snow.ql-toolbar button {
   background: $soft-gray;
   border-radius: 4px;
-  margin-right: 4px;
+  margin: 0 4px 4px 0;
 }
 
 ::v-deep .pre-text span {
@@ -9755,6 +9856,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   border: none;
   border-radius: 4px;
   padding: 0;
+  min-width: 500px;
 }
 
 ::v-deep .ql-container {
@@ -10309,7 +10411,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     align-items: flex-start;
 
     @media only screen and (max-width: 600px) {
-      left: -120%;
+      left: 0;
       width: 85vw;
     }
 
@@ -10427,7 +10529,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     align-items: flex-start;
 
     @media only screen and (max-width: 600px) {
-      left: -120%;
+      left: 0;
       width: 85vw;
     }
 
@@ -10586,6 +10688,22 @@ Your goal is to create content that resonates deeply, connects authentically, an
     img {
       margin-right: 4px;
     }
+  }
+}
+
+.left-mobile {
+  @media only screen and (max-width: 600px) {
+    left: -88px !important;
+  }
+}
+.left-mobile-l {
+  @media only screen and (max-width: 600px) {
+    left: -160px !important;
+  }
+}
+.left-mobile-m {
+  @media only screen and (max-width: 600px) {
+    left: -126px !important;
   }
 }
 
@@ -11696,6 +11814,10 @@ button:disabled {
     margin: 0 8px 4px 0;
     padding: 0;
   }
+
+  @media only screen and (max-width: 600px) {
+    top: 100%;
+  }
 }
 
 .right-arrow-footer {
@@ -12574,6 +12696,16 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media only screen and (max-width: 600px) {
+    h1 {
+      font-size: 24px;
+    }
+
+    .row {
+      flex-flow: wrap;
+    }
+  }
 }
 
 .centered-column {
@@ -12876,13 +13008,11 @@ textarea {
 // }
 
 .input-container-gray {
-  // border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 14px 0 12px 0;
   border-radius: 20px;
-  // border-radius: 6px;
-  width: 100%;
+
   color: $base-gray;
   position: relative;
   display: flex;
@@ -12901,6 +13031,11 @@ textarea {
 
   img {
     filter: invert(40%);
+  }
+
+  @media only screen and (max-width: 600px) {
+    margin-left: -4px;
+    width: 100% !important;
   }
 }
 
@@ -13896,6 +14031,10 @@ textarea::placeholder {
       -webkit-line-clamp: 2; /* Limits text to 2 lines */
       font-family: $base-font-family;
       font-weight: 200;
+
+      @media only screen and (max-width: 600px) {
+        max-width: 70vw;
+      }
     }
 
     small {
@@ -14195,6 +14334,10 @@ textarea::placeholder {
       margin: 0;
       font-family: $base-font-family;
     }
+  }
+
+  @media only screen and (max-width: 600px) {
+    left: -32px;
   }
 }
 
@@ -14872,6 +15015,12 @@ select {
 //   margin-right: -2px;
 // }
 
+.mobile-padding {
+  @media only screen and (max-width: 600px) {
+    padding: 0 8px !important;
+  }
+}
+
 .file-name {
   margin-top: 10px;
   font-size: 14px;
@@ -15066,6 +15215,11 @@ select {
   &::-webkit-scrollbar-track {
     margin-top: 12px; /* Top margin for the track */
   }
+
+  @media only screen and (max-width: 600px) {
+    right: 12px;
+    width: 94vw !important;
+  }
 }
 
 .bold-font {
@@ -15087,5 +15241,42 @@ select {
   img {
     margin-right: 4px;
   }
+}
+
+.mobile-min {
+  @media only screen and (max-width: 600px) {
+    min-width: 70vw !important;
+  }
+}
+
+.top-mar-mobile {
+  margin-top: 16px;
+
+  @media only screen and (max-width: 600px) {
+    margin-top: 8px;
+  }
+}
+
+.no-mar-mobile {
+  @media only screen and (max-width: 600px) {
+    margin-left: 4px !important;
+  }
+}
+
+.mobile-top {
+  @media only screen and (max-width: 600px) {
+    top: 24px !important;
+  }
+}
+
+.mobile-top-s {
+  @media only screen and (max-width: 600px) {
+    top: 22px !important;
+  }
+}
+
+.pinkbg {
+  background-color: $pinky !important;
+  margin: 0;
 }
 </style>

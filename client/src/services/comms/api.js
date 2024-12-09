@@ -678,6 +678,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async updateCompanyDetails(data) {
+        try {
+            const res = await this.client.patch(`company-details/${data.id}/`, data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async readColumnNames(file) {
         try {
             const formData = new FormData();

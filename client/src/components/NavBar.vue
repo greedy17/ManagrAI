@@ -251,11 +251,7 @@
 
       <div v-if="$route.name === 'PRSummaries' && !isViewOnly" id="relative-mobile">
         <div>
-          <div
-            v-if="listName === 'news' || listName === 'social'"
-            @click.stop="toggleShowSearches"
-            class="row pointer nav-text"
-          >
+          <div @click.stop="toggleShowSearches" class="row pointer nav-text">
             Saved Threads
             <img
               v-if="!showSavedSearches"
