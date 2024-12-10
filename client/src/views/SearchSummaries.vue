@@ -2207,7 +2207,6 @@
                         loading ||
                         summaryLoading ||
                         savingSearch ||
-                        savedSearch ||
                         !searchName ||
                         searchSaved
                       "
@@ -5553,6 +5552,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
             : '',
         })
 
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+
         if (discover) {
           this.summary = res
           this.discoverList = res.journalists
@@ -5562,6 +5565,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             clips: [],
             list: res.journalists,
           })
+
           this.$nextTick(() => {
             this.scrollToSummariesTop()
           })
@@ -7450,6 +7454,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.secondaryLoader = false
           this.secondaryLoaderAlt = true
           this.googleSearch()
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
         } else {
           this.summaries.push({
             summary: res.message
@@ -7459,6 +7466,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
+
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
 
           this.$nextTick(() => {
             this.scrollToSummariesTop()
@@ -8759,6 +8770,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.secondaryLoader = false
           this.secondaryLoaderAlt = true
           this.generateNewSearch(null, false)
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
         } else {
           this.summaries.push({
             summary: res.summary
@@ -8769,6 +8783,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
+
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
 
           this.$nextTick(() => {
             this.scrollToSummariesTop()
@@ -8959,6 +8977,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           summary: res.pitch,
           clips: [],
         })
+
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+
         this.$nextTick(() => {
           this.scrollToSummariesTop()
         })
@@ -12124,15 +12147,6 @@ li {
   animation: fadeIn 1s forwards;
 }
 
-.m-cntnr {
-  @media only screen and (max-width: 600px) {
-    display: none;
-  }
-
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
-}
-
 .xxl-margin-top {
   margin-top: 32px;
   margin-bottom: 12px;
@@ -12266,9 +12280,9 @@ li {
       overflow-x: hidden;
       padding-top: 32px;
 
-      @media only screen and (max-width: 600px) {
-        display: none;
-      }
+      // @media only screen and (max-width: 600px) {
+      //   display: none;
+      // }
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
         width: 40vw;
@@ -12394,6 +12408,10 @@ li {
     .content-padding {
       position: relative;
       width: 100%;
+
+      @media only screen and (max-width: 600px) {
+        padding-bottom: 80px;
+      }
 
       // &:hover {
       //   .absolute-bottom-right {
