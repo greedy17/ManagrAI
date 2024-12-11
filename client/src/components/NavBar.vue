@@ -217,7 +217,7 @@
         <p>Search successfully deleted!</p>
       </div>
     </Transition>
-    <div v-if="userIsLoggedIn">
+    <div v-if="userIsLoggedIn || isViewOnly">
       <div id="hamburger">
         <img
           v-if="!mobileMenuOpen && !isViewOnly"
@@ -251,11 +251,7 @@
 
       <div v-if="$route.name === 'PRSummaries' && !isViewOnly" id="relative-mobile">
         <div>
-          <div
-            v-if="listName === 'news' || listName === 'social'"
-            @click.stop="toggleShowSearches"
-            class="row pointer nav-text"
-          >
+          <div @click.stop="toggleShowSearches" class="row pointer nav-text">
             Saved Threads
             <img
               v-if="!showSavedSearches"
@@ -716,7 +712,7 @@ export default {
       mobileMenuOpen: false,
       hamburgerClicked: false,
       plansModal: false,
-      team: CollectionManager.create({ ModelClass: User }),
+      // team: CollectionManager.create({ ModelClass: User }),
       numberOfUsers: 5,
       amountList: [
         5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
@@ -728,14 +724,16 @@ export default {
     }
   },
   async created() {
-    this.getThreads()
-    this.getSearches()
-    this.getPitches()
-    this.getAssist()
-    this.getDiscoveries()
-    this.getReports()
-    await this.team.refresh()
-    this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
+    if (!this.$route.params.code) {
+      this.getThreads()
+      this.getSearches()
+      this.getPitches()
+      this.getAssist()
+      this.getDiscoveries()
+      this.getReports()
+    }
+    // await this.team.refresh()
+    // this.amountList = this.amountList.filter((item) => item >= this.activeUsers.length)
 
     // this.numberOfUsers = this.activeUsers.length
   },
@@ -1158,9 +1156,9 @@ export default {
     listName() {
       return this.$store.state.listName
     },
-    activeUsers() {
-      return this.team.list.filter((user) => user.isActive)
-    },
+    // activeUsers() {
+    //   return this.team.list.filter((user) => user.isActive)
+    // },
     unfilteredPitches() {
       return this.$store.state.allPitches
     },

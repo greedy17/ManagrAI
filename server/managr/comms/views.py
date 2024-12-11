@@ -2741,12 +2741,16 @@ class ThreadViewSet(
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
+            print('DICT IS HERE --- >',decrypt_dict)
             id = decrypted_dict.get("id")
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)
+            print('REPORT IS HERE --- >',report)
             serializer = self.get_serializer(report)
-            user.add_meta_data("shared_thread")
+            print('SERIALIZER IS HERE --- >',serializer)
+            # user.add_meta_data("shared_thread")
         except Exception as e:
+            print('exception is here --- >',e)
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={"error": "There was an issue retrieving this thread"},
@@ -3483,6 +3487,7 @@ def get_trending_articles(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_clip_report_summary(request):
+    elma = core_consts.ELMA
     user = request.user
     clips = request.data.get("clips")
     brand = request.data.get("brand")
@@ -3492,7 +3497,7 @@ def get_clip_report_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REPORT_SUMMARY(brand, clips)
+            prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,

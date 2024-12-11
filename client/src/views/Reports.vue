@@ -11,7 +11,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>Help me create a coverage report</p>
+              <p>Create a report based on a Thread</p>
             </div>
           </div>
 
@@ -263,7 +263,7 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>{{ sourceType === 'url' ? 'Upload URLs' : 'Saved Search' }}</p>
+              <p>{{ sourceType === 'url' ? 'Upload URLs' : 'Saved Thread' }}</p>
             </div>
           </div>
 
@@ -289,7 +289,7 @@
                     style="background-color: #fafafa; box-shadow: 1px 2px 6px rgba(0, 0, 0, 0.1)"
                   >
                     <p style="font-size: 15px !important" class="mobile-text-hide">
-                      {{ selectedSearch ? selectedSearch.name : 'Select a search' }}
+                      {{ selectedSearch ? selectedSearch.title : 'Select a thread' }}
                     </p>
 
                     <img
@@ -322,19 +322,15 @@
                     class="container-left-below"
                   >
                     <section>
-                      <h3>Select a search</h3>
+                      <h3>Select a thread</h3>
                     </section>
 
-                    <div v-if="savedSearches.length">
-                      <p
-                        v-for="(search, i) in savedSearches"
-                        :key="i"
-                        @click="selectSearch(search)"
-                      >
-                        {{ search.name }}
+                    <div v-if="savedThreads.length">
+                      <p v-for="(search, i) in savedThreads" :key="i" @click="selectSearch(search)">
+                        {{ search.title }}
                       </p>
                     </div>
-                    <div v-else>You dont have any saved searches...</div>
+                    <div v-else>You dont have any saved threads...</div>
                   </div>
                 </div>
               </div>
@@ -344,8 +340,8 @@
                 style="margin: 0 0 8px 14px"
               >
                 <p style="margin-top: 24px" v-if="sourceType === 'both'" class="">
-                  {{ urlCount }} URLs added from saved search. Add additional URLs below, separated
-                  by commas or new lines.
+                  {{ urlCount }} URLs added from the saved thread. Add additional URLs below,
+                  separated by commas or new lines.
                 </p>
 
                 <p v-else class="thin-font">
@@ -1056,7 +1052,7 @@ export default {
       sourceType: null,
       sources: [
         { name: 'Upload URLs', value: 'url' },
-        { name: 'Saved Search', value: 'saved' },
+        { name: 'Saved Thread', value: 'saved' },
         { name: 'Both', value: 'both' },
       ],
       editSummary: false,
@@ -1090,7 +1086,7 @@ export default {
       view: 'home',
       creating: true,
       reportName: '',
-      brandText: 'Next, tell us which brand this report is for (e.g. Nike, Tesla, FSU)',
+      brandText: 'Next, tell us which brands are included in this report (e.g. Nike, Tesla, FSU)',
       nameText: 'Using the message bar below, provide a name for your report',
       loading: false,
       brand: '',
@@ -1108,7 +1104,7 @@ export default {
       ],
       maxSize: 2 * 1024 * 1024,
       fileText: `Next, add news coverage links by pasting the URL's below.`,
-      savedText: `Got it, pick one of your saved searches`,
+      savedText: `Got it, pick one of your saved threads`,
       urlText: 'Where would you like us to pull the clips from ?',
       reportUrls: '',
       urlsSet: false,
@@ -1138,8 +1134,10 @@ www.forbes.com/article-3
     reports() {
       return this.$store.state.allReports
     },
-    savedSearches() {
-      return this.$store.state.allSearches.filter((search) => search.type === 'NEWS')
+    savedThreads() {
+      return this.$store.state.allThreads.filter(
+        (thread) => thread.meta_data.type && thread.meta_data.type === 'news',
+      )
     },
     user() {
       return this.$store.state.user
@@ -1154,41 +1152,37 @@ www.forbes.com/article-3
     this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
-    async getClips() {
+    getClips() {
       this.loadingClips = true
-      try {
-        const res = await Comms.api.getClips({
-          search: this.selectedSearch.input_text,
-          boolean: this.selectedSearch.search_boolean,
-          user_id: this.user.id,
-          date_from: this.dateStart,
-          date_to: this.dateEnd,
-          is_report: true,
+
+      let articles = []
+      articles = this.selectedSearch.meta_data.filteredArticles
+
+      let additionalClips = this.selectedSearch.meta_data.summaries
+        ? this.selectedSearch.meta_data.summaries.map((summary) => summary.clips)
+        : []
+
+      articles = [articles, ...additionalClips].flat()
+
+      console.log('artices', articles)
+
+      if (this.sourceType !== 'both') {
+        this.urls = articles.map((art) => {
+          return art.link
         })
-        let articles = []
-        articles = res.articles
+        this.urlCount = this.urls.length
+        this.useSearchUrls = true
+        this.setUrls()
+      } else {
+        this.reportUrls = articles.map((art) => {
+          return art.link
+        })
 
-        if (this.sourceType !== 'both') {
-          this.urls = articles.map((art) => {
-            return art.link
-          })
-          this.urlCount = this.urls.length
-          this.useSearchUrls = true
-          this.setUrls()
-        } else {
-          this.reportUrls = articles.map((art) => {
-            return art.link
-          })
-
-          this.urlCount = this.reportUrls.length
-          this.useSearchUrls = true
-        }
-      } catch (e) {
-        this.reportUrls = []
-        console.log(e)
-      } finally {
-        this.loadingClips = false
+        this.urlCount = this.reportUrls.length
+        this.useSearchUrls = true
       }
+
+      this.loadingClips = false
     },
     toggleSource() {
       this.showSource = true
@@ -1211,6 +1205,7 @@ www.forbes.com/article-3
       this.selectedSearch = val
       this.hideSearches()
       this.scrollToChatTop()
+      console.log(val)
       this.getClips()
     },
     closeSummaryEdit() {

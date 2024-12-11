@@ -1047,24 +1047,24 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
 )
 
 
-def REPORT_SUMMARY(brand, clips):
-    prompt = f"""
-    You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+# def REPORT_SUMMARY(brand, clips):
+#     prompt = f"""
+#     You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
     
-    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
-    2. Key recognizable publications and influential journalists who covered the brand.
-    3. Key metrics, such as total reach, potential impressions, and engagement rates.
-    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
-    5. Highlight recurring themes or key messages across the media coverage.
+#     1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+#     2. Key recognizable publications and influential journalists who covered the brand.
+#     3. Key metrics, such as total reach, potential impressions, and engagement rates.
+#     4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+#     5. Highlight recurring themes or key messages across the media coverage.
 
-    Your response must be properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html in your response.
+#     Your response must be properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html in your response.
    
-    Here are the news clips:
+#     Here are the news clips:
 
-    {clips}
-    """
+#     {clips}
+#     """
 
-    return prompt
+#     return prompt
 
 
 def OPEN_AI_NO_RESULTS(boolean):
@@ -1185,15 +1185,21 @@ JOURNALIST_CHOICES = [
 ]
 
 
-def REPORT_SUMMARY(brand, clips):
+def REPORT_SUMMARY(elma, brand, clips):
     prompt = f"""
-    You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+
+    {elma}.
+
+    Your task is to create a concise executive overview of the earned media report based on the news clips below for following brands or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+   
     1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
     2. Key recognizable publications and influential journalists who covered the brand.
     3. Key metrics, such as total reach, potential impressions, and engagement rates.
     4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
     5. Highlight recurring themes or key messages across the media coverage.
+
     Here are the news clips:
     {clips}
     """
     return prompt
+
