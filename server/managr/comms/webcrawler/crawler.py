@@ -30,7 +30,7 @@ SCRAPPY_HEADERS = {
 }
 
 XPATH_STRING_OBJ = {
-    "title": ["//meta[contains(@property, 'title')]/@content"],
+    "title": ["//title/text()"],
     "author": [
         "//*[contains(@class,'gnt_ar_by')]/a/text()",
         "//*[@class='article__author']/text()",
@@ -38,7 +38,10 @@ XPATH_STRING_OBJ = {
         "//*[@rel='author']/text()",
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
-    "description": ["//meta[contains(@property, 'description')]/@content"],
+    "description": [
+        "//meta[contains(@property, 'description')]/@content",
+        "//meta[contains(@name, 'description')]/@content",
+    ],
     "publish_date": [
         "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
@@ -329,6 +332,8 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
+                        if source.use_scrape_api:
+                            article_url = "http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article_url}&render=true"
                         self.articles_to_process += 1
                         yield scrapy.Request(
                             article_url,
