@@ -4093,8 +4093,8 @@ export default {
   },
   data() {
     return {
-      followupShares: null,
-      totalShares: null,
+      followupShares: {},
+      totalShares: {},
       editingProjects: false,
       selectedProject: null,
       projectId: '',
@@ -5078,6 +5078,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
             type: this.mainView,
             originalSearch: this.originalSearch,
             tweets: this.tweets,
+            followupShares: this.followupShares,
+            totalShares: this.totalShares,
           },
         })
         this.savedSearch = res
@@ -8026,6 +8028,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingSources = false
       this.journalisListtData = ''
       this.searchSaved = false
+      this.followupShares = null
+      this.totalShares = null
       this.hideShare()
     },
     resetSearch() {
@@ -8085,6 +8089,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.tweetMedia = search.meta_data.tweetMedia
       this.originalSearch = search.meta_data.originalSearch
       this.mainView = search.meta_data.type
+      this.totalShares = search.meta_data.totalShares
+      this.followupShares = search.meta_data.followupShares
       this.searchSaved = true
       this.changeSearch({ search: this.booleanString, template: this.newTemplate })
 
