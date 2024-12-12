@@ -384,6 +384,7 @@ class NewsSource(TimeStampModel):
     is_active = models.BooleanField(default=True)
     is_crawling = models.BooleanField(default=False)
     is_stopped = models.BooleanField(default=False)
+    use_scrape_api = models.BooleanField(default=False)
     posting_frequency = models.IntegerField(default=0)
     scrape_type = models.CharField(
         choices=[("HTML", "HTML"), ("SITEMAP", "Sitemap"), ("XML", "XML")],

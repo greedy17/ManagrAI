@@ -557,6 +557,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
     """
     return body
 
+
 def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instructions):
     body = f"""
 
@@ -1179,8 +1180,6 @@ REGENERATE_REPORT_SUMMARY = (
 
 
 DO_NOT_TRACK_LIST = [
-    "https://www.wsj.com",
-    "https://www.nytimes.com",
     "https://www.bizjournals.com",
     "https://www.tiktok.com",
     "https://www.instagram.com",
