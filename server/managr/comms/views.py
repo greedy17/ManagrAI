@@ -244,6 +244,7 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         previous = request.data.get("previous", False)
         is_follow_up = request.data.get("followUp", False)
+        trending = request.data.get("trending", False)
         company = request.data.get("company")
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
@@ -262,6 +263,7 @@ class PRSearchViewSet(
                     previous,
                     is_follow_up,
                     company,
+                    trending,
                     instructions,
                     True,
                 )
@@ -3474,11 +3476,71 @@ def get_social_url_data(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_trending_articles(request):
-    topics = request.data.get("topics")
-    countries = request.data.get("countries")
+    search = request.data.get("search")
+    countries = request.data.get("countries")  
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.GENERATE_TREND_BOOLEAN(search)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                'ed@mymanagr.com',
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+            message = json.loads(res.get("choices")[0].get("message").get("content"))
+
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount >= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+   
+    topics = message['keywords']
+
     articles = get_trend_articles(topics, countries)
     if "articles" in articles.keys():
-        return Response(status=status.HTTP_200_OK, data=articles)
+        return Response(status=status.HTTP_200_OK, data={"articles": articles, "string": topics})
     else:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=articles)
 

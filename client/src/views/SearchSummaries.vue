@@ -1144,6 +1144,18 @@
                           </div>
 
                           <div
+                            @click="switchMainView('trending')"
+                            :class="{ activeswitch: mainView === 'trending' }"
+                          >
+                            <span>
+                              <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                              Trending
+                            </span>
+
+                            <p>Discover trending headlines from around the world</p>
+                          </div>
+
+                          <div
                             @click="switchMainView('social')"
                             :class="{ activeswitch: mainView === 'social' }"
                           >
@@ -1544,6 +1556,17 @@
                   {{ example.name }}
                 </div>
               </div>
+              <div v-if="mainView === 'trending'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in trendExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1603,11 +1626,13 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row fadein"
-              v-else-if="mainView === 'news' && articlesFiltered.length"
+              v-else-if="
+                (mainView === 'news' || mainView === 'trending') && articlesFiltered.length
+              "
             >
               <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
-                  :src="article.image_url"
+                  :src="article.image_url ? article.image_url : article.image"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -2451,12 +2476,12 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
-              v-if="mainView === 'news'"
+              v-if="mainView === 'news' || mainView === 'trending'"
             >
               <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
                   @click="setOriginalArticles"
-                  :src="article.image_url"
+                  :src="article.image ? article.image : article.image_url"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -2620,7 +2645,7 @@
               ></div>
               <div
                 style="margin-top: 32px"
-                v-else-if="mainView === 'news'"
+                v-else-if="mainView === 'news' || mainView === 'trending'"
                 v-html="insertNewsCitations(summary)"
                 class="citation-text"
               ></div>
@@ -2689,11 +2714,15 @@
                     mainView === 'news' ? `Articles ` : mainView === 'social' ? `Posts ` : `Results`
                   }}
 
-                  <div v-if="mainView === 'news'" style="margin-left: 4px" class="row">
+                  <div
+                    v-if="mainView === 'news' || mainView === 'trending'"
+                    style="margin-left: 4px"
+                    class="row"
+                  >
                     <img
                       v-for="(article, i) in articlesFiltered.slice(0, 3)"
                       :key="i"
-                      :src="article.image_url"
+                      :src="article.image_url ? article.image_url : article.image"
                       @error="onImageError($event)"
                       alt=""
                       class="circle-img"
@@ -2828,12 +2857,12 @@
                   <div
                     style="width: 100%; justify-content: space-between; gap: 4px"
                     class="row"
-                    v-if="summary.clips.length && mainView === 'news'"
+                    v-if="summary.clips.length && (mainView === 'news' || mainView === 'trending')"
                   >
                     <div style="width: 24%" v-for="(clip, i) in summary.clips.slice(0, 4)" :key="i">
                       <img
                         @click="setAndShowArticles(summary.clips)"
-                        :src="clip.image_url"
+                        :src="clip.image_url ? clip.image_url : clip.image"
                         @error="onImageError($event)"
                         class="card-photo-header-small"
                       />
@@ -2980,25 +3009,32 @@
                     v-if="
                       !showingArticles &&
                       summary.clips.length &&
-                      (mainView === 'news' || mainView === 'web' || mainView === 'social')
+                      (mainView === 'news' ||
+                        mainView === 'trending' ||
+                        mainView === 'web' ||
+                        mainView === 'social')
                     "
                     @click="setAndShowArticles(summary.clips)"
                     class="secondary-button-white fadein"
                     style="margin: 0"
                   >
                     {{
-                      mainView === 'news'
+                      mainView === 'news' || mainView === 'trending'
                         ? `Articles `
                         : mainView === 'social'
                         ? `Posts `
                         : `Results`
                     }}
 
-                    <div v-if="mainView === 'news'" style="margin-left: 4px" class="row">
+                    <div
+                      v-if="mainView === 'news' || mainView === 'trending'"
+                      style="margin-left: 4px"
+                      class="row"
+                    >
                       <img
                         v-for="(article, i) in summary.clips.slice(0, 3)"
                         :key="i"
-                        :src="article.image_url"
+                        :src="article.image_url ? article.image_url : article.image"
                         alt=""
                         class="circle-img"
                       />
@@ -3093,6 +3129,13 @@
                     Gathering news...
                   </p>
                   <p
+                    v-else-if="mainView === 'trending'"
+                    style="margin: 0; margin-right: 8px"
+                    class="bold-text"
+                  >
+                    Gathering trending news...
+                  </p>
+                  <p
                     v-else-if="mainView === 'social'"
                     style="margin: 0; margin-right: 8px"
                     class="bold-text"
@@ -3156,7 +3199,7 @@
               v-model="newTemplate"
               :disabled="loading || summaryLoading"
               @keyup.enter="
-                mainView === 'news'
+                mainView === 'news' || mainView === 'trending'
                   ? getChatSummary($event, filteredArticles, newTemplate)
                   : mainView === 'social'
                   ? getChatSummary($event, preparedTweets, newTemplate)
@@ -3270,6 +3313,18 @@
                   </div>
 
                   <div
+                    @click="switchMainView('trending')"
+                    :class="{ activeswitch: mainView === 'trending' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                      Trending
+                    </span>
+
+                    <p>Discover trending headlines from around the world</p>
+                  </div>
+
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                   >
@@ -3312,6 +3367,18 @@
                     </span>
 
                     <p>Find the right media contacts for your story</p>
+                  </div>
+
+                  <div
+                    @click="switchMainView('trending')"
+                    :class="{ activeswitch: mainView === 'trending' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                      Trending
+                    </span>
+
+                    <p>Discover trending headlines from around the world</p>
                   </div>
                 </section>
               </div>
@@ -3627,8 +3694,7 @@
             </div>
             <div style="margin-bottom: 12px">
               <img
-                @error="onImageError($event)"
-                :src="currentArticle.image_url"
+                :src="mainView === 'news' ? currentArticle.image_url : currentArticle.image"
                 class="photo-header-small"
               />
             </div>
@@ -3785,7 +3851,7 @@
         >
           <p class="bold-text">
             {{
-              mainView === 'news'
+              mainView === 'news' || mainView === 'trending'
                 ? `Articles (${sidebarArticles.length})`
                 : mainView === 'social'
                 ? `Posts (${sidebarArticlesSocial.length})`
@@ -3799,7 +3865,7 @@
         </div>
 
         <div class="section">
-          <div v-if="mainView === 'news'" class="cards-container">
+          <div v-if="mainView === 'news' || mainView === 'trending'" class="cards-container">
             <div v-for="(article, i) in sidebarArticles" :key="article.id" class="card">
               <div style="width: 100%">
                 <div class="main-body">
@@ -3816,15 +3882,32 @@
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
-                      <small>{{ article.source.name }}</small>
+                      <small>{{
+                        mainView === 'trending'
+                          ? article.source
+                              .replace(/^https?:\/\//, '')
+                              .replace(/^www\./, '')
+                              .replace('.com', '')
+                          : article.source.name
+                      }}</small>
                     </div>
 
-                    <p style="cursor: pointer" @click="goToArticle(article.link)">
+                    <p
+                      style="cursor: pointer"
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                    >
                       {{ article.title }}
                     </p>
                     <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
                       <p class="thin-text">
-                        <span>{{ getTimeDifferenceInMinutes(article.publish_date) }} </span> -
+                        <span
+                          >{{
+                            getTimeDifferenceInMinutes(
+                              mainView === 'trending' ? article.date : article.publish_date,
+                            )
+                          }}
+                        </span>
+                        -
                         {{ article.description }}
                       </p>
                     </div>
@@ -3832,8 +3915,8 @@
 
                   <div>
                     <img
-                      @click="goToArticle(article.link)"
-                      :src="article.image_url"
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                      :src="mainView === 'trending' ? article.image : article.image_url"
                       @error="onImageError($event)"
                       class="card-photo-header"
                     />
@@ -3845,7 +3928,7 @@
                   </p>
 
                   <button
-                    @click="getTrafficData(article.link, article)"
+                    @click="getTrafficData(article.url ? article.url : article.link, article)"
                     style="margin-right: 16px"
                     class="secondary-button alt-btn s-wrapper"
                     :disabled="isViewOnly"
@@ -4010,7 +4093,8 @@ export default {
   },
   data() {
     return {
-      // hasWatchedOnce: false,
+      followupShares: {},
+      totalShares: {},
       editingProjects: false,
       selectedProject: null,
       projectId: '',
@@ -4291,6 +4375,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       savedSearch: {},
       tweets: [],
       filteredArticles: [],
+      trendingArticles: [],
       posts: [],
       tweetMedia: [],
       tweetUsers: null,
@@ -4402,6 +4487,20 @@ Your goal is to create content that resonates deeply, connects authentically, an
         {
           name: `Who covered AI in 2024`,
           value: `Who covered AI in 2024`,
+        },
+      ],
+      trendExamples: [
+        {
+          name: `What's trending in...`,
+          value: `What's trending in {Industry} ?`,
+        },
+        {
+          name: `Top headlines covering...`,
+          value: `Show me top headlines covering {Topic}`,
+        },
+        {
+          name: `Most shared stories..`,
+          value: `List the 5 most shared stories`,
         },
       ],
       discoverExamples: [
@@ -4819,7 +4918,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       const journalistElements = document.querySelectorAll('.select-journalist')
 
-      if (this.mainView === 'news') {
+      if (this.mainView === 'news' || this.mainView === 'trending') {
         journalistElements.forEach((element) => {
           element.addEventListener('click', (event) => {
             const citationIndex = event.target.getAttribute('data-citation')
@@ -4827,7 +4926,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
               const citation = this.filteredArticles[citationIndex]
               this.selectJournalist(citation)
             } catch (error) {
-              console.error('Failed to parse citation JSON:', citationJson)
               console.error('Error:', error)
             }
           })
@@ -4866,7 +4964,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       const journalistElements = document.querySelectorAll('.select-journalist-alt')
 
-      if (this.mainView === 'news') {
+      if (this.mainView === 'news' || this.mainView === 'trending') {
         journalistElements.forEach((element) => {
           element.addEventListener('click', (event) => {
             const citationIndex = event.target.getAttribute('data-citation')
@@ -4980,6 +5078,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
             type: this.mainView,
             originalSearch: this.originalSearch,
             tweets: this.tweets,
+            followupShares: this.followupShares,
+            totalShares: this.totalShares,
           },
         })
         this.savedSearch = res
@@ -5056,7 +5156,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
         social,
       }
 
-      this.getArticleSummary(this.currentArticle.link)
+      this.getArticleSummary(
+        this.currentArticle.link ? this.currentArticle.link : this.currentArticle.url,
+      )
     },
 
     async getArticleSummary(url, instructions = null) {
@@ -5077,6 +5179,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
         this.loadingAnalytics = false
         this.refreshUser()
+        console.log('CURRENT ARTICLE --- > ', this.currentArticle)
       } catch (e) {
         console.log(e)
         this.$toast('Article analysis not available', {
@@ -5420,16 +5523,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.addDetails(this.selectedProject.title, this.selectedProject.details)
+        this.selectedProject = null
       } catch (e) {
         console.log(e)
       } finally {
-        this.detailTitle = ''
-        this.currentDetails = ''
-        this.selectedOrg = ''
         this.getCompanyDetails()
         this.refreshUser()
         this.editingProjects = false
-        this.selectedProject = null
       }
     },
     async getCompanyDetails(newDeets = false) {
@@ -6005,16 +6106,20 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <span class="citation-tooltip">
 
               <span class="c-elip">
-                ${citation.source.name}      
+                ${citation.source.name ? citation.source.name : citation.source}      
               </span>
 
               <span class="row">
                 <span class="col">   
-                  <a class="inline-link c-elip" href="${citation.link}" target="_blank">${citation.title}</a>
+                  <a class="inline-link c-elip" href="${
+                    citation.link ? citation.link : citation.url
+                  }" target="_blank">${citation.title}</a>
                   <span class="c-elip" >${citation.description}</span>
                 </span>
 
-               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.image_url ? citation.image_url : citation.image
+               }" height="40px" width="40px" alt="">
               </span>
               
             
@@ -6095,20 +6200,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
             </a>
             <span class="citation-tooltip">
               <span class="c-elip">
-                ${citation.source.name}      
+                ${citation.source.name ? citation.source.name : citation.source}      
               </span>
 
               <span class="row">
                 <span class="col">
                 
-                <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                <a class="inline-link c-elip " href="${
+                  citation.url ? citation.url : citation.link
+                }" target="_blank" >${citation.title}</a>
 
                 <span class="c-elip" >${citation.description}</span>
 
                 </span>
 
 
-                <img src="${citation.image_url}" height="40px" width="40px" alt="">
+                <img src="${
+                  citation.image ? citation.image : citation.image_url
+                }" height="40px" width="40px" alt="">
 
                 </span>
               
@@ -6830,12 +6939,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.getJournalistBio()
 
           // this.draftPitch(author, outlet, headline, description, date)
-        } else if (this.mainView === 'news') {
+        } else if (this.mainView === 'news' || this.mainView === 'trending') {
           const author = this.extractJournalist(article.author)
-          const outlet = article.source.name
+          const outlet = this.mainView === 'trending' ? article.source : article.source.name
           const headline = article.title
           const description = article.description
-          const date = this.getTimeDifferenceInMinutes(article.publish_date)
+          const date = this.getTimeDifferenceInMinutes(
+            this.mainView === 'trending' ? article.date : article.publish_date,
+          )
           this.googleModalOpen = true
           // this.emailJournalistModalOpen = true
           this.currentHeadline = headline
@@ -7917,6 +8028,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingSources = false
       this.journalisListtData = ''
       this.searchSaved = false
+      this.followupShares = null
+      this.totalShares = null
       this.hideShare()
     },
     resetSearch() {
@@ -7976,6 +8089,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.tweetMedia = search.meta_data.tweetMedia
       this.originalSearch = search.meta_data.originalSearch
       this.mainView = search.meta_data.type
+      this.totalShares = search.meta_data.totalShares
+      this.followupShares = search.meta_data.followupShares
       this.searchSaved = true
       this.changeSearch({ search: this.booleanString, template: this.newTemplate })
 
@@ -8280,6 +8395,28 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } else if (this.mainView === 'web') {
         this.closeRegenModal()
         this.googleSearch()
+      } else if (this.mainView === 'trending') {
+        if (!this.summary) {
+          this.loading = true
+        }
+
+        this.changeSearch({ search: this.booleanString, template: this.newTemplate })
+
+        try {
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+
+          await this.getTrendingClips(saved, boolean)
+
+          if (saved) {
+            this.updateSearch()
+          }
+
+          this.refreshUser()
+        } catch (e) {
+          console.log(e)
+        }
       } else if (this.mainView === 'write') {
         this.closeRegenModal()
         this.generatePitch()
@@ -8521,6 +8658,126 @@ Your goal is to create content that resonates deeply, connects authentically, an
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
     },
+    async getReportClips(urls) {
+      try {
+        const response = await Comms.api.getReportClips({
+          urls: urls,
+        })
+
+        if (this.summary.length) {
+          if (!response.length) {
+            this.noResultsString = "We couldn't find any trending articles related to your search"
+          }
+
+          this.latestArticles = response.map((article) => {
+            const shareEntry = this.followupShares.find(
+              (share) => Object.keys(share)[0] === article.url,
+            )
+            const shares = shareEntry ? shareEntry[article.url] : 0
+            return {
+              ...article,
+              author:
+                Array.isArray(article.author) && article.author.length > 0
+                  ? article.author[0]
+                  : 'Unknown',
+              shares: shares,
+            }
+          })
+        } else {
+          if (!response.length) {
+            this.noResultsString = "We couldn't find any trending articles related to your search"
+          }
+          this.latestArticles = []
+          this.filteredArticles = response.map((article) => {
+            const shareEntry = this.totalShares.find(
+              (share) => Object.keys(share)[0] === article.url,
+            )
+            const shares = shareEntry ? shareEntry[article.url] : 0
+            return {
+              ...article,
+              author:
+                Array.isArray(article.author) && article.author.length > 0
+                  ? article.author[0]
+                  : 'Unknown',
+              shares: shares,
+            }
+          })
+        }
+
+        console.log(this.filteredArticles)
+        this.loading = false
+        this.getSummary(this.filteredArticles, this.newSearch)
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+        this.$toast('Error gathering articles, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async getTrendingClips(saved = false, boolean = '', chatTemplate = null) {
+      this.showingDropdown = false
+      if (this.summary) {
+        this.scrollToBottom()
+      }
+      try {
+        const response = await Comms.api.getTrendingClips({
+          search: this.newSearch,
+          countries: ['United States'],
+        })
+
+        if (!this.summary) {
+          this.totalShares = response.articles.articles.map((art) => {
+            return {
+              [art.url]: art.total_shares,
+            }
+          })
+        } else {
+          this.followupShares = response.articles.articles.map((art) => {
+            return {
+              [art.url]: art.total_shares,
+            }
+          })
+        }
+
+        let urls = []
+
+        urls = response.articles.articles.map((art) => {
+          return art.url
+        })
+
+        if (this.summary.length) {
+          if (!response.articles.articles.length) {
+            this.noResultsString = 'No Articles found'
+          }
+          this.getReportClips(urls)
+        } else {
+          if (!response.articles.articles.length) {
+            this.noResultsString = 'No Articles found'
+          }
+          this.latestArticles = []
+          this.booleanString = response.string.string
+          this.getReportClips(urls)
+        }
+        this.searchArticleText = ' '
+        this.searchArticleText = ''
+        this.booleanString = response.string
+
+        if (!saved && !chatTemplate) {
+          this.clearNewSearch()
+        }
+      } catch (e) {
+        this.clearNewSearch()
+        this.filteredArticles = []
+        console.log(e)
+      } finally {
+        // this.loading = false
+      }
+    },
     async getClips(saved = false, boolean = '', chatTemplate = null) {
       // this.summary = null
       this.showingDropdown = false
@@ -8752,6 +9009,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         source: `Source: ${a.source.name}`,
         author: `Author: ${a.author}`,
         link: `Link: ${a.link}`,
+        shares: `Total shares: ${a.shares ? a.shares : 0}`,
       }))
     },
     async regenerateTwitterSummary(clips, instructions) {
@@ -8914,7 +9172,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       if (!this.summary) {
         this.newSearch = this.newTemplate
-        if (this.mainView !== 'news') {
+        if (this.mainView !== 'news' || this.mainView !== 'trending') {
           this.generateNewSearch(null, false)
         } else {
           this.regenerateSummary()
@@ -8933,7 +9191,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSummaryMenu = false
       this.altCitationsMounted = false
       try {
-        if (this.mainView === 'news') {
+        if (this.mainView === 'news' || this.mainView === 'trending') {
           await this.getSummary(
             clips,
             instructions,
@@ -9003,6 +9261,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           company: this.selectedOrg,
           previous: this.noResultsString,
           followUp: true,
+          trending: this.mainView === 'trending' ? true : false,
         })
 
         if (res.summary.toLowerCase().includes('new search term')) {
@@ -9018,6 +9277,124 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } finally {
       }
     },
+    // async getTrendingSummary(
+    //   clips,
+    //   instructions = '',
+    //   previous,
+    //   twitter = false,
+    //   chatSummary = null,
+    //   followUp = false,
+    // ) {
+    //   this.citationsMounted = false
+
+    //   allClips = this.getArticleDescriptions(
+    //      clips,
+    //     )
+
+    //   if (!this.summary) {
+    //     this.summaryLoading = true
+    //   }
+
+    //   let openAiDown = false
+
+    //   try {
+    //     await Comms.api
+    //       .getTrendingSummary({
+    //         clips: allClips,
+    //         search: this.newSearch,
+    //         instructions: instructions,
+    //         company: this.selectedOrg,
+    //         previous: previous ? previous : null,
+    //         followUp: followUp,
+    //       })
+    //       .then((response) => {
+    //         if (this.shouldCancel) {
+    //           return this.stopLoading()
+    //         }
+    //         if (this.searchSaved) {
+    //           this.updateSearch()
+    //         }
+    //         this.originalSummary = response.summary
+    //         if (this.summary) {
+    //           if (response.summary.toLowerCase().includes('new search term')) {
+    //             this.newSearch = this.extractTerm(response.summary)
+    //             this.secondaryLoader = false
+    //             this.secondaryLoaderAlt = true
+    //             this.generateNewSearch(null, false)
+    //           } else {
+    //             this.summaries.push({
+    //               summary: response.summary
+    //                 .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    //                 .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
+    //               clips: this.latestArticles.length ? this.latestArticles : [],
+    //             })
+    //             this.secondaryLoader = false
+    //             this.secondaryLoaderAlt = false
+    //             setTimeout(() => {
+    //               this.altCitationsMounted = true
+    //             }, 5000)
+    //           }
+    //         } else {
+    //           this.summary = response.summary
+    //             .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    //             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+    //         }
+    //       })
+    //   } catch (e) {
+    //     console.log('Error in getSummary', e)
+    //     this.laoding = false
+    //     this.summaryLoading = false
+    //     this.secondaryLoader = false
+    //     this.secondaryLoaderAlt = false
+    //     if (
+    //       e.data &&
+    //       e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable"
+    //     ) {
+    //       this.$toast('OpenAI is down, please try again later.', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //       openAiDown = true
+    //     } else {
+    //       this.$toast('Something went wrong, please try again.', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     }
+    //   } finally {
+    //     if (this.summaries.length && !this.secondaryLoader && !this.secondaryLoaderAlt) {
+    //       this.scrollToSummariesTop()
+    //     } else {
+    //       this.scrollToBottom()
+    //     }
+
+    //     if (openAiDown) {
+    //       // this.changeSearch({ search: null, template: null })
+    //       this.resetSearch()
+    //       this.abortFunctions()
+    //       return this.stopLoading()
+    //     }
+    //     const newAbortControllers = { ...this.$store.state.abortControllers }
+    //     delete newAbortControllers.getClips
+    //     this.$store.dispatch('updateAbortController', newAbortControllers)
+    //     this.summarizing = true
+    //     this.summaryLoading = false
+    //     if (chatSummary) {
+    //       this.newTemplate = ''
+    //     }
+    //     if (this.chatting) {
+    //       this.chatting = false
+    //       this.changeSearch({ search: this.booleanString, template: this.newTemplate })
+    //     }
+    //     this.refreshUser()
+    //   }
+    // },
     async getSummary(
       clips,
       instructions = '',
@@ -9061,6 +9438,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               company: this.selectedOrg,
               previous: previous ? previous : null,
               followUp: followUp,
+              trending: this.mainView === 'trending' ? true : false,
             },
             this.controllers.getSummary.controller.signal,
           )
@@ -9290,7 +9668,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               article.source.name.toLowerCase().includes(searchText),
             article.title && article.title.toLowerCase().includes(searchText),
             article.description && article.description.toLowerCase().includes(searchText),
-            article.author && article.author.toLowerCase().includes(searchText),
+            // article.author && article.author.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []

@@ -338,6 +338,14 @@
                   alt=""
                   @click="selectSearch(search)"
                 />
+                <img
+                  class="search-icon"
+                  v-else-if="search.meta_data.type === 'trending'"
+                  src="@/assets/images/arrow-trend-up.svg"
+                  height="12px"
+                  alt=""
+                  @click="selectSearch(search)"
+                />
                 <p :title="search.title" @click="selectSearch(search)">
                   {{ search.title }}
                 </p>
@@ -557,6 +565,14 @@
                     class="search-icon"
                     v-else-if="search.meta_data.type === 'write'"
                     src="@/assets/images/brain.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'trending'"
+                    src="@/assets/images/arrow-trend-up.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"

@@ -97,6 +97,7 @@ class Search(TimeStampModel):
         previous,
         is_follow__up,
         company,
+        trending,
         instructions=False,
         for_client=False,
     ):
@@ -105,7 +106,7 @@ class Search(TimeStampModel):
 
         if is_follow__up:
             prompt = comms_consts.SUMMARY_FOLLOW_UP(
-                datetime.now().date(), clips, previous, company, elma, instructions
+                datetime.now().date(), clips, previous, company, elma, instructions, trending
             )
         else:
             prompt = (
@@ -115,6 +116,7 @@ class Search(TimeStampModel):
                     input_text,
                     company,
                     elma,
+                    trending,
                     instructions,
                     for_client,
                 )

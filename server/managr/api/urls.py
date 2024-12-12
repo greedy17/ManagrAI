@@ -552,6 +552,11 @@ urlpatterns = [
         comms_views.rewrite_report,
         name="rewrite-report",
     ),
+    path(
+        "trending/",
+        comms_views.get_trending_articles,
+        name="trending-articles",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

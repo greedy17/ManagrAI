@@ -366,67 +366,131 @@ def TWITTER_USERNAME_INSTRUCTIONS(company):
 
 
 def OPEN_AI_NEWS_CLIPS_SUMMARY(
-    date, clips, search, project, elma, instructions=False, for_client=False
+    date, clips, search, project, elma, trending, instructions=False, for_client=False
 ):
-    body = f"""
+    if not trending:
 
-    {elma}.
+        body = f"""
 
-    Today is {date}. Please provide a concise and accurate response based on the news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the news coverage for their project.
-    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+        {elma}.
+
+        Today is {date}. User is asking a question based on recent media coverage. Please provide an output per the users request (see below) based on the news coverage below (see below). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. Example: “Top storylines covering Lululemon” = List top stories covering Lululemon. Example 2: "List top journalist covering Lululemon” = return a list of journalist. Example 3: Lululemon = List top headlines about Lululemon along with any additional insights (sentiment, key messages)
+        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+        
+        Input Format:
+
+        User Request: {search}
+        Media Coverage: {clips}
+        Project details (campaign, media pitch, etc): {project}
     
-    Input Format:
+        Output format:
 
-    User Request: {search}
-    News Coverage: {clips}
-    Project details (campaign, media pitch, etc): {project}
-   
-    Output format:
-
-    **Heading** in `<h2>` tags,
-    Sections with `<strong>` subheadings,
-    Ordered or unordered lists using `<ol>` or `<ul>`,
-    Paragraphs with `<p>`, and
-    Line breaks `<br>` between main points for clarity.
-    Do not include ```html in your response.
-
-    Keep responses structured and consistent for easy reading in a Vue.js app.
-    """
-    return body
-
-
-def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions):
-    body = f"""
-
-    {elma}.
-
-    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the news coverage below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
-    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
-    
-    Follow these instructions carefully:
-    
-    1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
-    2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
-    3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
-    4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
-    
-    Input Format:
-    Previous response: {previous}
-    User Request: {instructions}
-    News Coverage: {clips}
-    Project details (campaign, media pitch, etc): {project}
-    
-    Output format:
-    **Heading** in `<h2>` tags,
+        **Heading** in `<h2>` tags,
         Sections with `<strong>` subheadings,
         Ordered or unordered lists using `<ol>` or `<ul>`,
         Paragraphs with `<p>`, and
         Line breaks `<br>` between main points for clarity.
         Do not include ```html in your response.
-    Keep responses structured and consistent for easy reading in a Vue.js app.
-    """
+
+        Keep responses structured and consistent for easy reading in a Vue.js app.
+        """
+
+    else:
+
+        body = f"""
+
+        {elma}.
+
+        Today is {date}. Please provide a concise and accurate response based on the trending news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the news coverage for their project.
+        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+        
+        Input Format:
+
+        User Request: {search}
+        News Coverage: {clips}
+        Project details (campaign, media pitch, etc): {project}
+    
+        Output format:
+
+        **Heading** in `<h2>` tags,
+        Sections with `<strong>` subheadings,
+        Ordered or unordered lists using `<ol>` or `<ul>`,
+        Paragraphs with `<p>`, and
+        Line breaks `<br>` between main points for clarity.
+        Do not include ```html in your response.
+
+        Keep responses structured and consistent for easy reading in a Vue.js app.
+        """
+
+    return body
+
+
+def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions, trending):
+    if not trending:
+       
+        body = f"""
+
+        {elma}.
+
+        Today is {date}. User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the news coverage below. Also, if a user provides project details (check below) reference those as well, they are applicable to the request.
+        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+        
+        Follow these instructions carefully:
+        
+        1. The user is most likely asking a follow up question (query) based on the previous response and the news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
+        2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+        3. The output should just be the answer to their question / request. Example 1: "List top journalist covering this news" = return a list of journalist. Example 2: "What's being said about Joe Smith" = an concise answer about Joe smith.
+        4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+        
+        Input Format:
+        Previous response: {previous}
+        User Request: {instructions}
+        News Coverage: {clips}
+        Project details (campaign, media pitch, etc): {project}
+        
+        Output format:
+        **Heading** in `<h2>` tags,
+            Sections with `<strong>` subheadings,
+            Ordered or unordered lists using `<ol>` or `<ul>`,
+            Paragraphs with `<p>`, and
+            Line breaks `<br>` between main points for clarity.
+            Do not include ```html in your response.
+        Keep responses structured and consistent for easy reading in a Vue.js app.
+        """
+
+    else:
+
+        body = f"""
+
+        {elma}.
+        Today is {date}. User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the trending news coverage below. Also, if a user provides project details (check below) reference those as well, they are applicable to the request.
+        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+       
+        Follow these instructions carefully:
+        1. The user is most likely asking a follow up question (query) based on the previous response and the trending news coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
+        2. If the answer can not be provided using the previous response or trending news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new keyword From the user input, extract the **either the single most relevant keyword or up to 2 keywords separated by a comma ** related to the topic while excluding brand names, locations (e.g., country, state, etc.), or generic terms like 'top' or 'headlines'.
+        3. The output should just be the answer to their question / request. Example 1: "List top journalist covering this news" = return a list of journalist. Example 2: "What's being said about Joe Smith" = an concise answer about Joe smith.
+        4. Only return "new search term" followed by the keyword, in square brackets with no explanations or other information. Example: "New Search Term: [keyword is here]
+        
+        Input Format:
+        Previous response: {previous}
+        User Request: {instructions}
+        News Coverage: {clips}
+        Project details (campaign, media pitch, etc): {project}
+
+        Output format:
+        **Heading** in `<h2>` tags,
+            Sections with `<strong>` subheadings,
+            Ordered or unordered lists using `<ol>` or `<ul>`,
+            Paragraphs with `<p>`, and
+            Line breaks `<br>` between main points for clarity.
+            Do not include ```html in your response.
+        Keep responses structured and consistent for easy reading in a Vue.js app.
+        """ 
 
     return body
 
@@ -1200,5 +1264,20 @@ def REPORT_SUMMARY(elma, brand, clips):
     Here are the news clips:
     {clips}
     """
+    return prompt
+
+def GENERATE_TREND_BOOLEAN(search):
+    prompt = f"""
+    From the user input, extract the **either the single most relevant keyword or up to 2 keywords separated by a comma ** related to the topic while excluding brand names, locations (e.g., country, state, etc.), or generic terms like 'top' or 'headlines'.
+   
+    Example 1: user input: "Top news covering AI and healthcare" should return: AI, Healthcare.
+    Example 2: user input: "Whats happening in sports" should return: Sports
+    Example 3: user input: "Whats trending would be relevant to Florida State University" should return: "Higher Education"
+
+    User input: {search}
+    * Output format must a ONLY JSON object:
+    keywords : [LIST OF KEYWORDS]
+    """
+
     return prompt
 

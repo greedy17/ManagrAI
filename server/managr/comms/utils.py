@@ -1095,6 +1095,7 @@ def get_social_data(urls):
 
 
 def get_trend_articles(topics, countries):
+    print(topics, countries)
     headers = {"Accept": "application/json"}
     params = {
         "api_key": comms_consts.BUZZSUMO_API_KEY,
