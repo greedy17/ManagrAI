@@ -429,7 +429,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(
 
 def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions, trending):
     if not trending:
-       
+
         body = f"""
 
         {elma}.
@@ -490,7 +490,7 @@ def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions, trendi
             Line breaks `<br>` between main points for clarity.
             Do not include ```html in your response.
         Keep responses structured and consistent for easy reading in a Vue.js app.
-        """ 
+        """
 
     return body
 
@@ -1115,7 +1115,7 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
 # def REPORT_SUMMARY(brand, clips):
 #     prompt = f"""
 #     You are the VP of Communications at {brand}. Your task is to create a concise executive overview of the earned media report based on the news clips below. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
-    
+
 #     1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
 #     2. Key recognizable publications and influential journalists who covered the brand.
 #     3. Key metrics, such as total reach, potential impressions, and engagement rates.
@@ -1123,7 +1123,7 @@ OPEN_AI_EMPTY_SEARCH_SUGGESTIONS = (
 #     5. Highlight recurring themes or key messages across the media coverage.
 
 #     Your response must be properly formatted html. Do not include any styling and/or <meta> tags. Do not include ```html in your response.
-   
+
 #     Here are the news clips:
 
 #     {clips}
@@ -1235,6 +1235,7 @@ EXCLUDE_DOMAINS = [
     "superpunch.net",
     "securityaffairs.com",
     "fuckingyoung.es",
+    "pypi.org",
 ]
 
 JOURNALIST_CHOICES = [
@@ -1266,6 +1267,7 @@ def REPORT_SUMMARY(elma, brand, clips):
     """
     return prompt
 
+
 def GENERATE_TREND_BOOLEAN(search):
     prompt = f"""
     From the user input, extract the **either the single most relevant keyword or up to 2 keywords separated by a comma ** related to the topic while excluding brand names, locations (e.g., country, state, etc.), or generic terms like 'top' or 'headlines'.
@@ -1280,4 +1282,3 @@ def GENERATE_TREND_BOOLEAN(search):
     """
 
     return prompt
-

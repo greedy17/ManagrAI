@@ -177,6 +177,7 @@ class NewsSpider(scrapy.Spider):
     handle_httpstatus_list = [403, 400]
     custom_settings = {
         "FEED_EXPORT_ENCODING": "utf-8",
+        "DOWNLOAD_TIMEOUT": 300,
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
         "DOWNLOADER_MIDDLEWARES": {
