@@ -333,7 +333,7 @@ class NewsSpider(scrapy.Spider):
                     ):
                         article_url = complete_url(article_url, source.domain)
                         if source.use_scrape_api:
-                            article_url = "http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article_url}&render=true"
+                            article_url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article_url}&render=true"
                         self.articles_to_process += 1
                         yield scrapy.Request(
                             article_url,
