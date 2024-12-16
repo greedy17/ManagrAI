@@ -796,6 +796,13 @@ class AssistAlert(TimeStampModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    thread = models.ForeignKey(
+        "Thread",
+        related_name="threads",
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+    )
     recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     meta_data = JSONField(
         default=dict,
