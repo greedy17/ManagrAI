@@ -792,15 +792,15 @@ class AssistAlert(TimeStampModel):
     search = models.ForeignKey(
         "Search",
         related_name="alerts",
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
     )
     thread = models.ForeignKey(
         "Thread",
         related_name="threads",
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
     )
     recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
