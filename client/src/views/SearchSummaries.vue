@@ -1796,7 +1796,7 @@
                     (mainView === 'web' && summary)) &&
                   !isViewOnly
                 "
-                :disabled="searchSaved"
+                :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
               >
                 <!-- <img
                   v-if="
@@ -1835,7 +1835,7 @@
 
                 <img v-else height="14px" src="@/assets/images/disk.svg" alt="" /> -->
 
-                <!-- <div
+                <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
@@ -1853,9 +1853,9 @@
                   "
                 >
                   Disable Digest
-                </div> -->
+                </div>
 
-                <div>Save</div>
+                <div v-else>Save</div>
               </button>
 
               <div
@@ -2248,7 +2248,7 @@
                   </div>
                 </div>
 
-                <!-- <div
+                <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     !notifiedList.includes(searchId)
@@ -2272,7 +2272,6 @@
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
-           
 
                   <div style="margin: 8px 0" class="space-between">
                     <div class="row">
@@ -2414,7 +2413,6 @@
                         </div>
                       </div>
                     </div>
-                  
                   </div>
 
                   <div class="row-end-bottom" style="margin-top: 0">
@@ -2436,8 +2434,6 @@
                     >
                       Schedule
                     </button>
-
-               
                   </div>
                 </div>
 
@@ -2468,7 +2464,7 @@
                       Disable Digest
                     </button>
                   </div>
-                </div> -->
+                </div>
               </div>
             </div>
           </header>
@@ -5080,10 +5076,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
             tweets: this.tweets,
             followupShares: this.followupShares,
             totalShares: this.totalShares,
+            boolean: this.booleanString,
+            project: this.selectedOrg,
           },
         })
         this.savedSearch = res
-        this.showingSave = false
+        this.searchId = res.id
+        // this.showingSave = false
         this.savingSearch = false
         this.$toast('Thread Saved', {
           timeout: 2000,
@@ -7170,7 +7169,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           instructions: this.newTemplate,
         })
         if (response.id) {
-          // this.searchId = response.id
+          this.searchId = response.id
           this.$toast('Content saved', {
             timeout: 2000,
             position: 'top-left',
