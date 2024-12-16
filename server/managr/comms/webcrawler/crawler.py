@@ -2,6 +2,8 @@ import scrapy
 import logging
 import datetime
 import time
+import json
+from functools import reduce
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -389,7 +391,27 @@ class NewsSpider(scrapy.Spider):
         article_tags = None
         if source.selectors_defined:
             for key in article_selectors.keys():
-                selector = response.xpath(article_selectors[key]).getall()
+                path = article_selectors[key]
+                if "//script" in path:
+                    script_path = path.split("|")[0]
+                    selector = response.xpath(script_path).get()
+                else:
+                    selector = response.xpath(path).getall()
+                if "//script" in path:
+                    data_path = path.split("|")[1:]
+                    for i, v in enumerate(data_path):
+                        try:
+                            integer_value = int(v)
+                            data_path[i] = integer_value
+                        except ValueError:
+                            continue
+                    try:
+                        data = json.loads(selector)
+                        selector_value = reduce(lambda d, key: d[key], data_path, data)
+                        selector = selector_value
+                    except Exception as e:
+                        print(e)
+                        selector = None
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
