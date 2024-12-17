@@ -2416,6 +2416,7 @@
                   </div>
 
                   <div class="row-end-bottom" style="margin-top: 0">
+                    <button @click="testEmailAlert">snd test</button>
                     <button @click="hideSave" class="secondary-button">Close</button>
 
                     <button
@@ -4381,6 +4382,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       isTyping: false,
       searchName: null,
       searchId: null,
+      threadId: null,
       textIndex: 0,
       typedMessage: '',
       tweetError: '',
@@ -5081,7 +5083,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           },
         })
         this.savedSearch = res
-        this.searchId = res.id
+        this.threadId = res.id
         // this.showingSave = false
         this.savingSearch = false
         this.$toast('Thread Saved', {
@@ -7248,11 +7250,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
       if (id) {
         this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
       } else {
-        this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+        this.currentAlert =
+          this.emailAlerts.filter((alert) => alert.search === this.searchId)[0] ||
+          alert.thread === this.threadId
       }
       this.getEmailAlerts()
     },
     async testEmailAlert() {
+      console.log('ALERT ID IS HERE', this.currentAlertId)
       try {
         Comms.api.testEmailAlert({
           alert_id: this.currentAlertId,
@@ -7343,9 +7348,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
     // sendtoslack
     async addEmailAlert() {
       this.savingAlert = true
+
       try {
+        await this.createSearch()
+        console.log('search id', this.searchId)
+        console.log('thread id', this.threadId)
         const response = await Comms.api.addEmailAlert({
           search: this.searchId,
+          thread: this.threadId,
           run_at: this.formattedDate,
           user: this.user.id,
           title: this.searchName,
@@ -8073,7 +8083,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.altCitationsMounted = false
       this.savedSearch = search
       this.shareUrl = search.share_url
-      this.searchId = search.id
+      this.threadId = search.id
       this.newSearch = search.meta_data.searchTerm
       this.summary = search.meta_data.summary
       this.discoverList = search.meta_data.list
@@ -8555,47 +8565,47 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.selectedSearch = search
     },
     async createSearch() {
-      this.showSaveName = false
-      this.savingSearch = true
+      console.log('booty string', this.booleanString)
+      // this.showSaveName = false
+      // this.savingSearch = true
       try {
-        const response = await Comms.api
-          .createSearch({
-            name: this.searchName,
-            input_text: this.newSearch,
-            search_boolean: this.booleanString || 'Ig',
-            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-            meta_data: this.metaData,
-            type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
-          })
-          .then((response) => {
-            if (response.id) {
-              this.searchId = response.id
-              this.savedSearch = {
-                name: response.name,
-                input_text: this.newSearch,
-                meta_data: this.metaData,
-                search_boolean: this.booleanString,
-                instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-              }
+        const response = await Comms.api.createSearch({
+          name: this.savedSearch.title,
+          input_text: this.summaries.length ? this.followUps[-1] : this.newSearch,
+          search_boolean: this.booleanString ? this.booleanString : '',
+          instructions: this.summaries.length ? this.followUps[-1] : this.newSearch,
+          meta_data: this.metaData,
+          type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
+        })
 
-              this.$toast('Search Saved', {
-                timeout: 2000,
-                position: 'top-left',
-                type: 'success',
-                toastClassName: 'custom',
-                bodyClassName: ['custom'],
-              })
-            }
-          })
+        if (response.id) {
+          this.searchId = response.id
+          this.savedSearch = {
+            name: response.name,
+            input_text: this.newSearch,
+            meta_data: this.metaData,
+            search_boolean: this.booleanString,
+            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
+          }
+
+          // this.$toast('Search Saved', {
+          //   timeout: 2000,
+          //   position: 'top-left',
+          //   type: 'success',
+          //   toastClassName: 'custom',
+          //   bodyClassName: ['custom'],
+          // })
+        }
       } catch (e) {
         console.log(e)
-      } finally {
-        this.$store.dispatch('getSearches')
-        setTimeout(() => {
-          this.saveModalOpen = false
-          this.savingSearch = false
-        }, 1000)
       }
+      // finally {
+      //   this.$store.dispatch('getSearches')
+      //   setTimeout(() => {
+      //     this.saveModalOpen = false
+      //     this.savingSearch = false
+      //   }, 1000)
+      // }
     },
 
     async sendSummaryEmail() {
@@ -8603,25 +8613,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
       try {
         this.sentSummaryEmail = true
 
-        let clips
-        if (this.mainView === 'social') {
-          clips = this.tweets.filter((clip, i) => {
-            if (i < 10) {
-              return clip
-            }
-          })
-        } else if (this.mainView === 'news') {
-          clips = this.filteredArticles.filter((clip, i) => {
-            if (i < 10) {
-              return clip
-            }
-          })
-        } else {
-          clips = this.addedArticles
-        }
+        // let clips
+        // if (this.mainView === 'social') {
+        //   clips = this.tweets.filter((clip, i) => {
+        //     if (i < 10) {
+        //       return clip
+        //     }
+        //   })
+        // } else if (this.mainView === 'news') {
+        //   clips = this.filteredArticles.filter((clip, i) => {
+        //     if (i < 10) {
+        //       return clip
+        //     }
+        //   })
+        // } else {
+        //   clips = this.addedArticles
+        // }
         await Comms.api.sendSummaryEmail({
-          summary: this.summary,
-          clips,
+          link: this.currentAlert.share_url,
           title: this.newSearch,
           email: this.shareEmail,
         })

@@ -6,12 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Digest</title>
     <style>
-        p {
+        p,
+        b,
+        div {
             margin: 16px 0;
+            padding: 0;
         }
 
-        ul {
-            padding-left: 0 !important;
+        .im {
+            color: #2f4656 !important;
+            white-space: nowrap;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            margin: 0 !important;
+        }
+
+        ol {
+            padding-left: -0 !important;
         }
 
         li {
@@ -39,53 +54,12 @@
                     <table role="presentation" width="100%"
                         style="border-bottom: 1px solid #DDDDDD; margin-bottom: 16px; padding-bottom: 16px;">
                         <tr>
-                            <td>
-                                <div
-                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 32px; background-color: #e9f3fa; padding:16px; font-weight: 200;">
-                                    {{ summary | safe }}
-                                </div>
+                            <td
+                                style="color: #2f4656; font-family: Arial, sans-serif; background-color: #e9f3fa; padding:16px; font-weight: 200;">
+                                <a href="{{ thread_url }}" style="text-decoration: none; color: #2f4656;"></a>
                             </td>
                         </tr>
                     </table>
-                    {% for value in clips %}
-                    <table role="presentation" width="100%"
-                        style="border-bottom: 1px solid #DDDDDD; padding-bottom: 15px; margin-bottom: 15px;">
-                        <tr>
-                            <td style="width: 400px; text-overflow: ellipsis;">
-                                <p style="font-size: 12px; color: #5383ec">
-                                    {{value.source.name}}
-                                </p>
-                                <a href="{{value.link}}"
-                                    style="text-decoration: none; cursor: pointer; font-size: 20px; color: #333333; font-weight: 300; text-overflow: ellipsis;">
-                                    {{ value.title }}
-                                </a>
-                                <p style="margin: 10px 0; color: #555555; text-overflow: ellipsis;">
-                                    {{ value.description }}
-                                </p>
-                            </td>
-                            <td>
-                                <img src="{{value.image_url}}" alt="{{value.title}}" width="120" height="120"
-                                    style="display: block; border: none; height: 120px; width: 120px; margin-left: 16px; margin-top: 16px; object-fit: cover; cursor: pointer;">
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <div style="color: #9596b4; padding-top: 5px;">
-                                    <span
-                                        style="background-color: #eeeeee; padding: 6px 12px; color: #27292c; border-radius: 12px; font-size: 12px; margin-right: 0.5rem;">
-                                        {{value.author}}</span>
-                                    <span style="font-size: 12px;">{{value.publish_date}}</span>
-                                </div>
-                                {% if clips|length != 1 and value.summary %}
-                                <div
-                                    style="color: #2f4656; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; padding: 8px; border-radius: 4px; background-color: #e9f3fa;">
-                                    {{ value.summary | safe }}
-                                </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </table>
-                    {% endfor %}
                 </td>
             </tr>
             <tr>
