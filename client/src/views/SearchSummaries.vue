@@ -1197,10 +1197,10 @@
                           >
                             <span>
                               <img src="@/assets/images/users.svg" height="11px" alt="" />
-                              Contacts
+                              Media Contacts
                             </span>
 
-                            <p>Find the right media contacts for your story</p>
+                            <p>Find the right journalists for your story</p>
                           </div>
                         </section>
                       </div>
@@ -2419,7 +2419,6 @@
                   </div>
 
                   <div class="row-end-bottom" style="margin-top: 0">
-                    <button @click="testEmailAlert">snd test</button>
                     <button @click="hideSave" class="secondary-button">Close</button>
 
                     <button
@@ -2440,8 +2439,6 @@
                     </button>
                   </div>
                 </div>
-
-                <button @click="testEmailAlert">snd test</button>
 
                 <div
                   class="dropdown-small-section"
@@ -3365,10 +3362,10 @@
                   >
                     <span>
                       <img src="@/assets/images/users.svg" height="11px" alt="" />
-                      Contacts
+                      Media Contacts
                     </span>
 
-                    <p>Find the right media contacts for your story</p>
+                    <p>Find the right journalists for your story</p>
                   </div>
 
                   <div
@@ -9657,7 +9654,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       return 'https://managr.ai/contact'
     },
     onboardingLink() {
-      return 'https://www.loom.com/share/115402e27c0c442b8204e19e5d65fb00?sid=c9116dfa-12f6-48bf-a68e-0dab11aa9789'
+      return 'https://www.loom.com/share/1011e37bb1324b09a3fc08623e480580?sid=8c47d7f1-7e2a-4ec9-a09a-8304059a1bee'
     },
     placeHolderText() {
       let text = ''

@@ -555,21 +555,26 @@ def _send_news_summary(news_alert_id):
                 clips = [article for article in clips if article["title"] != "[Removed]"]
                 normalized_clips = normalize_newsapi_to_model(clips)
                 descriptions = [clip["description"] for clip in normalized_clips]
-                
-                res = Search.get_summary_email(
+
+                res = Search.get_summary(
                     alert.user,
                     2000,
                     60.0,
                     descriptions,
                     alert.search.search_boolean,
-                    alert.search.instructions,
                     False,
+                    False,
+                    '',
+                    False,
+                    alert.search.instructions,
+                    True,
                 )
 
                 email_list = [alert.user.email]
 
-                message = res.get("choices")[0].get("message").get("content")
-                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = re.sub(r'\*(.*?)\*', r'<strong>\1</strong>', message)
+                message = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2" target="_blank">\1</a>', message)
 
                 thread.meta_data["articlesFiltered"] = normalized_clips
                 thread.meta_data["filteredArticles"] = normalized_clips   

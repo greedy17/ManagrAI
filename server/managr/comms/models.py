@@ -175,7 +175,6 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False, is_report=False):
-        print('boolean is here', search_boolean)
         page_size = 40
         if is_report:
             page_size = 100

@@ -672,7 +672,6 @@ class PRSearchViewSet(
                     query_input = query_input + " lang:en -is:retweet"
                     if "from:" not in query_input:
                         query_input = query_input + " is:verified"
-                    print("BOOLEAN IS HERE", query_input)
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
 
                 tweets = tweet_res.get("data", None)
