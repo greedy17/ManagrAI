@@ -31,10 +31,10 @@ SCHEDULED_TASKS_IMAGE_NAME="$MANAGR_ECR_REPO_URL/$MANAGR_SERVER_SCHEDULED_TASKS_
 
 if [ -n "$TASK_FAMILY" ]; then
     TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$TASK_FAMILY")
-    echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)' >task-definition.json
+    echo $TASK_DEFINITION | jq --arg IMAGE "$IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy) | del(.enableFaultInjection)' >task-definition.json
 elif [ -n "$SCHEDULED_TASK_FAMILY" ]; then
     TASK_DEFINITION=$(aws ecs describe-task-definition --task-definition "$SCHEDULED_TASK_FAMILY")
-    echo $TASK_DEFINITION | jq --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)' >task-definition.json
+    echo $TASK_DEFINITION | jq --arg SCHEDULED_TASKS_IMAGE_NAME "$SCHEDULED_TASKS_IMAGE_NAME" '.taskDefinition | .containerDefinitions[0].image = $SCHEDULED_TASKS_IMAGE_NAME | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy) | del(.enableFaultInjection)' >task-definition.json
     aws ecs register-task-definition --family "$SCHEDULED_TASK_FAMILY" --cli-input-json file://task-definition.json
     TASK_REVISION=$(aws ecs describe-task-definition --task-definition "$SCHEDULED_TASK_FAMILY" | jq '.taskDefinition.revision')
     EVENTS_RULE=$(aws events list-targets-by-rule --rule "$SCHEDULED_TASK_FAMILY")
