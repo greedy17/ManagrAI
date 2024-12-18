@@ -231,7 +231,7 @@
             </button>
 
             <button
-              v-if="hasGoogleIntegration && hasMicrosoftIntegration"
+              v-if="hasGoogleIntegration || hasMicrosoftIntegration"
               @click="sendEmail"
               :disabled="loadingDraft || !subject || !targetEmail || sendingEmail"
               style="margin-right: 4px"
