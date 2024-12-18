@@ -1797,7 +1797,7 @@
                     (mainView === 'web' && summary)) &&
                   !isViewOnly
                 "
-                :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
+                :disabled="searchSaved && mainView !== 'news'"
               >
                 <!-- <img
                   v-if="
@@ -1838,7 +1838,7 @@
 
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
@@ -1849,7 +1849,7 @@
 
                 <div
                   v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -2252,7 +2252,7 @@
 
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
                   "
@@ -2297,7 +2297,7 @@
                     </label>
                   </div>
 
-                  <div
+                  <!-- <div
                     v-if="user.slackRef && mainView === 'news'"
                     style="margin-bottom: 16px"
                     class="space-between"
@@ -2341,7 +2341,7 @@
                       <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
                       Connect
                     </button>
-                  </div>
+                  </div> -->
 
                   <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
                     <div class="dropdown-select">
@@ -2443,7 +2443,7 @@
                 <div
                   class="dropdown-small-section"
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -4162,7 +4162,7 @@ www.forbes.com/article-3
       drafting: false,
       originalSummary: null,
       placeholderTime: 'Select a time',
-      alertType: '',
+      alertType: 'EMAIL',
       alertChannel: '',
       alertChannelName: '',
       userChannelOpts: new SlackListResponse(),
