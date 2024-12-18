@@ -2741,16 +2741,13 @@ class ThreadViewSet(
         # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
         try:
             decrypted_dict = decrypt_dict(encrypted_code)
-            print('DICT IS HERE --- >',decrypt_dict)
             id = decrypted_dict.get("id")
             date = decrypted_dict.get("created_at")
             report = Thread.objects.get(id=id)
-            print('REPORT IS HERE --- >',report)
             serializer = self.get_serializer(report)
-            print('SERIALIZER IS HERE --- >',serializer)
             # user.add_meta_data("shared_thread")
         except Exception as e:
-            print('exception is here --- >',e)
+            print("exception is here --- >", e)
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={"error": "There was an issue retrieving this thread"},
@@ -3475,7 +3472,7 @@ def get_social_url_data(request):
 @authentication_classes([ExpiringTokenAuthentication])
 def get_trending_articles(request):
     search = request.data.get("search")
-    countries = request.data.get("countries")  
+    countries = request.data.get("countries")
     has_error = False
     attempts = 1
     token_amount = 1000
@@ -3486,7 +3483,7 @@ def get_trending_articles(request):
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             prompt = comms_consts.GENERATE_TREND_BOOLEAN(search)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                'ed@mymanagr.com',
+                "ed@mymanagr.com",
                 prompt,
                 "You are a VP of Communications",
                 token_amount=token_amount,
@@ -3533,8 +3530,8 @@ def get_trending_articles(request):
             break
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
-   
-    topics = message['keywords']
+
+    topics = message["keywords"]
 
     articles = get_trend_articles(topics, countries)
     if "articles" in articles.keys():

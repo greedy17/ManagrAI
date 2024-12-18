@@ -411,7 +411,7 @@ class NewsSpider(scrapy.Spider):
                         selector = selector_value
                     except Exception as e:
                         print(e)
-                        selector = None
+                        selector = []
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
