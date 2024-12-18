@@ -146,8 +146,8 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-        elma = core_consts.ELMA 
-        project = ''
+        elma = core_consts.ELMA
+        project = ""
 
         prompt = (
             comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(
@@ -549,7 +549,7 @@ class NewsSource(TimeStampModel):
 
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
-        six_hours = datetime.now() - timedelta(hours=10)
+        six_hours = datetime.now() - timedelta(hours=6)
         active_sources = cls.objects.filter(is_active=True, scrape_type=type)
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
@@ -562,7 +562,7 @@ class NewsSource(TimeStampModel):
                 active_sources = active_sources.filter(is_crawling=True)
             else:
                 active_sources = active_sources.filter(is_crawling=True, is_stopped=False).filter(
-                    last_scraped__lt=six_hours
+                    last_scraped__gt=six_hours
                 )
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:

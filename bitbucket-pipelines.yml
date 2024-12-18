@@ -88,7 +88,7 @@ fargateStagingDeployment: &fargateStagingDeployment
         # DEBUG: "<boolean>" # Optional
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
-    - pipe: atlassian/aws-ecs-deploy:1.6.2
+    - pipe: atlassian/aws-ecs-deploy:1.12.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
@@ -146,7 +146,7 @@ fargateProdDeployment: &fargateProdDeployment
     - TASK_FAMILY="managr-app-task-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
     # Deploy to Fargate
-    - pipe: atlassian/aws-ecs-deploy:1.6.2
+    - pipe: atlassian/aws-ecs-deploy:1.12.2
       variables:
         CLUSTER_NAME: $AWS_ECS_CLUSTER_NAME
         SERVICE_NAME: $AWS_ECS_SERVICE_NAME
