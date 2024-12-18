@@ -13,7 +13,7 @@ from managr.utils.misc import custom_paginator
 from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, AssistAlert, Journalist, JournalistContact, EmailTracker
+from .models import Search, NewsSource, AssistAlert, Journalist, JournalistContact, EmailTracker, Thread
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
@@ -65,9 +65,9 @@ def emit_send_news_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
-def emit_share_client_summary(summary, clips, title, user_email):
+def emit_share_client_summary( link, title, user_email):
     logger.info("emit function")
-    return _share_client_summary(summary, clips, title, user_email)
+    return _share_client_summary( link, title, user_email)
 
 
 def emit_get_meta_account_info(user_id):
@@ -531,6 +531,9 @@ def _process_website_domain(urls, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
+    thread_id = alert.thread.id
+    thread = Thread.objects.get(id=thread_id)
+    link = thread.generate_url()
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
@@ -552,42 +555,35 @@ def _send_news_summary(news_alert_id):
                 clips = [article for article in clips if article["title"] != "[Removed]"]
                 normalized_clips = normalize_newsapi_to_model(clips)
                 descriptions = [clip["description"] for clip in normalized_clips]
-                res = Search.get_summary_email(
+
+                res = Search.get_summary(
                     alert.user,
                     2000,
                     60.0,
                     descriptions,
                     alert.search.search_boolean,
-                    alert.search.instructions,
                     False,
+                    False,
+                    '',
+                    False,
+                    alert.search.instructions,
+                    True,
                 )
+
                 email_list = [alert.user.email]
 
-                # if "@outlook" in email_list[0]:
-                message = res.get("choices")[0].get("message").get("content")
-                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = re.sub(r'\*(.*?)\*', r'<strong>\1</strong>', message)
+                message = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2" target="_blank">\1</a>', message)
 
-                # else:
-                #     message = res.get("choices")[0].get("message").get("content")
-                #     message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                #     for i in range(6, 0, -1):
-                #         message = re.sub(
-                #             rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                #         )
-                #     message = re.sub(
-                #         r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
-                #         r'<a href="\2\3">\1\4</a>',
-                #         message,
-                #     )
+                thread.meta_data["articlesFiltered"] = normalized_clips
+                thread.meta_data["filteredArticles"] = normalized_clips   
+                thread.meta_data["summary"] = message
+                thread.meta_data["summaries"] = []
+                thread.save()
 
-                clip_short_list = normalized_clips[:5]
-                for clip in clip_short_list:
-                    if clip["author"] is None:
-                        clip["author"] = "N/A"
-                    clip["publish_date"] = clip["publish_date"][:10]
                 content = {
-                    "summary": message,
-                    "clips": clip_short_list,
+                    "thread_url": link,
                     "website_url": f"{settings.MANAGR_URL}/login",
                     "title": f"{alert.search.name}",
                 }
@@ -673,14 +669,10 @@ def _send_social_summary(news_alert_id):
 
 
 @background()
-def _share_client_summary(summary, clips, title, user_email):
-    for clip in clips:
-        if clip["author"] is None:
-            clip["author"] = "N/A"
-        clip["publish_date"] = clip["publish_date"][:10]
+def _share_client_summary(link, title, user_email):
+  
     content = {
-        "summary": summary,
-        "clips": clips,
+        "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",
         "title": f"{title}",
     }
