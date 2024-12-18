@@ -495,7 +495,9 @@ def SUMMARY_FOLLOW_UP(date, clips, previous, project, elma, instructions, trendi
     return body
 
 
-def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, elma, project, instructions=False, for_client=False):
+def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(
+    date, clips, search, elma, project, instructions=False, for_client=False
+):
 
     body = f"""
 
@@ -522,7 +524,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(date, clips, search, elma, project, instruc
 
         Keep responses structured and consistent for easy reading in a Vue.js app.
         """
-    
+
     return body
 
 
@@ -1221,6 +1223,7 @@ DO_NOT_INCLUDE_WORDS = [
 NON_VIABLE_CLASSES = ["menu", "nav"]
 
 EXCLUDE_DOMAINS = [
+    "bringatrailer.com",
     "globenewswire.com",
     "marketscreener.com",
     "zacjohnson.com",
