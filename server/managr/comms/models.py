@@ -146,10 +146,12 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        elma = core_consts.ELMA 
+        project = ''
 
         prompt = (
             comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(
-                datetime.now().date(), clips, input_text, instructions, for_client
+                datetime.now().date(), clips, input_text, elma, project, instructions, for_client
             )
             if for_client
             else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
@@ -173,6 +175,7 @@ class Search(TimeStampModel):
 
     @classmethod
     def get_clips(cls, search_boolean, date_to=False, date_from=False, is_report=False):
+        print('boolean is here', search_boolean)
         page_size = 40
         if is_report:
             page_size = 100

@@ -1785,7 +1785,8 @@
                     mainView !== 'news' &&
                     mainView !== 'social' &&
                     (savedDiscovery || savedPitch) &&
-                    !notifiedList.includes(searchId),
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId),
                 }"
                 @click.stop="showSave"
                 v-if="
@@ -1839,7 +1840,8 @@
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
-                    !notifiedList.includes(searchId)
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId)
                   "
                 >
                   Schedule Digest
@@ -1849,7 +1851,7 @@
                   v-else-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
+                    (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
                 >
                   Disable Digest
@@ -2251,7 +2253,8 @@
                 <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
-                    !notifiedList.includes(searchId)
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId)
                   "
                   class="dropdown-small-section"
                 >
@@ -2438,12 +2441,14 @@
                   </div>
                 </div>
 
+                <button @click="testEmailAlert">snd test</button>
+
                 <div
                   class="dropdown-small-section"
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
+                    (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
                 >
                   <label>Disable Digest</label>
@@ -7247,20 +7252,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     setCurrentAlert(id = null) {
+      console.log('email alerts - >', this.emailAlerts)
       if (id) {
         this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
       } else {
-        this.currentAlert =
-          this.emailAlerts.filter((alert) => alert.search === this.searchId)[0] ||
-          alert.thread === this.threadId
+        this.currentAlert = this.emailAlerts.filter(
+          (alert) =>
+            alert.search === this.searchId ||
+            alert.thread === this.threadId ||
+            alert.thread === this.searchId,
+        )[0]
+
+        console.log('currentalert', this.currentAlert)
       }
-      this.getEmailAlerts()
+
+      // this.getEmailAlerts()
     },
     async testEmailAlert() {
-      console.log('ALERT ID IS HERE', this.currentAlertId)
       try {
         Comms.api.testEmailAlert({
-          alert_id: this.currentAlertId,
+          alert_id: this.currentAlert.id,
           social: this.mainView === 'social' ? true : false,
         })
         this.showingSave = false
@@ -7297,16 +7308,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     async getEmailAlerts() {
       try {
-        Comms.api.getEmailAlerts().then((response) => {
-          this.emailAlerts = response.results
-          this.notifiedList = response.results.map((alert) => alert.search)
-        })
+        const response = await Comms.api.getEmailAlerts()
+        let threadList = []
+        let searchList = []
+        this.emailAlerts = response.results
+        threadList = response.results.map((alert) => alert.thread)
+        searchList = response.results.map((alert) => alert.search)
+        this.notifiedList = [...threadList, ...searchList]
       } catch (e) {
         console.log(e)
       }
     },
     setAlertTime() {
-      let alert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+      let alert = this.emailAlerts.filter((alert) => alert.thread === this.threadId)[0]
 
       if (alert) {
         const datetimeString = alert.run_at
@@ -7353,12 +7367,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
         await this.createSearch()
         console.log('search id', this.searchId)
         console.log('thread id', this.threadId)
+        console.log('saved seearch / thread', this.savedSearch)
         const response = await Comms.api.addEmailAlert({
           search: this.searchId,
           thread: this.threadId,
           run_at: this.formattedDate,
           user: this.user.id,
-          title: this.searchName,
+          title: this.savedSearch.title || this.searchName,
           type: this.alertType,
           recipients: [this.alertChannel ? this.alertChannel : this.user.email],
         })
@@ -7394,7 +7409,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
         }
       } finally {
-        this.getEmailAlerts()
         this.savingAlert = false
       }
     },
@@ -8101,6 +8115,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.totalShares = search.meta_data.totalShares
       this.followupShares = search.meta_data.followupShares
       this.searchSaved = true
+      this.booleanString = search.meta_data.boolean
+        ? search.meta_data.boolean
+        : search.meta_data.searchTerm
       this.changeSearch({ search: this.booleanString, template: this.newTemplate })
 
       setTimeout(() => {
@@ -8109,7 +8126,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }, 3000)
       // this.summarizing = false
       // this.searchName = search.name
-      // this.setAlertTime()
+      this.setAlertTime()
       // this.showSummaryInstructions = true
       // if (search.hasOwnProperty('audience')) {
       //   this.newTemplate = search.instructions
@@ -8149,7 +8166,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       // } else {
       //   this.changeSearch(search.type)
       // }
-      // this.setCurrentAlert()
+      this.setCurrentAlert()
     },
     changeIndex() {
       setTimeout(() => {
@@ -8565,29 +8582,29 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.selectedSearch = search
     },
     async createSearch() {
-      console.log('booty string', this.booleanString)
       // this.showSaveName = false
       // this.savingSearch = true
+      console.log('BOOLEAN STRING HERE', this.booleanString)
       try {
         const response = await Comms.api.createSearch({
           name: this.savedSearch.title,
-          input_text: this.summaries.length ? this.followUps[-1] : this.newSearch,
-          search_boolean: this.booleanString ? this.booleanString : '',
-          instructions: this.summaries.length ? this.followUps[-1] : this.newSearch,
+          input_text: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
+          search_boolean: this.booleanString
+            ? this.booleanString
+            : this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
+          instructions: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
           meta_data: this.metaData,
           type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
         })
 
         if (response.id) {
           this.searchId = response.id
-          this.savedSearch = {
-            name: response.name,
-            input_text: this.newSearch,
-            meta_data: this.metaData,
-            search_boolean: this.booleanString,
-            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-          }
-
           // this.$toast('Search Saved', {
           //   timeout: 2000,
           //   position: 'top-left',

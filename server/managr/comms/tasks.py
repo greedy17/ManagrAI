@@ -531,11 +531,9 @@ def _process_website_domain(urls, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    print('SEARCH ====== > ::', alert.search )
-    print('NEWS ID --- > :', news_alert_id)
-    print('ALERT IS HERE ====== > ::', alert )
     thread_id = alert.thread.id
     thread = Thread.objects.get(id=thread_id)
+    link = thread.generate_url()
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
@@ -552,12 +550,12 @@ def _send_news_summary(news_alert_id):
     }
     if alert.type in ["EMAIL", "BOTH"]:
         clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
-        link = thread.share_url
         if len(clips):
             try:
                 clips = [article for article in clips if article["title"] != "[Removed]"]
                 normalized_clips = normalize_newsapi_to_model(clips)
                 descriptions = [clip["description"] for clip in normalized_clips]
+                
                 res = Search.get_summary_email(
                     alert.user,
                     2000,
@@ -567,31 +565,17 @@ def _send_news_summary(news_alert_id):
                     alert.search.instructions,
                     False,
                 )
+
                 email_list = [alert.user.email]
+
                 message = res.get("choices")[0].get("message").get("content")
-                thread.meta_data.articlesFiltered = normalized_clips
-                thread.meta_data.filteredArticles = normalized_clips   
-                thread.meta_data.summary = message
-                thread.meta_data.summaries = []
+                message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
+
+                thread.meta_data["articlesFiltered"] = normalized_clips
+                thread.meta_data["filteredArticles"] = normalized_clips   
+                thread.meta_data["summary"] = message
+                thread.meta_data["summaries"] = []
                 thread.save()
-                # message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                # else:
-                #     message = res.get("choices")[0].get("message").get("content")
-                #     message = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", message)
-                #     for i in range(6, 0, -1):
-                #         message = re.sub(
-                #             rf'^{"#" * i} (.*?)$', rf"<h{i}>\1</h{i}>", message, flags=re.MULTILINE
-                #         )
-                #     message = re.sub(
-                #         r"\[(.*?)\]\((.*?)\)|<([^|>]+)\|([^>]+)>",
-                #         r'<a href="\2\3">\1\4</a>',
-                #         message,
-                #     )
-                # clip_short_list = normalized_clips[:5]
-                # for clip in clip_short_list:
-                #     if clip["author"] is None:
-                #         clip["author"] = "N/A"
-                #     clip["publish_date"] = clip["publish_date"][:10]
 
                 content = {
                     "thread_url": link,
