@@ -217,7 +217,7 @@ variable "scheduled_tasks" {
     {
       name       = "processalltaskscrawleram"
       command    = "process_tasks --duration 7200"
-      cron       = "cron(0 11 * * ? *)"
+      cron       = "cron(0 10 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
@@ -225,7 +225,7 @@ variable "scheduled_tasks" {
     {
       name       = "processalltaskscrawlerpm"
       command    = "process_tasks --duration 7200"
-      cron       = "cron(0 22 * * ? *)"
+      cron       = "cron(0 21 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768

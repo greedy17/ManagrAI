@@ -1,0 +1,417 @@
+[
+  {
+    "name": "managr-app",
+    "image": "${app_image}",
+    "cpu": ${fargate_cpu},
+    "memory": ${fargate_memory},
+    "networkMode": "awsvpc",
+    "environment": [
+      { "name": "DD_SERVICE", "value": "managr-server" },
+      { "name": "DD_ENV", "value": "fargate:${environment}" },
+      { "name": "DD_PROFILING_ENABLED", "value": "true" },
+
+
+      { "name": "ALLOWED_HOSTS", "value": "${allowed_hosts}" },
+      { "name": "CURRENT_DOMAIN", "value": "${current_domain}" },
+      { "name": "CURRENT_PORT", "value": "${current_port}" },
+      { "name": "DEBUG", "value": "${debug}" },
+      { "name": "ENVIRONMENT", "value": "${environment}" },
+
+      { "name": "USE_CUSTOM_SMTP", "value": "${use_custom_smtp}" },
+      { "name": "SMTP_USE_TLS", "value": "${smtp_use_tls}" },
+      { "name": "SMTP_PORT", "value": "${smtp_port}" },
+      { "name": "SMTP_VALID_TESTING_DOMAINS", "value": "${smtp_valid_testing_domains}" },
+      { "name": "USE_AWS_STORAGE", "value": "${use_aws_storage}" },
+      { "name": "AWS_LOCATION", "value": "${aws_location}" },
+      { "name": "ENVIRONMENT", "value": "${environment}" },
+
+      { "name": "USE_ROLLBAR", "value": "${use_rollbar}" },
+      { "name": "USE_NYLAS", "value": "${use_nylas}" },
+      { "name": "USE_TWILIO", "value": "${use_twilio}" },
+      { "name": "USE_ZOOM", "value": "${use_zoom}" },
+      { "name": "USE_SLACK", "value": "${use_slack}" },
+      { "name": "USE_SALESFORCE", "value": "${use_salesforce}" },
+      { "name": "USE_SALESLOFT", "value": "${use_salesloft}" },
+      { "name": "USE_GONG", "value": "${use_gong}" },
+      { "name": "USE_OUTREACH", "value": "${use_outreach}" },
+      { "name": "USE_HUBSPOT", "value": "${use_hubspot}" },
+      { "name": "USE_OPEN_AI", "value": "${use_open_ai}" },
+      { "name": "USE_SSO", "value": "${use_sso}" },
+      { "name": "USE_NEWS_API", "value": "${use_news_api}" },
+      { "name": "USE_TWITTER_API", "value": "${use_twitter_api}" },
+      { "name": "USE_INSTAGRAM_API", "value": "${use_instagram_api}" }
+    ],
+    "secrets": [
+      {
+        "name": "SECRET_KEY",
+        "valueFrom": "${config_secret_arn}:secretKey::"
+      },
+      {
+        "name": "STAFF_EMAIL",
+        "valueFrom": "${config_secret_arn}:staffEmail::"
+      },
+
+      {
+        "name": "DB_HOST",
+        "valueFrom": "${config_secret_arn}:dbHost::"
+      },
+      {
+        "name": "DB_USER",
+        "valueFrom": "${config_secret_arn}:dbUser::"
+      },
+      {
+        "name": "DB_PASS",
+        "valueFrom": "${config_secret_arn}:dbPass::"
+      },
+      {
+        "name": "dbSnapShot",
+        "valueFrom": "${config_secret_arn}:dbSnapShot::"
+      },
+     
+      {
+        "name": "DB_NAME",
+        "valueFrom": "${config_secret_arn}:dbName::"
+      },
+      {
+        "name": "SUPERUSER_EMAIL",
+        "valueFrom": "${config_secret_arn}:superuserEmail::"
+      },
+      {
+        "name": "SUPERUSER_PASSWORD",
+        "valueFrom": "${config_secret_arn}:superuserPassword::"
+      },
+      {
+        "name": "ROLLBAR_ACCESS_TOKEN",
+        "valueFrom": "${config_secret_arn}:rollbarAccessToken::"
+      },
+      {
+        "name": "SMTP_USER",
+        "valueFrom": "${config_secret_arn}:smtpUser::"
+      },
+      {
+        "name": "SMTP_PASSWORD",
+        "valueFrom": "${config_secret_arn}:smtpPassword::"
+      },
+      {
+        "name": "SMTP_HOST",
+        "valueFrom": "${config_secret_arn}:smtpHost::"
+      },
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "valueFrom": "${config_secret_arn}:awsAccessKeyId::"
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "valueFrom": "${config_secret_arn}:awsSecretAccessKey::"
+      },
+      {
+        "name": "AWS_STORAGE_BUCKET_NAME",
+        "valueFrom": "${config_secret_arn}:awsStorageBucketName::"
+      },
+      {
+        "name": "NYLAS_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:nylasClientId::"
+      },
+      {
+        "name": "NYLAS_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:nylasClientSecret::"
+      },
+      {
+        "name": "NYLAS_OAUTH_CALLBACK_URL",
+        "valueFrom": "${config_secret_arn}:nylasOauthCallbackUrl::"
+      },
+      {
+        "name": "TWILIO_ACCOUNT_SID",
+        "valueFrom": "${config_secret_arn}:twilioAccountSid::"
+      },
+      {
+        "name": "TWILIO_AUTH_TOKEN",
+        "valueFrom": "${config_secret_arn}:twilioAuthToken::"
+      },
+      {
+        "name": "TWILIO_BASE_CALLBACK_URL",
+        "valueFrom": "${config_secret_arn}:twilioBaseCallbackUrl::"
+      },
+      {
+        "name": "ZOOM_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:zoomRedirectUri::"
+      },
+      {
+        "name": "ZOOM_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:zoomClientId::"
+      },
+      {
+        "name": "ZOOM_SECRET",
+        "valueFrom": "${config_secret_arn}:zoomSecret::"
+      },
+      {
+        "name": "ZOOM_WEBHOOK_TOKEN",
+        "valueFrom": "${config_secret_arn}:zoomWebhookToken::"
+      },
+      {
+        "name": "ZOOM_FAKE_MEETING_UUID",
+        "valueFrom": "${config_secret_arn}:zoomFakeMeetingUuid::"
+      },
+      {
+        "name": "SLACK_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:slackClientId::"
+      },
+      {
+        "name": "SLACK_SECRET",
+        "valueFrom": "${config_secret_arn}:slackSecret::"
+      },
+      {
+        "name": "SLACK_SIGNING_SECRET",
+        "valueFrom": "${config_secret_arn}:slackSigningSecret::"
+      },
+      {
+        "name": "SLACK_APP_VERSION",
+        "valueFrom": "${config_secret_arn}:slackAppVersion::"
+      },
+      {
+        "name": "SLACK_ERROR_WEBHOOK",
+        "valueFrom": "${config_secret_arn}:slackErrorWebhook::"
+      },
+      {
+        "name": "SALESFORCE_BASE_URL",
+        "valueFrom": "${config_secret_arn}:salesforceBaseUrl::"
+      },
+      {
+        "name": "SALESFORCE_CONSUMER_KEY",
+        "valueFrom": "${config_secret_arn}:salesforceConsumerKey::"
+      },
+      {
+        "name": "SALESFORCE_SECRET",
+        "valueFrom": "${config_secret_arn}:salesforceSecret::"
+      },
+      {
+        "name": "SALESFORCE_SCOPES",
+        "valueFrom": "${config_secret_arn}:salesforceScopes::"
+      },
+      {
+        "name": "SALESFORCE_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:salesforceRedirectUri::"
+      },
+      {
+        "name": "SALESFORCE_API_VERSION",
+        "valueFrom": "${config_secret_arn}:salesforceApiVersion::"
+      },
+      {
+        "name": "SALESLOFT_BASE_URL",
+        "valueFrom": "${config_secret_arn}:salesloftBaseUrl::"
+      },
+      {
+        "name": "SALESLOFT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:salesloftClientId::"
+      },
+      {
+        "name": "SALESLOFT_SECRET",
+        "valueFrom": "${config_secret_arn}:salesloftSecret::"
+      },
+      {
+        "name": "SALESLOFT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:salesloftRedirectUri::"
+      },
+      {
+        "name": "GONG_BASE_URL",
+        "valueFrom": "${config_secret_arn}:gongBaseUrl::"
+      },
+      {
+        "name": "GONG_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:gongClientId::"
+      },
+      {
+        "name": "GONG_SECRET",
+        "valueFrom": "${config_secret_arn}:gongSecret::"
+      },
+      {
+        "name": "GONG_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:gongRedirectUri::"
+      },
+      {
+        "name": "OUTREACH_BASE_URL",
+        "valueFrom": "${config_secret_arn}:outreachBaseUrl::"
+      },
+      {
+        "name": "OUTREACH_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:outreachClientId::"
+      },
+      {
+        "name": "OUTREACH_SECRET",
+        "valueFrom": "${config_secret_arn}:outreachSecret::"
+      },
+      {
+        "name": "OUTREACH_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:outreachRedirectUri::"
+      },
+      {
+        "name": "HUBSPOT_BASE_URL",
+        "valueFrom": "${config_secret_arn}:hubspotBaseUrl::"
+      },
+      {
+        "name": "HUBSPOT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:hubspotClientId::"
+      },
+      {
+        "name": "HUBSPOT_SECRET",
+        "valueFrom": "${config_secret_arn}:hubspotSecret::"
+      },
+      {
+        "name": "HUBSPOT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:hubspotRedirectUri::"
+      },
+      {
+        "name": "OPEN_AI_SECRET",
+        "valueFrom": "${config_secret_arn}:openAiSecret::"
+      },
+      {
+        "name": "MICROSOFT_SECRET_KEY",
+        "valueFrom": "${config_secret_arn}:microsoftSecretKey::"
+      },
+      {
+        "name": "GOOGLE_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:googleClientId::"
+      },
+      {
+        "name": "GOOGLE_LOGIN_URI",
+        "valueFrom": "${config_secret_arn}:googleLoginUri::"
+      },
+      {
+        "name": "NEWS_API_KEY",
+        "valueFrom": "${config_secret_arn}:newsApiKey::"
+      },
+      {
+        "name": "TWITTER_API_KEY",
+        "valueFrom": "${config_secret_arn}:twitterApiKey::"
+      },
+      {
+        "name": "TWITTER_API_SECRET",
+        "valueFrom": "${config_secret_arn}:twitterApiSecret::"
+      },
+      {
+        "name": "TWITTER_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:twitterClientId::"
+      },
+      {
+        "name": "TWITTER_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:twitterRedirectUri::"
+      },
+      {
+        "name": "TWITTER_ACCESS_TOKEN",
+        "valueFrom": "${config_secret_arn}:twitterAccessToken::"
+      },
+      {
+        "name": "STRIPE_API_KEY",
+        "valueFrom": "${config_secret_arn}:stripeApiKey::"
+      },
+      {
+        "name": "STRIPE_PRICE_ID",
+        "valueFrom": "${config_secret_arn}:stripePriceId::"
+      },
+      {
+        "name": "INSTAGRAM_APP_SECRET",
+        "valueFrom": "${config_secret_arn}:instagramAppSecret::"
+      },
+      {
+        "name": "INSTAGRAM_APP_KEY",
+        "valueFrom": "${config_secret_arn}:instagramAppKey::"
+      },
+      {
+        "name": "INSTAGRAM_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:instagramRedirectUri::"
+      },
+      {
+        "name": "HUNTER_API_KEY",
+        "valueFrom": "${config_secret_arn}:hunterApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_API_KEY",
+        "valueFrom": "${config_secret_arn}:googleSearchApiKey::"
+      },
+      {
+        "name": "GOOGLE_SEARCH_ID",
+        "valueFrom": "${config_secret_arn}:googleSearchId::"
+      },
+      {
+        "name": "GOOGLE_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:googleClientSecret::"
+      },
+      {
+        "name": "GOOGLE_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:googleRedirectUri::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_ID",
+        "valueFrom": "${config_secret_arn}:microsoftClientId::"
+      },
+      {
+        "name": "MICROSOFT_CLIENT_SECRET",
+        "valueFrom": "${config_secret_arn}:microsoftClientSecret::"
+      },
+      {
+        "name": "MICROSOFT_REDIRECT_URI",
+        "valueFrom": "${config_secret_arn}:microsoftRedirectUri::"
+      },
+      {
+        "name": "SCRAPER_API_KEY",
+        "valueFrom": "${config_secret_arn}:scraperApiKey::"
+      },
+      {
+        "name": "SEMRUSH_API_KEY",
+        "valueFrom": "${config_secret_arn}:semrushApiKey::"
+      },
+      {
+        "name": "BUZZSUMO_API_KEY",
+        "valueFrom": "${config_secret_arn}:buzzsumoApiKey::"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${aws_logs_group}",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  },
+  {
+    "name": "datadog-agent",
+    "image": "${datadog_image}",
+    "secrets": [
+      {
+        "name": "DD_API_KEY",
+        "valueFrom": "${config_secret_arn}:ddApiKey::"
+      }
+    ],
+    "environment": [
+      {
+        "name": "ECS_FARGATE",
+        "value": "true"
+      },
+      {
+        "name": "DD_TAGS",
+        "value": "env:fargate:${environment}"
+      },
+      {
+        "name": "DD_APM_ENABLED",
+        "value": "true"
+      },
+      {
+        "name": "DD_APM_NON_LOCAL_TRAFFIC",
+        "value": "true"
+      },
+      {
+        "name": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${aws_logs_group}",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }
+]
