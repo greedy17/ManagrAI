@@ -562,7 +562,7 @@ class NewsSource(TimeStampModel):
                 active_sources = active_sources.filter(is_crawling=True)
             else:
                 active_sources = active_sources.filter(is_crawling=True, is_stopped=False).filter(
-                    last_scraped__gt=six_hours
+                    last_scraped__lt=six_hours
                 )
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
