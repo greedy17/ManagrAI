@@ -5,6 +5,7 @@ import base64
 import hashlib
 import httpx
 import pytz
+import math
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -96,6 +97,7 @@ class Search(TimeStampModel):
         previous,
         is_follow__up,
         company,
+        trending,
         instructions=False,
         for_client=False,
     ):
@@ -104,7 +106,7 @@ class Search(TimeStampModel):
 
         if is_follow__up:
             prompt = comms_consts.SUMMARY_FOLLOW_UP(
-                datetime.now().date(), clips, previous, company, elma, instructions
+                datetime.now().date(), clips, previous, company, elma, instructions, trending
             )
         else:
             prompt = (
@@ -114,6 +116,7 @@ class Search(TimeStampModel):
                     input_text,
                     company,
                     elma,
+                    trending,
                     instructions,
                     for_client,
                 )
@@ -143,10 +146,12 @@ class Search(TimeStampModel):
         cls, user, tokens, timeout, clips, input_text, instructions=False, for_client=False
     ):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        elma = core_consts.ELMA
+        project = ""
 
         prompt = (
             comms_consts.OPEN_AI_NEWS_CLIPS_SUMMARY_EMAIL(
-                datetime.now().date(), clips, input_text, instructions, for_client
+                datetime.now().date(), clips, input_text, elma, project, instructions, for_client
             )
             if for_client
             else comms_consts.OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(
@@ -271,7 +276,15 @@ class TwitterAuthAccountAdapter:
             return self._handle_response(response)
 
     def get_summary(
-        self, user, tokens, timeout, tweets, input_text, project, instructions=False, for_client=False
+        self,
+        user,
+        tokens,
+        timeout,
+        tweets,
+        input_text,
+        project,
+        instructions=False,
+        for_client=False,
     ):
         elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -292,7 +305,6 @@ class TwitterAuthAccountAdapter:
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
-    
 
     @classmethod
     def get_authorization_link(cls):
@@ -356,7 +368,6 @@ class Pitch(TimeStampModel):
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
         # style = user.writing_style if user.writing_style else False
         prompt = comms_consts.OPEN_AI_PITCH(datetime.now().date(), type, instructions, elma, style)
-        print('PROMPT IS HERE --- > :', prompt)
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(user.email, prompt, model="o1-mini")
         with Variable_Client(timeout) as client:
             r = client.post(
@@ -374,6 +385,9 @@ class NewsSource(TimeStampModel):
     last_scraped = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_crawling = models.BooleanField(default=False)
+    is_stopped = models.BooleanField(default=False)
+    use_scrape_api = models.BooleanField(default=False)
+    posting_frequency = models.IntegerField(default=0)
     scrape_type = models.CharField(
         choices=[("HTML", "HTML"), ("SITEMAP", "Sitemap"), ("XML", "XML")],
         max_length=50,
@@ -527,24 +541,16 @@ class NewsSource(TimeStampModel):
 
     @classmethod
     def get_stopped_sources(cls, include_date=False):
-        today = datetime.today()
-        stopped_sources = []
-        news = NewsSource.objects.filter(is_crawling=True, is_active=True)
-        for n in news:
-            article = n.newest_article_date()
-            if article and (today - article).days >= 7:
-                if include_date:
-                    stopped_sources.append(f"{n.domain}, {str(article.publish_date)}")
-                else:
-                    stopped_sources.append(n.domain)
+        news = NewsSource.objects.filter(
+            is_crawling=True, is_active=True, is_stopped=True
+        ).values_list("domain", flat=True)
+        stopped_sources = list(news)
         return stopped_sources
 
     @classmethod
     def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
-        six_hours = datetime.now() - timedelta(hours=10)
-        active_sources = cls.objects.filter(is_active=True, scrape_type=type).order_by(
-            "last_scraped"
-        )
+        six_hours = datetime.now() - timedelta(hours=6)
+        active_sources = cls.objects.filter(is_active=True, scrape_type=type)
         # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
             active_sources = active_sources.filter(
@@ -555,7 +561,9 @@ class NewsSource(TimeStampModel):
             if settings.IN_DEV or run_now:
                 active_sources = active_sources.filter(is_crawling=True)
             else:
-                active_sources = active_sources.filter(is_crawling=True, last_scraped__lt=six_hours)
+                active_sources = active_sources.filter(is_crawling=True, is_stopped=False).filter(
+                    last_scraped__lt=six_hours
+                )
         # filters sources that were just added and don't have scrape data yet
         elif not scrape_ready and new:
             active_sources = active_sources.filter(article_link_attribute__isnull=True)
@@ -647,6 +655,40 @@ class NewsSource(TimeStampModel):
                     print(f"{author} - {e}")
                     continue
         return
+
+    def calculate_posting_frequency(self):
+        publish_dates = list(self.articles.all().values_list("publish_date", flat=True))
+        parsed_dates = []
+        for date in publish_dates:
+            try:
+                parsed_dates.append(datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S.%f"))
+            except ValueError:
+                parsed_dates.append(datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S"))
+        unique_dates = sorted({date.date() for date in parsed_dates})
+        time_diffs = [
+            (unique_dates[i] - unique_dates[i - 1]).days for i in range(1, len(unique_dates))
+        ]
+        if time_diffs:
+            avg_interval_days = sum(time_diffs) / len(time_diffs)
+        else:
+            avg_interval_days = 0
+        self.posting_frequency = math.ceil(avg_interval_days)
+        return self.save()
+
+    def check_if_stopped(self):
+        if self.posting_frequency == 0:
+            return
+        newest_article = self.newest_article_date()
+        if newest_article:
+            article_date = newest_article.date()
+            today = datetime.now().date()
+            days_since_last_article = (today - article_date).days
+            if days_since_last_article > self.posting_frequency:
+                self.is_stopped = True
+            else:
+                self.is_stopped = False
+        self.save()
+        return self.is_stopped
 
 
 class Article(TimeStampModel):
@@ -752,8 +794,15 @@ class AssistAlert(TimeStampModel):
     search = models.ForeignKey(
         "Search",
         related_name="alerts",
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    thread = models.ForeignKey(
+        "Thread",
+        related_name="threads",
+        blank=True,
+        null=True,
         on_delete=models.CASCADE,
     )
     recipients = ArrayField(models.CharField(max_length=255), default=list, blank=True)
@@ -885,17 +934,20 @@ class TwitterAccount(TimeStampModel):
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
-    
-    def get_summary_follow_up(
-        self, user, tokens, timeout, previous, tweets, project, instructions
-    ):
+
+    def get_summary_follow_up(self, user, tokens, timeout, previous, tweets, project, instructions):
         elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
 
         prompt = comms_consts.TWITTER_SUMMARY_FOLLOW_UP(
-        datetime.now().date(), tweets, previous, project, elma, instructions, 
+            datetime.now().date(),
+            tweets,
+            previous,
+            project,
+            elma,
+            instructions,
         )
-      
+
         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
             user.email,
             prompt,
@@ -910,7 +962,7 @@ class TwitterAccount(TimeStampModel):
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
-    
+
     def no_results(cls, user, boolean):
         timeout = 60.0
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -1558,6 +1610,13 @@ class Thread(TimeStampModel):
             except Exception as e:
                 return {"success": False, "error": str(e)}
         return {"success": True, "data": message.as_dict()}
+
+    def generate_url(self):
+        date = str(datetime.now())
+        data = {"created_at": date, "id": str(self.id)}
+        encrypted_data = encrypt_dict(data)
+        base_url = get_site_url()
+        return f"{base_url}/summaries/{encrypted_data}"
 
 
 class ThreadMessage(TimeStampModel):

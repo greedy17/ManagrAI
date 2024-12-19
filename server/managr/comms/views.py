@@ -247,6 +247,7 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         previous = request.data.get("previous", False)
         is_follow_up = request.data.get("followUp", False)
+        trending = request.data.get("trending", False)
         company = request.data.get("company")
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
@@ -265,6 +266,7 @@ class PRSearchViewSet(
                     previous,
                     is_follow_up,
                     company,
+                    trending,
                     instructions,
                     True,
                 )
@@ -316,7 +318,6 @@ class PRSearchViewSet(
         url = request.data["params"]["url"]
         search = request.data["params"]["search"]
         instructions = request.data["params"]["instructions"]
-        length = request.data["params"]["length"]
         has_error = False
         attempts = 1
         token_amount = 2000
@@ -329,7 +330,7 @@ class PRSearchViewSet(
                 text = article_res.text.replace("\n", "")
                 open_ai_url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
                 prompt = comms_consts.OPEN_AI_ARTICLE_SUMMARY(
-                    datetime.now().date(), text, search, length, instructions, True
+                    datetime.now().date(), text, search, instructions, True
                 )
                 body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                     user.email, prompt, model="o1-mini"
@@ -675,6 +676,7 @@ class PRSearchViewSet(
                     if "from:" not in query_input:
                         query_input = query_input + " is:verified"
                 tweet_res = twitter_account.get_tweets(query_input, next_token)
+
                 tweets = tweet_res.get("data", None)
                 includes = tweet_res.get("includes", None)
                 attempts += 1
@@ -1091,11 +1093,10 @@ class PRSearchViewSet(
         url_path="email-summary",
     )
     def share_email_summary(self, request, *args, **kwargs):
-        summary = request.data.get("summary", "N/A")
-        clips = request.data.get("clips", [])
+        link = request.data.get("link", "N/A")
         email = request.data.get("email", request.user.email)
         title = request.data.get("title", "")
-        emit_share_client_summary(summary, clips, title, email)
+        emit_share_client_summary(link, title, email)
         return Response(status=status.HTTP_200_OK)
 
     @action(
@@ -2712,11 +2713,10 @@ class ThreadViewSet(
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
-        return Response(status=status.HTTP_201_CREATED, data=readSerializer.data)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -2733,6 +2733,31 @@ class ThreadViewSet(
         except Exception as e:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
+
+    @action(
+        methods=["get"],
+        permission_classes=[permissions.AllowAny],
+        detail=False,
+        url_path="shared",
+    )
+    def get_shared_thread(self, request, *args, **kwargs):
+        user = request.user
+        encrypted_code = request.GET.get("code")
+        # encrypted_code = base64.urlsafe_b64decode(encrypted_code.encode('utf-8'))
+        try:
+            decrypted_dict = decrypt_dict(encrypted_code)
+            id = decrypted_dict.get("id")
+            date = decrypted_dict.get("created_at")
+            report = Thread.objects.get(id=id)
+            serializer = self.get_serializer(report)
+            # user.add_meta_data("shared_thread")
+        except Exception as e:
+            print("exception is here --- >", e)
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={"error": "There was an issue retrieving this thread"},
+            )
+        return Response(status=status.HTTP_200_OK, data={"data": serializer.data, "date": date})
 
 
 # ENDPOINTS
@@ -3451,11 +3476,71 @@ def get_social_url_data(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_trending_articles(request):
-    topics = request.data.get("topics")
+    search = request.data.get("search")
     countries = request.data.get("countries")
+    has_error = False
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.GENERATE_TREND_BOOLEAN(search)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "ed@mymanagr.com",
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+            message = json.loads(res.get("choices")[0].get("message").get("content"))
+
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount >= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
+
+    topics = message["keywords"]
+
     articles = get_trend_articles(topics, countries)
     if "articles" in articles.keys():
-        return Response(status=status.HTTP_200_OK, data=articles)
+        return Response(status=status.HTTP_200_OK, data={"articles": articles, "string": topics})
     else:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=articles)
 
@@ -3464,6 +3549,7 @@ def get_trending_articles(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_clip_report_summary(request):
+    elma = core_consts.ELMA
     user = request.user
     clips = request.data.get("clips")
     brand = request.data.get("brand")
@@ -3473,7 +3559,7 @@ def get_clip_report_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REPORT_SUMMARY(brand, clips)
+            prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,

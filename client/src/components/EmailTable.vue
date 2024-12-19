@@ -231,6 +231,7 @@
             </button>
 
             <button
+              v-if="hasGoogleIntegration || hasMicrosoftIntegration"
               @click="sendEmail"
               :disabled="loadingDraft || !subject || !targetEmail || sendingEmail"
               style="margin-right: 4px"
@@ -246,6 +247,15 @@
                 alt=""
               />
               Send
+            </button>
+
+            <button
+              v-else
+              @click="goToIntegrations"
+              style="margin-right: 4px"
+              class="primary-button"
+            >
+              <span> Connect Email</span>
             </button>
           </div>
         </div>
@@ -518,6 +528,12 @@ export default {
     },
   },
   computed: {
+    hasGoogleIntegration() {
+      return !!this.$store.state.user.hasGoogleIntegration
+    },
+    hasMicrosoftIntegration() {
+      return !!this.$store.state.user.hasMicrosoftIntegration
+    },
     sortedEmails() {
       let filteredEmails = this.emails.filter((email) => {
         const searchText = this.searchText.toLowerCase()
@@ -712,6 +728,9 @@ export default {
   },
 
   methods: {
+    goToIntegrations() {
+      this.$router.push({ name: 'PRIntegrations' })
+    },
     setInsightData() {
       let newEmails = this.sanitizeEmails(this.sortedEmails)
       this.$emit('set-insight-data', newEmails)

@@ -182,7 +182,14 @@ class CommsApi extends ModelAPI {
     async getClips(data, signal) {
         try {
             const res = await this.client.get('pr/clips/', { signal, params: data })
-            console.log(res)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async getTrendingClips(data) {
+        try {
+            const res = await this.client.post('trending/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -678,6 +685,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    async updateCompanyDetails(data) {
+        try {
+            const res = await this.client.patch(`company-details/${data.id}/`, data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async readColumnNames(file) {
         try {
             const formData = new FormData();
@@ -753,6 +768,41 @@ class CommsApi extends ModelAPI {
     async rewriteReport(data) {
         try {
             const res = await this.client.post('rewrite-report/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async getThreads() {
+        try {
+            const res = await this.client.get('threads')
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async saveThread(data) {
+        try {
+            const res = await this.client.post('threads/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async deleteThread(data) {
+        try {
+            const res = await this.client.delete(`threads/${data.id}/`)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+    async shareThread(data) {
+        try {
+            const res = await this.client.get(`threads/shared`, { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

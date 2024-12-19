@@ -562,6 +562,11 @@ urlpatterns = [
         comms_views.get_social_media_data,
         name="socal-data",
     ),
+    path(
+        "trending/",
+        comms_views.get_trending_articles,
+        name="trending-articles",
+    ),
 ]
 router.register("users/reports", core_views.ReportViewSet, "reports"),
 router.register("users/conversations", core_views.ConversationViewSet, "conversations"),

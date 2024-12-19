@@ -48,6 +48,7 @@ const state = {
   chatTitle: 'All Open Opportunities',
   currentTask: null,
   meetingBeingProcessed: '',
+  allThreads: [],
   allSearches: [],
   allPitches: [],
   allAssist: [],
@@ -66,10 +67,14 @@ const state = {
   generatedContent: null,
   abortControllers: {},
   stripeKey: null,
-  listName: 'news'
+  listName: 'news',
+  viewOnly: false,
 }
 
 const mutations = {
+  VIEW_ONLY: (state, payload) => {
+    state.viewOnly = payload
+  },
   UPDATE_LIST: (state, payload) => {
     state.listName = payload
   },
@@ -162,6 +167,9 @@ const mutations = {
   },
   SAVE_SEARCHES(state, searches) {
     state.allSearches = searches
+  },
+  SAVE_THREADS(state, threads) {
+    state.allThreads = threads
   },
   SAVE_PITCHES(state, pitches) {
     state.allPitches = pitches
@@ -299,6 +307,9 @@ const actions = {
 
     commit('UPDATE_STAGES', res.results ? res.results : null)
   },
+  updateViewOnly({ commit }, bool) {
+    commit('VIEW_ONLY', bool)
+  },
   updateListName({ commit }, title) {
     commit('UPDATE_LIST', title)
   },
@@ -323,6 +334,16 @@ const actions = {
     try {
       const res = await MeetingWorkflows.api.getMeetingList()
       commit('SAVE_MEETINGS', res.results)
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  async getThreads({ commit }) {
+    try {
+      await Comms.api.getThreads().then((response) => {
+
+        commit('SAVE_THREADS', response.results)
+      })
     } catch (e) {
       console.log(e)
     }

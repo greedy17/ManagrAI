@@ -87,7 +87,7 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 class AssistAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssistAlert
-        fields = ("id", "user", "type", "title", "search", "run_at", "meta_data", "recipients")
+        fields = ("id", "user", "type", "title","search", "thread", "run_at", "meta_data", "recipients")
 
 
 class ProcessSerializer(serializers.ModelSerializer):
@@ -216,10 +216,12 @@ class CompanyDetailsSerializer(serializers.ModelSerializer):
 
 
 class ThreadSerializer(serializers.ModelSerializer):
+    share_url = serializers.SerializerMethodField("get_share_url")
+
     class Meta:
         model = Thread
-        fields = (
-            "id",
-            "title",
-            "user",
-        )
+        fields = ("id", "title", "user", "share_url", "meta_data")
+
+    def get_share_url(self, instance):
+        url = instance.generate_url()
+        return url

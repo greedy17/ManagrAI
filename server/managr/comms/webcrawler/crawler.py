@@ -2,6 +2,8 @@ import scrapy
 import logging
 import datetime
 import time
+import json
+from functools import reduce
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -9,6 +11,7 @@ from managr.core.models import CrawlerReport
 from django.db import IntegrityError
 from ..models import NewsSource, Article
 from ..serializers import ArticleSerializer
+from urllib.parse import urlparse, parse_qs
 from dateutil import parser
 from managr.api.emails import send_html_email
 from copy import copy
@@ -30,7 +33,7 @@ SCRAPPY_HEADERS = {
 }
 
 XPATH_STRING_OBJ = {
-    "title": ["//meta[contains(@property, 'title')]/@content"],
+    "title": ["//title/text()"],
     "author": [
         "//*[contains(@class,'gnt_ar_by')]/a/text()",
         "//*[@class='article__author']/text()",
@@ -38,9 +41,13 @@ XPATH_STRING_OBJ = {
         "//*[@rel='author']/text()",
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
-    "description": ["//meta[contains(@property, 'description')]/@content"],
+    "description": [
+        "//meta[contains(@property, 'description')]/@content",
+        "//meta[contains(@name, 'description')]/@content",
+    ],
     "publish_date": [
         "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
+        "//meta[@property='article:published_time']/@content"
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'modified') or contains(translate(@property, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'published')]/@content",
@@ -174,6 +181,7 @@ class NewsSpider(scrapy.Spider):
     handle_httpstatus_list = [403, 400]
     custom_settings = {
         "FEED_EXPORT_ENCODING": "utf-8",
+        "DOWNLOAD_TIMEOUT": 300,
         "DOWNLOAD_DELAY_RANDOMIZE": True,
         "DOWNLOAD_DELAY": 2,
         "DOWNLOADER_MIDDLEWARES": {
@@ -197,6 +205,7 @@ class NewsSpider(scrapy.Spider):
         self.no_report = kwargs.get("no_report")
         self.article_only = kwargs.get("article_only")
         self.urls_processed = 0
+        self.articles_to_process = 0
         self.error_log = []
         self.start_time = time.time()
         self.blocked_urls = 0
@@ -270,11 +279,14 @@ class NewsSpider(scrapy.Spider):
         url = original_check[0] if original_check else response.request.url
         if url[len(url) - 1] == "/":
             url = url[: len(url) - 1]
+        if "api.scraperapi.com" in url:
+            parsed_url = urlparse(url)
+            params = parse_qs(parsed_url.query)
+            url = params.get("url")[0]
         try:
             source = NewsSource.objects.get(domain=url)
             if response.status == 403:
-                source.sitemap = f"{source.domain}/sitemap.xml"
-                source.scrape_type = "XML"
+                source.use_scrape_api = True
                 source.save()
                 return
         except NewsSource.DoesNotExist:
@@ -328,6 +340,9 @@ class NewsSpider(scrapy.Spider):
                         article_domain
                     ):
                         article_url = complete_url(article_url, source.domain)
+                        if source.use_scrape_api:
+                            article_url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={article_url}&render=true"
+                        self.articles_to_process += 1
                         yield scrapy.Request(
                             article_url,
                             callback=self.parse_article,
@@ -347,22 +362,56 @@ class NewsSpider(scrapy.Spider):
                 source.save()
         else:
             self.process_new_url(source, response)
-
+        source.check_if_stopped()
         self.urls_processed += 1
         return
 
     def parse_article(self, response, source=False):
         xpath_copy = copy(XPATH_STRING_OBJ)
+        url = response.url
+        if "api.scraperapi.com" in response.url:
+            parsed_url = urlparse(response.url)
+            params = parse_qs(parsed_url.query)
+            url = params.get("url")[0]
         if source is False:
-            instance = Article.objects.get(link=response.url)
-            source = instance.source
-        meta_tag_data = {"link": response.url, "source": source.id}
+            try:
+                instance = Article.objects.get(link=url)
+                source = instance.source
+            except Article.DoesNotExist:
+                instance = None
+                try:
+                    domain = get_domain(url, True)
+                    source = NewsSource.objects.get(domain__contains=domain)
+                except NewsSource.DoesNotExist:
+                    logger.exception(f"Failed to find source with domain: {domain}")
+                    return
+        meta_tag_data = {"link": url, "source": source.id}
         article_selectors = source.article_selectors()
         fields_dict = {}
         article_tags = None
         if source.selectors_defined:
             for key in article_selectors.keys():
-                selector = response.xpath(article_selectors[key]).getall()
+                path = article_selectors[key]
+                if "//script" in path:
+                    script_path = path.split("|")[0]
+                    selector = response.xpath(script_path).get()
+                else:
+                    selector = response.xpath(path).getall()
+                if "//script" in path:
+                    data_path = path.split("|")[1:]
+                    for i, v in enumerate(data_path):
+                        try:
+                            integer_value = int(v)
+                            data_path[i] = integer_value
+                        except ValueError:
+                            continue
+                    try:
+                        data = json.loads(selector)
+                        selector_value = reduce(lambda d, key: d[key], data_path, data)
+                        selector = selector_value
+                    except Exception as e:
+                        print(e)
+                        selector = []
                 if len(selector) and key != "content" and key != "publish_date":
                     selector = ",".join(selector)
                 if key == "publish_date":
@@ -422,7 +471,7 @@ class NewsSpider(scrapy.Spider):
             if "content" in meta_tag_data.keys():
                 cleaned_data = data_cleaner(meta_tag_data)
                 if isinstance(cleaned_data, dict):
-                    if self.article_only:
+                    if self.article_only and instance:
                         serializer = ArticleSerializer(instance=instance, data=cleaned_data)
                     else:
                         serializer = ArticleSerializer(data=cleaned_data)
@@ -450,6 +499,9 @@ class NewsSpider(scrapy.Spider):
         if not source.is_crawling:
             source.crawling
         self.urls_processed += 1
+        self.articles_to_process -= 1
+        if self.articles_to_process == 0:
+            source.check_if_stopped()
         return
 
     def process_new_url(self, source, response):
@@ -502,9 +554,16 @@ class NewsSpider(scrapy.Spider):
 
     def start_requests(self):
         self.total_urls = len(self.start_urls)
+        scrape_api_sources = list(
+            NewsSource.objects.filter(domain__in=self.start_urls, use_scrape_api=True).values_list(
+                "domain", flat=True
+            )
+        )
         for url in self.start_urls:
             callback = self.parse_article if self.article_only else self.parse
             try:
+                if url in scrape_api_sources:
+                    url = f"http://api.scraperapi.com/?api_key={comms_consts.SCRAPER_API_KEY}&url={url}&render=true"
                 yield scrapy.Request(url, headers=SCRAPPY_HEADERS, callback=callback)
             except Exception as e:
                 self.error_log.append(f"Failed on {url} ({str(e)})")

@@ -17,7 +17,7 @@
       </div>
     </Modal>
     <NavBar
-      v-if="!hideNavBar && userIsLoggedIn"
+      v-if="!hideNavBar && (userIsLoggedIn || isViewOnly)"
       :menuOpen="menuOpen"
       @toggle-menu="toggleMenu"
       @close-menu="closeMenu"
@@ -217,6 +217,9 @@ export default {
     },
     userIsLoggedIn() {
       return this.$store.getters.userIsLoggedIn
+    },
+    isViewOnly() {
+      return this.$store.state.viewOnly
     },
     isOnboarding() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)

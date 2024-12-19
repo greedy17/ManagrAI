@@ -211,7 +211,7 @@
               Cancel
             </button>
 
-            <button
+            <!-- <button
               v-if="mainView === 'write'"
               @click="savePitch"
               :disabled="savingSearch"
@@ -223,9 +223,9 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
-            </button>
+            </button> -->
 
-            <button
+            <!-- <button
               v-else-if="mainView === 'discover'"
               @click="saveDiscovery"
               :disabled="savingSearch"
@@ -237,9 +237,9 @@
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
-            </button>
+            </button> -->
 
-            <button v-else @click="createSearch" :disabled="savingSearch" class="save-button">
+            <button @click="saveThread" :disabled="savingSearch" class="save-button">
               {{ savingSearch ? 'Saving' : 'Save' }}
               <div style="margin-left: 4px" v-if="savingSearch" class="loading-small">
                 <div class="dot"></div>
@@ -255,7 +255,7 @@
       <!-- height: 80vh -->
       <div
         style="width: 55vw; min-width: 500px; max-height: 1000px; height: 80vh"
-        class="regen-container"
+        class="regen-container mobile-min"
       >
         <div style="background-color: white; z-index: 1000" class="paid-header">
           <div class="space-between">
@@ -290,6 +290,7 @@
 
             <div style="position: relative">
               <p
+                class="mobile-top"
                 style="
                   margin: 0;
                   padding: 0;
@@ -342,6 +343,7 @@
             <div style="width: 100%" class="row">
               <div style="position: relative; width: 50%">
                 <p
+                  class="mobile-top-s"
                   style="
                     margin: 0;
                     padding: 0;
@@ -365,6 +367,7 @@
 
               <div style="position: relative; width: 50%">
                 <p
+                  class="mobile-top-s"
                   style="
                     margin: 0;
                     padding: 0;
@@ -397,6 +400,7 @@
                   left: 0;
                   top: 20px;
                 "
+                class="mobile-top"
               >
                 Subject:
               </p>
@@ -583,7 +587,7 @@
               <div
                 v-outside-click="hideDetailsEmail"
                 v-show="showingDetailsEmail"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile-m"
               >
                 <header style="padding-top: 8px; padding-bottom: 8px" class="space-between">
                   <!-- <section class="h-padding">
@@ -667,13 +671,13 @@
             >
               <img
                 v-if="drafting"
-                style="margin-right: 4px"
+                style="margin-left: 4px"
                 class="invert rotation"
                 src="@/assets/images/loading.svg"
                 height="14px"
                 alt=""
               />
-              Save draft
+              {{ isMobile ? 'Save' : 'Save Draft' }}
             </button>
 
             <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
@@ -682,7 +686,7 @@
               <div class="dot"></div>
             </div>
             <button
-              v-else
+              v-else-if="hasGoogleIntegration || hasMicrosoftIntegration"
               @click="sendEmail"
               :disabled="
                 loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
@@ -692,6 +696,15 @@
               :class="{ opaque: loadingPitch || !subject || !targetEmail }"
             >
               <span> Send</span>
+            </button>
+
+            <button
+              v-else-if="!hasGoogleIntegration && !hasMicrosoftIntegration"
+              @click="goToIntegrations"
+              style="margin-right: 4px"
+              class="primary-button no-mar-mobile"
+            >
+              <span> {{ isMobile ? 'Connect' : ' Connect Email' }}</span>
             </button>
           </div>
         </div>
@@ -718,7 +731,7 @@
               :disabled="buttonClicked || loadingDraft || mainView === 'social'"
             >
               <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
-              <div style="right: 120%" class="s-tooltip-below">Save to network</div>
+              <div style="right: 120%" class="s-tooltip-below">Save to contacts</div>
             </button>
           </div>
         </header>
@@ -991,31 +1004,9 @@
             <div class="centered">
               <h1>Your AI-powered PR assistant, Elma</h1>
             </div>
-            <!-- <div class="rows">
-              <div
-                v-for="(example, i) in searchExamples"
-                :key="i"
-                @click="setAndChat(example)"
-                class="example fadein"
-              >
-                <div class="example__header">
-                  <div class="row">
-                    <img :src="example.imgSource" height="14px" alt="" />
-                    <p>{{ example.title }}</p>
-                  </div>
-
-                  <div :class="`${example.tagClass} example__tag`">
-                    {{ example.tag }}
-                  </div>
-                </div>
-                <p>
-                  {{ example.text }}
-                </p>
-              </div>
-            </div> -->
           </div>
 
-          <div style="width: 100%; padding: 0 10vw">
+          <div class="mobile-padding" style="width: 100%; padding: 0 10vw">
             <div class="large-input-container-alt">
               <div class="input-container-gray" :class="{ lbborder: newSearch }">
                 <section>
@@ -1043,7 +1034,8 @@
                       :disabled="
                         loading ||
                         summaryLoading ||
-                        (mainView === 'social' && !hasTwitterIntegration)
+                        (mainView === 'social' && !hasTwitterIntegration) ||
+                        isViewOnly
                       "
                     />
 
@@ -1126,7 +1118,7 @@
                         alt=""
                       /> -->
 
-                        <div class="s-tooltip">Mode</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Mode' }}</div>
                       </div>
 
                       <div
@@ -1149,6 +1141,18 @@
                               News
                             </span>
                             <p>Search through real-time news outlets</p>
+                          </div>
+
+                          <div
+                            @click="switchMainView('trending')"
+                            :class="{ activeswitch: mainView === 'trending' }"
+                          >
+                            <span>
+                              <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                              Trending
+                            </span>
+
+                            <p>Discover trending headlines from around the world</p>
                           </div>
 
                           <div
@@ -1193,10 +1197,10 @@
                           >
                             <span>
                               <img src="@/assets/images/users.svg" height="11px" alt="" />
-                              Contacts
+                              Media Contacts
                             </span>
 
-                            <p>Discover relevant media contacts</p>
+                            <p>Find the right journalists for your story</p>
                           </div>
                         </section>
                       </div>
@@ -1221,7 +1225,7 @@
                       <div
                         v-outside-click="hideStyles"
                         v-show="showingStyles"
-                        class="drop-options-alt"
+                        class="drop-options-alt left-mobile"
                       >
                         <header>
                           <!-- <section class="h-padding">
@@ -1343,13 +1347,14 @@
                         >
                           <img src="@/assets/images/close.svg" height="12px" alt="" />
                         </div>
-                        <div class="s-tooltip">Projects</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Projects' }}</div>
                       </div>
 
                       <div
                         v-outside-click="hideMainDetails"
                         v-if="showingMainDetails"
                         class="drop-options-alt"
+                        :class="mainView === 'write' ? 'left-mobile-l' : 'left-mobile'"
                       >
                         <header>
                           <h4>Projects</h4>
@@ -1363,7 +1368,7 @@
                           </button> -->
                         </header>
 
-                        <section v-if="allCompanyDetails.length">
+                        <section v-if="allCompanyDetails.length && !editingProjects">
                           <div
                             style="position: relative"
                             @click="addDetails(detail.title, detail.details)"
@@ -1372,15 +1377,34 @@
                             :class="{ activesquareTile: detailTitle === detail.title }"
                             :title="detail.title"
                           >
-                            <span class="">
-                              {{ detail.title }}
-                            </span>
-                            <p class="">{{ detail.details }}</p>
+                            <main v-if="!editingProjects">
+                              <span style="max-width: 140px" class="ellipsis-text-s">
+                                {{ detail.title }}
+                              </span>
+                              <p class="">{{ detail.details }}</p>
 
-                            <span @click="deleteCompanyDetails(detail.id)" class="absolute-icon">
-                              <img src="@/assets/images/close.svg" height="10px" alt="" />
-                            </span>
+                              <span @click.stop="selectProject(detail)" class="absolute-icon">
+                                <img src="@/assets/images/edit.svg" height="10px" alt="" />
+                              </span>
+                            </main>
                           </div>
+                        </section>
+
+                        <section v-else-if="editingProjects">
+                          <textarea
+                            v-model="selectedProject.details"
+                            rows="3"
+                            class="area-input text-area-input"
+                            :class="{ opaquest: loadingPitch }"
+                            v-autoresize
+                            :placeholder="selectedProject.details"
+                            style="
+                              border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                              border-radius: 8px;
+                              padding: 16px 8px;
+                            "
+                            maxlength="800"
+                          ></textarea>
                         </section>
 
                         <section style="padding: 16px" v-else>
@@ -1396,9 +1420,10 @@
                           >
                         </section>
 
-                        <footer class="space-between">
+                        <footer v-if="!editingProjects" class="space-between">
                           <span></span>
                           <button
+                            :disabled="isViewOnly"
                             @click="toggleDetailsInputModal"
                             class="primary-button"
                             style="margin-right: 4px"
@@ -1406,10 +1431,26 @@
                             Add Project
                           </button>
                         </footer>
+
+                        <footer v-else class="space-between">
+                          <button
+                            @click="deleteCompanyDetails(selectedProject.id)"
+                            class="primary-button pinkbg"
+                          >
+                            Delete
+                          </button>
+
+                          <main class="row">
+                            <button @click="editingProjects = false" class="secondary-button">
+                              Cancel
+                            </button>
+                            <button @click="updateProject" class="primary-button">Update</button>
+                          </main>
+                        </footer>
                       </div>
                     </div>
 
-                    <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+                    <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
                       <div
                         @click.stop="toggleDate"
                         :class="{ 'soft-gray-bg': showDateSelection }"
@@ -1422,12 +1463,12 @@
                           alt=""
                         />
 
-                        <div class="s-tooltip">Date</div>
+                        <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
                       </div>
 
                       <div
                         v-outside-click="hideDate"
-                        class="container-left-above"
+                        class="container-left-above left-mobile"
                         v-show="showDateSelection"
                         style="top: 40px"
                       >
@@ -1515,6 +1556,17 @@
                   {{ example.name }}
                 </div>
               </div>
+              <div v-if="mainView === 'trending'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in trendExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1574,11 +1626,13 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row fadein"
-              v-else-if="mainView === 'news' && articlesFiltered.length"
+              v-else-if="
+                (mainView === 'news' || mainView === 'trending') && articlesFiltered.length
+              "
             >
               <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
-                  :src="article.image_url"
+                  :src="article.image_url ? article.image_url : article.image"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -1612,7 +1666,12 @@
         >
           <header class="content-header-test">
             <div class="row-top">
-              <div style="margin-top: 16px" class="image-container xxl-margin" @click="resetAll">
+              <div
+                v-if="!isViewOnly"
+                style="margin-top: 16px"
+                class="image-container xxl-margin"
+                @click="resetAll"
+              >
                 <img src="@/assets/images/goBack.svg" height="17px" alt="" />
               </div>
 
@@ -1690,22 +1749,20 @@
                 </div>
               </div> -->
 
-              <div
-                v-if="mainView === 'news'"
+              <button
+                v-if="!isViewOnly"
                 @click.stop="showShare"
-                class="secondary-button"
+                class="secondary-button s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
+                :disabled="!searchSaved"
               >
                 Share
-                <!-- <img
-                  style="cursor: pointer; filter: invert(40%)"
-                  src="@/assets/images/upload2.svg"
-                  height="14px"
-                  alt=""
-                />
-
-                <div class="s-tooltip">Share</div> -->
-              </div>
+                <div v-if="!searchSaved && !isViewOnly" style="width: 150px" class="s-tooltip">
+                  Save to enable sharing
+                </div>
+                <div v-else-if="isViewOnly" class="s-tooltip">Locked</div>
+                <div v-else class="s-tooltip">Share thread</div>
+              </button>
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
@@ -1728,15 +1785,19 @@
                     mainView !== 'news' &&
                     mainView !== 'social' &&
                     (savedDiscovery || savedPitch) &&
-                    !notifiedList.includes(searchId),
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId),
                 }"
                 @click.stop="showSave"
                 v-if="
-                  (filteredArticles && filteredArticles.length) ||
-                  tweets.length ||
-                  (mainView === 'write' && summary) ||
-                  (mainView === 'discover' && summary)
+                  ((filteredArticles && filteredArticles.length) ||
+                    tweets.length ||
+                    (mainView === 'write' && summary) ||
+                    (mainView === 'discover' && summary) ||
+                    (mainView === 'web' && summary)) &&
+                  !isViewOnly
                 "
+                :disabled="searchSaved && mainView !== 'news'"
               >
                 <!-- <img
                   v-if="
@@ -1777,9 +1838,10 @@
 
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
-                    !notifiedList.includes(searchId)
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId)
                   "
                 >
                   Schedule Digest
@@ -1787,9 +1849,9 @@
 
                 <div
                   v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
+                    (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
                 >
                   Disable Digest
@@ -1839,12 +1901,6 @@
                       :title="detail.title"
                     >
                       <span class="">
-                        <img
-                          class="blue-filter"
-                          src="@/assets/images/logo.png"
-                          height="11px"
-                          alt=""
-                        />
                         {{ detail.title }}
                       </span>
                       <p class="">{{ detail.details }}</p>
@@ -1871,9 +1927,40 @@
               </div>
 
               <div class="dropdown-small" v-outside-click="hideShare" v-show="showingShare">
-                <div class="dropdown-small-header">Share with others</div>
-                <div class="dropdown-small-section dropdown-small-bb">
-                  <label for="shareEmail">Email</label>
+                <div style="padding-bottom: 12px" class="dropdown-small-header dropdown-small-bb">
+                  <p style="margin: 0">Share Thread</p>
+                  <small style="color: #555f71">Below is a shareable link to this thread</small>
+                </div>
+                <div class="dropdown-small-section">
+                  <div v-if="savedSearch" class="row">
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/link.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    <a
+                      :href="savedSearch.share_url"
+                      target="_blank"
+                      style="max-width: 250px; margin: 0"
+                      class="ellipsis-text-s share-link"
+                    >
+                      {{ savedSearch.share_url }}
+                    </a>
+                  </div>
+
+                  <div v-else class="row">
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/link.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    <small style="max-width: 250px; margin: 0" class="ellipsis-text-s share-link">
+                      link not generated
+                    </small>
+                  </div>
+                  <!-- <label for="shareEmail">Email</label>
                   <input
                     class="area-input-outline"
                     name="shareEmail"
@@ -1897,9 +1984,9 @@
                       <img v-else src="@/assets/images/email-round.svg" height="14px" alt="" /> Send
                       Email
                     </button>
-                  </div>
+                  </div> -->
                 </div>
-                <div class="dropdown-small-section">
+                <!-- <div class="dropdown-small-section">
                   <label for="slackChannel">Slack</label>
 
                   <div>
@@ -2000,6 +2087,17 @@
                       Connect Slack
                     </button>
                   </div>
+                </div> -->
+
+                <div class="flex-end">
+                  <div style="width: fit-content; padding-bottom: 12px" class="row">
+                    <button @click="hideShare" style="margin: 0 8px" class="secondary-button">
+                      Close
+                    </button>
+                    <button style="margin: 0" @click="copyShareThread" class="primary-button">
+                      {{ copyShareTip }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2027,11 +2125,11 @@
                   "
                   class="dropdown-small-header opaquest"
                 >
-                  Save this search
+                  Save Thread
                 </div>
-                <div v-else class="dropdown-small-header">Save this search</div>
+                <div v-else class="dropdown-small-header">Save Thread</div>
 
-                <div v-if="mainView === 'write'" class="dropdown-small-section">
+                <!-- <div v-if="mainView === 'write'" class="dropdown-small-section">
                   <label
                     :class="{ opaquest: savedPitch }"
                     style="font-size: 13px"
@@ -2066,9 +2164,9 @@
                       Save
                     </button>
                   </div>
-                </div>
+                </div> -->
 
-                <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
+                <!-- <div v-else-if="mainView === 'discover'" class="dropdown-small-section">
                   <label
                     :class="{ opaquest: savedDiscovery }"
                     style="font-size: 13px"
@@ -2108,9 +2206,9 @@
                       Save
                     </button>
                   </div>
-                </div>
+                </div> -->
 
-                <div v-else class="dropdown-small-section dropdown-small-bb">
+                <div class="dropdown-small-section dropdown-small-bb">
                   <label
                     :class="{ opaquest: searchSaved || savedSearch }"
                     style="font-size: 13px"
@@ -2122,23 +2220,22 @@
                     style="width: 100%"
                     class="area-input-outline"
                     type="text"
-                    placeholder="Name your search..."
+                    placeholder="Thread name..."
                     v-model="searchName"
-                    :disabled="savedSearch"
+                    :disabled="searchSaved"
                   />
 
                   <div>
                     <button
-                      @click="createSearch"
+                      @click="saveThread"
                       class="primary-button"
                       :disabled="
                         articleSummaryLoading ||
                         loading ||
                         summaryLoading ||
                         savingSearch ||
-                        savedSearch ||
-                        mainView === 'web' ||
-                        !searchName
+                        !searchName ||
+                        searchSaved
                       "
                     >
                       <img
@@ -2155,8 +2252,9 @@
 
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    !notifiedList.includes(searchId)
+                    mainView === 'news' &&
+                    !notifiedList.includes(searchId) &&
+                    !notifiedList.includes(threadId)
                   "
                   class="dropdown-small-section"
                 >
@@ -2177,12 +2275,6 @@
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
-                  <!-- 
-                     :class="{ 'has-placeholder': !alertTIme }"
-                    :data-placeholder="placeholderTime"
-                     @focus="clearPlaceholder"
-                    @blur="setPlaceholder"
-                     -->
 
                   <div style="margin: 8px 0" class="space-between">
                     <div class="row">
@@ -2205,7 +2297,7 @@
                     </label>
                   </div>
 
-                  <div
+                  <!-- <div
                     v-if="user.slackRef && mainView === 'news'"
                     style="margin-bottom: 16px"
                     class="space-between"
@@ -2249,7 +2341,7 @@
                       <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
                       Connect
                     </button>
-                  </div>
+                  </div> -->
 
                   <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
                     <div class="dropdown-select">
@@ -2324,37 +2416,7 @@
                         </div>
                       </div>
                     </div>
-                    <!-- <select
-                      style="width: 100%"
-                      v-model="alertChannel"
-                      class="area-input-outline dropdown-select"
-                    >
-                      <option value="" disabled>Select a Slack channel</option>
-                      <option
-                        v-for="channel in userChannelOpts.channels"
-                        :key="channel.id"
-                        :value="channel.id"
-                      >
-                        {{ channel.name }}
-                      </option>
-                      <option v-if="userChannelOpts.nextCursor" disabled>──────────</option>
-                      <option
-                        v-if="userChannelOpts.nextCursor"
-                        @click="listUserChannels(userChannelOpts.nextCursor)"
-                        class="load-more-option"
-                      >
-                        Load More Channels...
-                      </option>
-                    </select> -->
                   </div>
-
-                  <!-- <small v-if="isPaid && (savedSearch || savedDiscovery || savedPitch)"
-                    >Get daily emails with news clips and summary</small
-                  >
-                  <small class="opaquer" v-else-if="isPaid"
-                    >Get daily emails with news clips and summary</small
-                  >
-                  <small v-else>Upgrade your plan to activate alerts</small> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -2375,24 +2437,15 @@
                     >
                       Schedule
                     </button>
-
-                    <!-- <button
-                      style="margin-left: 8px"
-                      v-else
-                      class="primary-button fadein"
-                      @click="testEmailAlert"
-                    >
-                      Send Preview
-                    </button> -->
                   </div>
                 </div>
 
                 <div
                   class="dropdown-small-section"
-                  v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                  v-if="
+                    mainView === 'news' &&
                     (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
+                    (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
                 >
                   <label>Disable Digest</label>
@@ -2422,12 +2475,12 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
-              v-if="mainView === 'news'"
+              v-if="mainView === 'news' || mainView === 'trending'"
             >
               <div style="width: 24%" v-for="(article, i) in articlesFiltered.slice(0, 4)" :key="i">
                 <img
                   @click="setOriginalArticles"
-                  :src="article.image_url"
+                  :src="article.image ? article.image : article.image_url"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -2508,6 +2561,46 @@
               "
             >
               <div class="citation-text" v-html="noResultsString"></div>
+              <div
+                style="margin: 12px 0"
+                class="row"
+                v-if="mainView === 'news' || mainView === 'social'"
+              >
+                <div
+                  @click="toggleType(mainView === 'news' ? 'social' : 'news')"
+                  class="s-wrapper"
+                  style="margin-right: 12px; cursor: pointer"
+                >
+                  <img
+                    v-if="mainView === 'news'"
+                    src="@/assets/images/twitter-x.svg"
+                    height="16px"
+                    alt=""
+                  />
+                  <img
+                    v-else-if="mainView === 'social'"
+                    src="@/assets/images/globe.svg"
+                    height="16px"
+                    alt=""
+                  />
+                  <div class="s-tooltip">
+                    {{
+                      isViewOnly
+                        ? 'Locked'
+                        : mainView === 'news'
+                        ? !hasTwitterIntegration
+                          ? 'Connect Twiiter'
+                          : 'Switch to Social'
+                        : 'Switch to News'
+                    }}
+                  </div>
+                </div>
+
+                <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
+                  <img src="@/assets/images/google.svg" height="16px" alt="" />
+                  <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to Web' }}</div>
+                </div>
+              </div>
             </div>
 
             <div v-else class="content-padding relative">
@@ -2551,7 +2644,7 @@
               ></div>
               <div
                 style="margin-top: 32px"
-                v-else-if="mainView === 'news'"
+                v-else-if="mainView === 'news' || mainView === 'trending'"
                 v-html="insertNewsCitations(summary)"
                 class="citation-text"
               ></div>
@@ -2593,14 +2686,20 @@
                   <p><span>Name</span>: {{ j.name }}</p>
                   <p><span>Publication</span>: {{ j.publication }}</p>
                   <p><span>Reason for selection</span>: {{ j.reason }}</p>
-                  <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                  <button
+                    :disabled="isViewOnly"
+                    @click="grabJournalist(j.name, j.pub)"
+                    class="secondary-button s-wrapper"
+                  >
                     View bio
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
                   </button>
                 </div>
               </div>
 
               <!-- class="gradient-border-btm" -->
               <div
+                class="row"
                 style="margin: 8px 0 16px 0; padding-bottom: 24px"
                 v-if="mainView !== 'write' && mainView !== 'discover'"
               >
@@ -2614,11 +2713,15 @@
                     mainView === 'news' ? `Articles ` : mainView === 'social' ? `Posts ` : `Results`
                   }}
 
-                  <div v-if="mainView === 'news'" style="margin-left: 4px" class="row">
+                  <div
+                    v-if="mainView === 'news' || mainView === 'trending'"
+                    style="margin-left: 4px"
+                    class="row"
+                  >
                     <img
                       v-for="(article, i) in articlesFiltered.slice(0, 3)"
                       :key="i"
-                      :src="article.image_url"
+                      :src="article.image_url ? article.image_url : article.image"
                       @error="onImageError($event)"
                       alt=""
                       class="circle-img"
@@ -2679,6 +2782,67 @@
                     mainView === 'news' ? `Articles` : mainView === 'social' ? `Posts` : `Results`
                   }}
                 </button>
+
+                <div class="row" v-if="mainView === 'news' || mainView === 'social'">
+                  <div
+                    @click="toggleType(mainView === 'news' ? 'social' : 'news')"
+                    class="s-wrapper"
+                    style="margin: 0 12px; cursor: pointer"
+                  >
+                    <img
+                      v-if="mainView === 'news'"
+                      src="@/assets/images/twitter-x.svg"
+                      height="16px"
+                      alt=""
+                    />
+                    <img
+                      v-else-if="mainView === 'social'"
+                      src="@/assets/images/globe.svg"
+                      height="16px"
+                      alt=""
+                    />
+                    <div class="s-tooltip">
+                      {{
+                        isViewOnly
+                          ? 'Locked'
+                          : mainView === 'news'
+                          ? !hasTwitterIntegration
+                            ? 'Connect Twiiter'
+                            : 'Switch to Social'
+                          : 'Switch to News'
+                      }}
+                    </div>
+                  </div>
+
+                  <div @click="toggleType('web')" style="cursor: pointer" class="s-wrapper">
+                    <img src="@/assets/images/google.svg" height="16px" alt="" />
+                    <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to Web' }}</div>
+                  </div>
+                </div>
+
+                <div class="row" v-if="mainView === 'web'">
+                  <div
+                    @click="toggleType('news')"
+                    class="s-wrapper"
+                    style="margin: 0 12px; cursor: pointer"
+                  >
+                    <img src="@/assets/images/globe.svg" height="16px" alt="" />
+                    <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to News' }}</div>
+                  </div>
+
+                  <div @click="toggleType('social')" style="cursor: pointer" class="s-wrapper">
+                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+                    <div class="s-tooltip">
+                      {{
+                        isViewOnly
+                          ? 'Locked'
+                          : !hasTwitterIntegration
+                          ? 'Connect Twiiter'
+                          : 'Switch to Social'
+                      }}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div v-if="summaries.length">
@@ -2692,12 +2856,12 @@
                   <div
                     style="width: 100%; justify-content: space-between; gap: 4px"
                     class="row"
-                    v-if="summary.clips.length && mainView === 'news'"
+                    v-if="summary.clips.length && (mainView === 'news' || mainView === 'trending')"
                   >
                     <div style="width: 24%" v-for="(clip, i) in summary.clips.slice(0, 4)" :key="i">
                       <img
                         @click="setAndShowArticles(summary.clips)"
-                        :src="clip.image_url"
+                        :src="clip.image_url ? clip.image_url : clip.image"
                         @error="onImageError($event)"
                         class="card-photo-header-small"
                       />
@@ -2829,8 +2993,13 @@
                       <p><span>Name</span>: {{ j.name }}</p>
                       <p><span>Publication</span>: {{ j.publication }}</p>
                       <p><span>Reason for selection</span>: {{ j.reason }}</p>
-                      <button @click="grabJournalist(j.name, j.pub)" class="secondary-button">
+                      <button
+                        :disabled="isViewOnly"
+                        @click="grabJournalist(j.name, j.pub)"
+                        class="secondary-button s-wrapper"
+                      >
                         View bio
+                        <div v-if="isViewOnly" class="s-tooltip">Locked</div>
                       </button>
                     </div>
                   </div>
@@ -2839,25 +3008,32 @@
                     v-if="
                       !showingArticles &&
                       summary.clips.length &&
-                      (mainView === 'news' || mainView === 'web' || mainView === 'social')
+                      (mainView === 'news' ||
+                        mainView === 'trending' ||
+                        mainView === 'web' ||
+                        mainView === 'social')
                     "
                     @click="setAndShowArticles(summary.clips)"
                     class="secondary-button-white fadein"
                     style="margin: 0"
                   >
                     {{
-                      mainView === 'news'
+                      mainView === 'news' || mainView === 'trending'
                         ? `Articles `
                         : mainView === 'social'
                         ? `Posts `
                         : `Results`
                     }}
 
-                    <div v-if="mainView === 'news'" style="margin-left: 4px" class="row">
+                    <div
+                      v-if="mainView === 'news' || mainView === 'trending'"
+                      style="margin-left: 4px"
+                      class="row"
+                    >
                       <img
                         v-for="(article, i) in summary.clips.slice(0, 3)"
                         :key="i"
-                        :src="article.image_url"
+                        :src="article.image_url ? article.image_url : article.image"
                         alt=""
                         class="circle-img"
                       />
@@ -2952,6 +3128,13 @@
                     Gathering news...
                   </p>
                   <p
+                    v-else-if="mainView === 'trending'"
+                    style="margin: 0; margin-right: 8px"
+                    class="bold-text"
+                  >
+                    Gathering trending news...
+                  </p>
+                  <p
                     v-else-if="mainView === 'social'"
                     style="margin: 0; margin-right: 8px"
                     class="bold-text"
@@ -2982,7 +3165,7 @@
       </section>
 
       <div
-        v-if="!loading && !summaryLoading"
+        v-if="!loading && !summaryLoading && !isViewOnly"
         style="
           background: white;
           position: sticky;
@@ -3015,7 +3198,7 @@
               v-model="newTemplate"
               :disabled="loading || summaryLoading"
               @keyup.enter="
-                mainView === 'news'
+                mainView === 'news' || mainView === 'trending'
                   ? getChatSummary($event, filteredArticles, newTemplate)
                   : mainView === 'social'
                   ? getChatSummary($event, preparedTweets, newTemplate)
@@ -3129,6 +3312,18 @@
                   </div>
 
                   <div
+                    @click="switchMainView('trending')"
+                    :class="{ activeswitch: mainView === 'trending' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                      Trending
+                    </span>
+
+                    <p>Discover trending headlines from around the world</p>
+                  </div>
+
+                  <div
                     @click="switchMainView('social')"
                     :class="{ activeswitch: mainView === 'social' }"
                   >
@@ -3167,10 +3362,22 @@
                   >
                     <span>
                       <img src="@/assets/images/users.svg" height="11px" alt="" />
-                      Contacts
+                      Media Contacts
                     </span>
 
-                    <p>Discover relevant media contacts</p>
+                    <p>Find the right journalists for your story</p>
+                  </div>
+
+                  <div
+                    @click="switchMainView('trending')"
+                    :class="{ activeswitch: mainView === 'trending' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
+                      Trending
+                    </span>
+
+                    <p>Discover trending headlines from around the world</p>
                   </div>
                 </section>
               </div>
@@ -3201,7 +3408,7 @@
               <div
                 v-outside-click="hideMainDetails"
                 v-if="showingMainDetails"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile"
               >
                 <header>
                   <h4>Projects</h4>
@@ -3238,7 +3445,7 @@
                   </button>
                 </header> -->
 
-                <section v-if="allCompanyDetails.length">
+                <section v-if="allCompanyDetails.length && !editingProjects">
                   <div
                     style="position: relative"
                     @click="addDetails(detail.title, detail.details)"
@@ -3247,7 +3454,7 @@
                     :class="{ activesquareTile: detailTitle === detail.title }"
                     :title="detail.title"
                   >
-                    <span class="">
+                    <span style="max-width: 140px" class="ellipsis-text-s">
                       {{ detail.title }}
                     </span>
                     <p class="">{{ detail.details }}</p>
@@ -3256,6 +3463,23 @@
                       <img src="@/assets/images/close.svg" height="10px" alt="" />
                     </span>
                   </div>
+                </section>
+
+                <section v-else-if="editingProjects">
+                  <textarea
+                    v-model="selectedProject.details"
+                    rows="3"
+                    class="area-input text-area-input"
+                    :class="{ opaquest: loadingPitch }"
+                    v-autoresize
+                    :placeholder="selectedProject.details"
+                    style="
+                      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                      border-radius: 8px;
+                      padding: 16px 8px;
+                    "
+                    maxlength="800"
+                  ></textarea>
                 </section>
 
                 <section style="padding: 16px" v-else>
@@ -3271,7 +3495,7 @@
                   >
                 </section>
 
-                <footer class="space-between">
+                <footer v-if="!editingProjects" class="space-between">
                   <span></span>
                   <button
                     @click="toggleDetailsInputModal"
@@ -3280,6 +3504,22 @@
                   >
                     Add Project
                   </button>
+                </footer>
+
+                <footer v-else class="space-between">
+                  <button
+                    @click="deleteCompanyDetails(selectedProject.id)"
+                    class="primary-button pinkbg"
+                  >
+                    Delete
+                  </button>
+
+                  <main class="row">
+                    <button @click="editingProjects = false" class="secondary-button">
+                      Cancel
+                    </button>
+                    <button @click="updateProject" class="primary-button">Update</button>
+                  </main>
                 </footer>
               </div>
             </div>
@@ -3299,7 +3539,7 @@
               <div
                 v-outside-click="hideStyles"
                 v-show="showingStyles"
-                class="drop-options-alt-up"
+                class="drop-options-alt-up left-mobile"
                 style="bottom: 48px"
               >
                 <header>
@@ -3399,7 +3639,7 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'news'" style="margin-top: 16px" class="row relative">
+            <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
@@ -3413,12 +3653,12 @@
                   alt=""
                 />
 
-                <div class="s-tooltip">Date</div>
+                <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
               </div>
 
               <div
                 v-outside-click="hideDate"
-                class="container-left-above"
+                class="container-left-above left-mobile"
                 v-show="showDateSelection"
               >
                 <header>
@@ -3444,7 +3684,155 @@
       </div>
     </div>
 
-    <div style="width: 100vw" v-if="selectedSearch">
+    <div style="width: 100vw; height: 100vh" v-if="selectedSearch">
+      <div v-if="showingAnalytics" style="position: relative">
+        <div class="containered">
+          <div v-if="loadingAnalytics" style="position: relative" class="containered__top">
+            <div @click="showingAnalytics = false" class="image-container abs-top-right">
+              <img src="@/assets/images/close.svg" height="16px" alt="" />
+            </div>
+            <div style="margin-bottom: 12px">
+              <img
+                :src="mainView === 'news' ? currentArticle.image_url : currentArticle.image"
+                class="photo-header-small"
+              />
+            </div>
+
+            <div style="padding: 12px 0" class="row">
+              <p style="margin: 0; margin-right: 8px; font-size: 14px" class="bold-text">
+                Analyzing article...
+              </p>
+              <img
+                class="rotation innvert"
+                height="14px"
+                src="@/assets/images/loading.svg"
+                alt=""
+              />
+            </div>
+          </div>
+
+          <div v-else style="position: relative" class="containered__top">
+            <div style="position: sticky; top: 0">
+              <div @click="showingAnalytics = false" class="image-container abs-top-right">
+                <img src="@/assets/images/close.svg" height="16px" alt="" />
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px">
+              <img
+                @error="onImageError($event)"
+                :src="currentArticle.image_url"
+                class="photo-header-small"
+              />
+            </div>
+
+            <div class="space-between-top no-letter-margin">
+              <div class="col">
+                <p style="margin: 0" class="bold-font">
+                  {{
+                    currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
+                  }}
+                </p>
+                <div style="margin-top: 8px; color: #3b8ec0" class="row">
+                  <span>by</span>
+                  <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
+                </div>
+              </div>
+              <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
+            </div>
+
+            <div>
+              <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
+                <a :href="currentArticle.link" target="_blank" class="bold-txt a-text">
+                  {{ currentArticle.title }}
+                </a>
+              </div>
+            </div>
+
+            <div class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <p style="font-size: 14px" class="bold-font">
+                  {{ currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.users) : 0 }}
+                </p>
+              </div>
+
+              <section class="row img-mar img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/facebook.png" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumberAlt(
+                        currentArticle.social[0]
+                          ? currentArticle.social[0]['total_facebook_shares']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/twitter-x.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumberAlt(
+                        currentArticle.social[0] ? currentArticle.social[0]['twitter_shares'] : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/reddit.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumberAlt(
+                        currentArticle.social[0]
+                          ? currentArticle.social['total_reddit_engagements']
+                          : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+
+                <div class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/pinterest.png"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      formatNumberAlt(
+                        currentArticle.social[0] ? currentArticle.social[0]['pinterest_shares'] : 0,
+                      )
+                    }}
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div v-if="currentArticle.summary">
+            <div
+              style="margin-top: 12px; font-size: 15px !important"
+              v-html="currentArticle.summary"
+              class="pre-text"
+            ></div>
+          </div>
+
+          <div v-if="loadingAnalytics">
+            <div style="margin-top: 12px"></div>
+          </div>
+        </div>
+      </div>
+
       <div
         v-if="summary && showingArticles"
         :class="['sidebar-aside fadein', { open: showingArticles }]"
@@ -3462,7 +3850,7 @@
         >
           <p class="bold-text">
             {{
-              mainView === 'news'
+              mainView === 'news' || mainView === 'trending'
                 ? `Articles (${sidebarArticles.length})`
                 : mainView === 'social'
                 ? `Posts (${sidebarArticlesSocial.length})`
@@ -3474,8 +3862,9 @@
             <img src="@/assets/images/close.svg" height="16px" alt="" />
           </div>
         </div>
+
         <div class="section">
-          <div v-if="mainView === 'news'" class="cards-container">
+          <div v-if="mainView === 'news' || mainView === 'trending'" class="cards-container">
             <div v-for="(article, i) in sidebarArticles" :key="article.id" class="card">
               <div style="width: 100%">
                 <div class="main-body">
@@ -3492,15 +3881,32 @@
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
-                      <small>{{ article.source.name }}</small>
+                      <small>{{
+                        mainView === 'trending'
+                          ? article.source
+                              .replace(/^https?:\/\//, '')
+                              .replace(/^www\./, '')
+                              .replace('.com', '')
+                          : article.source.name
+                      }}</small>
                     </div>
 
-                    <p style="cursor: pointer" @click="goToArticle(article.link)">
+                    <p
+                      style="cursor: pointer"
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                    >
                       {{ article.title }}
                     </p>
                     <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
                       <p class="thin-text">
-                        <span>{{ getTimeDifferenceInMinutes(article.publish_date) }} </span> -
+                        <span
+                          >{{
+                            getTimeDifferenceInMinutes(
+                              mainView === 'trending' ? article.date : article.publish_date,
+                            )
+                          }}
+                        </span>
+                        -
                         {{ article.description }}
                       </p>
                     </div>
@@ -3508,17 +3914,34 @@
 
                   <div>
                     <img
-                      @click="goToArticle(article.link)"
-                      :src="article.image_url"
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                      :src="mainView === 'trending' ? article.image : article.image_url"
                       @error="onImageError($event)"
                       class="card-photo-header"
                     />
                   </div>
                 </div>
-                <div style="margin: -4px 0 0 10px">
+                <div class="space-between" style="margin: -4px 0 0 10px">
                   <p @click="selectJournalist(article)" class="turq-text">
                     By <span>{{ extractJournalist(article.author) }}</span>
                   </p>
+
+                  <button
+                    @click="getTrafficData(article.url ? article.url : article.link, article)"
+                    style="margin-right: 16px"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
                 </div>
                 <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
                   <button
@@ -3669,6 +4092,17 @@ export default {
   },
   data() {
     return {
+      followupShares: {},
+      totalShares: {},
+      editingProjects: false,
+      selectedProject: null,
+      projectId: '',
+      shareUrl: '',
+      currentThread: {},
+      searchSaved: false,
+      loadingAnalytics: false,
+      showingAnalytics: false,
+      currentArticle: {},
       noResultsString: '',
       alternateAricles: [],
       originalSearch: '',
@@ -3728,7 +4162,7 @@ www.forbes.com/article-3
       drafting: false,
       originalSummary: null,
       placeholderTime: 'Select a time',
-      alertType: '',
+      alertType: 'EMAIL',
       alertChannel: '',
       alertChannelName: '',
       userChannelOpts: new SlackListResponse(),
@@ -3937,9 +4371,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
       buttonText: 'Article Summary',
       AllUserTweets: {},
       mainView: 'news',
-      savedSearch: null,
+      savedSearch: {},
       tweets: [],
       filteredArticles: [],
+      trendingArticles: [],
       posts: [],
       tweetMedia: [],
       tweetUsers: null,
@@ -3949,6 +4384,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       isTyping: false,
       searchName: null,
       searchId: null,
+      threadId: null,
       textIndex: 0,
       typedMessage: '',
       tweetError: '',
@@ -3999,16 +4435,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       newsExamples: [
         {
-          name: `Top storylines about...`,
-          value: `Top storylines about {Topic}`,
+          name: `Top storylines...`,
+          value: `Top storylines, influential journalists, and sentiment covering {Topic}`,
         },
         {
-          name: `List top journalists covering...`,
-          value: `List top journalists covering {Topic}`,
+          name: `News roundup...`,
+          value: `Provide a news roundup for {Brand}, include brand, competitors and industry updates`,
         },
         {
-          name: `Analyze media coverage...`,
-          value: `Analyze media coverage about {Brand}`,
+          name: `Who's writing about...`,
+          value: `Who’s writing about {Topic} ? List the 5 most influential, recognizable journalists.`,
         },
       ],
       discoveryExamples: [
@@ -4017,12 +4453,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `U.S journalist covering {Topic}`,
         },
         {
-          name: `Podcasters interested in...`,
-          value: `Podcasters interested in {Topic}`,
-        },
-        {
           name: `Journalist similar to...`,
           value: `Journalist similar to...`,
+        },
+        {
+          name: `Podcasters interested in...`,
+          value: `Podcasters interested in {Topic}`,
         },
       ],
       socialExamples: [
@@ -4031,12 +4467,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `Top storylines about {Topic}`,
         },
         {
-          name: `List top influencers covering...`,
-          value: `List top influencers covering {Topic}`,
-        },
-        {
           name: `Analyze post about...`,
           value: `Analyze post about {Topic}`,
+        },
+        {
+          name: `List top influencers covering...`,
+          value: `List top influencers covering {Topic}`,
         },
       ],
       webExamples: [
@@ -4045,12 +4481,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `List upcoming awards...`,
         },
         {
-          name: `Create a briefing sheet...`,
+          name: `Create briefing sheet...`,
           value: `Create a briefing sheet for {journalist name} from {outlet}`,
         },
         {
           name: `Who covered AI in 2024`,
           value: `Who covered AI in 2024`,
+        },
+      ],
+      trendExamples: [
+        {
+          name: `What's trending in...`,
+          value: `What's trending in {Industry} ?`,
+        },
+        {
+          name: `Top headlines covering...`,
+          value: `Show me top headlines covering {Topic}`,
+        },
+        {
+          name: `Most shared stories..`,
+          value: `List the 5 most shared stories`,
         },
       ],
       discoverExamples: [
@@ -4328,6 +4778,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       upgradeMessage: 'You have reached your usage limit for the month. Please upgrade your plan.',
       copyTip: 'Copy',
+      copyShareTip: 'Copy Link',
       searchSuggestions: [
         `What is the PR impact of this coverage`,
         `Find me the most positive / negative article`,
@@ -4372,6 +4823,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       Your goal is to create content that resonates deeply, connects authentically, and compels action without being overt. Every word should feel like it was written by a human, unrecognizable by AI detectors.`,
       dropdownLoading: false,
+      traffic: null,
+      socialData: null,
     }
   },
   created() {
@@ -4397,12 +4850,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.selectedTime = defaultTime.toISOString().slice(0, 16)
 
     this.$store.dispatch('updateListName', 'news')
-    this.getWritingStyles()
-    this.getCompanyDetails()
-    this.shareEmail = this.user.email
 
-    if (this.user.slackRef) {
-      this.listUserChannels()
+    if (!this.$route.params.code) {
+      this.getWritingStyles()
+      this.getCompanyDetails()
+      this.shareEmail = this.user.email
+
+      if (this.user.slackRef) {
+        this.listUserChannels()
+      }
     }
   },
   watch: {
@@ -4443,6 +4899,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         }
       }
     },
+    // summaries(newVal, oldVal) {
+    //   if (!this.hasWatchedOnce) {
+    //     // Ignore the first change and set the flag
+    //     this.hasWatchedOnce = true
+    //     return
+    //   }
+
+    //   if (newVal !== oldVal) {
+    //     console.log('values', newVal, oldVal)
+    //     this.searchSaved = false
+    //   }
+    // },
   },
   updated() {
     if (!this.citationsMounted) {
@@ -4450,7 +4918,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       const journalistElements = document.querySelectorAll('.select-journalist')
 
-      if (this.mainView === 'news') {
+      if (this.mainView === 'news' || this.mainView === 'trending') {
         journalistElements.forEach((element) => {
           element.addEventListener('click', (event) => {
             const citationIndex = event.target.getAttribute('data-citation')
@@ -4458,7 +4926,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
               const citation = this.filteredArticles[citationIndex]
               this.selectJournalist(citation)
             } catch (error) {
-              console.error('Failed to parse citation JSON:', citationJson)
               console.error('Error:', error)
             }
           })
@@ -4497,7 +4964,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       const journalistElements = document.querySelectorAll('.select-journalist-alt')
 
-      if (this.mainView === 'news') {
+      if (this.mainView === 'news' || this.mainView === 'trending') {
         journalistElements.forEach((element) => {
           element.addEventListener('click', (event) => {
             const citationIndex = event.target.getAttribute('data-citation')
@@ -4555,14 +5022,194 @@ Your goal is to create content that resonates deeply, connects authentically, an
     }
   },
   mounted() {
-    this.getEmailAlerts()
-    this.pitchStyleSetup()
-    this.setPlaceholder()
+    if (!this.$route.params.code) {
+      this.getEmailAlerts()
+      this.pitchStyleSetup()
+      this.setPlaceholder()
+    }
+
+    const path = this.$route.path.replace(/\/$/, '') // Remove trailing slash
+    const matches = path.match(/\/summaries\/(.+)/)
+    if (matches && matches[1]) {
+      const code = matches[1]
+      this.shareThread(code)
+    }
   },
   beforeDestroy() {
     this.abortFunctions()
   },
   methods: {
+    async shareThread(code) {
+      try {
+        const res = await Comms.api.shareThread({
+          code: code,
+        })
+        this.setSearch(res.data)
+        this.$store.dispatch('updateViewOnly', true)
+      } catch (e) {
+        console.log(e)
+        this.$toast('Thread does not exist', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async saveThread() {
+      this.savingSearch = true
+      try {
+        const res = await Comms.api.saveThread({
+          user: this.user.id,
+          title: this.searchName,
+          meta_data: {
+            searchTerm: this.newSearch,
+            summary: this.summary,
+            list: this.discoverList,
+            articlesFiltered: this.articlesFiltered,
+            filteredResults: this.filteredResults,
+            tweetMedia: this.tweetMedia,
+            summaries: this.summaries,
+            followUps: this.followUps,
+            preparedTweets: this.preparedTweets,
+            googleResults: this.googleResults,
+            filteredArticles: this.filteredArticles,
+            type: this.mainView,
+            originalSearch: this.originalSearch,
+            tweets: this.tweets,
+            followupShares: this.followupShares,
+            totalShares: this.totalShares,
+            boolean: this.booleanString,
+            project: this.selectedOrg,
+          },
+        })
+        this.savedSearch = res
+        this.threadId = res.id
+        // this.showingSave = false
+        this.savingSearch = false
+        this.$toast('Thread Saved', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.searchSaved = true
+        this.refreshUser()
+        this.$store.dispatch('getThreads')
+      } catch (e) {
+        console.log(e)
+      } finally {
+      }
+    },
+    removeDomain(url) {
+      const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
+
+      return url.replace(domainRegex, '')
+    },
+    async getTrafficData(url, article) {
+      this.loadingAnalytics = true
+      this.showingAnalytics = true
+
+      this.currentArticle = article
+      try {
+        const res = await Comms.api.getTrafficData({
+          urls: [url],
+        })
+        this.traffic = res
+        this.getSocialData(url)
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+        // this.$toast('Error uploading clips, try again', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+      }
+    },
+    async getSocialData(url) {
+      try {
+        const res = await Comms.api.getSocialData({
+          urls: [url],
+        })
+        this.socialData = res
+        this.combineArticleWithTraffic()
+      } catch (e) {
+        console.error(e)
+        this.loadingAnalytics = false
+      }
+    },
+
+    combineArticleWithTraffic() {
+      // const domain = this.currentArticle.link
+      //   .replace(/^https?:\/\//, '')
+      //   .replace(/^www\./, '')
+      //   .split('/')[0]
+
+      const traffic = Object.values(this.traffic)[0] || {}
+      const social = Object.values(this.socialData)[0] || {}
+
+      this.currentArticle = {
+        ...this.currentArticle,
+        traffic,
+        social,
+      }
+
+      this.getArticleSummary(
+        this.currentArticle.link ? this.currentArticle.link : this.currentArticle.url,
+      )
+    },
+
+    async getArticleSummary(url, instructions = null) {
+      try {
+        const response = await Comms.api.getArticleSummary({
+          url: url,
+          search: this.booleanString,
+          instructions: instructions,
+        })
+
+        if (this.shouldCancel) {
+          return this.stopLoading()
+        }
+
+        this.currentArticle['summary'] = response.summary
+          .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+          .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+
+        this.loadingAnalytics = false
+        this.refreshUser()
+        console.log('CURRENT ARTICLE --- > ', this.currentArticle)
+      } catch (e) {
+        console.log(e)
+        this.$toast('Article analysis not available', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+
+        this.loadingAnalytics = false
+      } finally {
+        // this.showArticleRegenerate = false
+        // this.loadingUrl = null
+      }
+    },
+
+    formatNumberAlt(number) {
+      if (number === '0' || number === 0 || !number) {
+        return 0
+      }
+
+      const roundedNumber = Math.ceil(number)
+
+      return roundedNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    },
+
     setOriginalArticles() {
       this.alternateAricles = []
       this.showingArticles = true
@@ -4835,12 +5482,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.refreshUser()
       }
     },
+    selectProject(project) {
+      console.log('here', project)
+      this.selectedProject = project
+      this.editingProjects = true
+      console.log(this.selectedProject)
+    },
     async deleteCompanyDetails(id) {
       try {
         const res = await Comms.api.deleteCompanyDetails({
           id: id,
         })
-        this.$toast('Details removed', {
+        this.$toast('Project removed', {
           timeout: 2000,
           position: 'top-left',
           type: 'success',
@@ -4848,13 +5501,39 @@ Your goal is to create content that resonates deeply, connects authentically, an
           bodyClassName: ['custom'],
         })
       } catch (e) {
-        conosole.log(e)
+        console.log(e)
       } finally {
         this.detailTitle = ''
         this.currentDetails = ''
         this.selectedOrg = ''
         this.getCompanyDetails()
         this.refreshUser()
+        this.editingProjects = false
+        this.selectedProject = null
+      }
+    },
+
+    async updateProject() {
+      try {
+        const res = await Comms.api.updateCompanyDetails({
+          id: this.selectedProject.id,
+          details: this.selectedProject.details,
+        })
+        this.$toast('Project updated', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'success',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+        this.addDetails(this.selectedProject.title, this.selectedProject.details)
+        this.selectedProject = null
+      } catch (e) {
+        console.log(e)
+      } finally {
+        this.getCompanyDetails()
+        this.refreshUser()
+        this.editingProjects = false
       }
     },
     async getCompanyDetails(newDeets = false) {
@@ -4977,6 +5656,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
             : '',
         })
 
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+
         if (discover) {
           this.summary = res
           this.discoverList = res.journalists
@@ -4986,6 +5669,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             clips: [],
             list: res.journalists,
           })
+
           this.$nextTick(() => {
             this.scrollToSummariesTop()
           })
@@ -5126,18 +5810,20 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     addDetails(title, deets) {
-      if (title === this.detailTitle) {
-        this.detailTitle = ''
-        this.selectedOrg = ''
+      if (!this.isViewOnly) {
+        if (title === this.detailTitle) {
+          this.detailTitle = ''
+          this.selectedOrg = ''
+          this.showingDetails = false
+          this.showingMainDetails = false
+          this.showingAllDetails = false
+        }
+        this.selectedOrg = deets
+        this.detailTitle = title
         this.showingDetails = false
         this.showingMainDetails = false
         this.showingAllDetails = false
       }
-      this.selectedOrg = deets
-      this.detailTitle = title
-      this.showingDetails = false
-      this.showingMainDetails = false
-      this.showingAllDetails = false
     },
     addDetailsAlt(title, deets) {
       if (title === this.detailTitle) {
@@ -5273,7 +5959,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingDetailsEmail = !this.showingDetailsEmail
     },
     toggleMainDetails() {
-      this.showingMainDetails = !this.showingMainDetails
+      if (!this.isViewOnly) {
+        this.showingMainDetails = !this.showingMainDetails
+      }
     },
     toggleHelpMenu() {
       this.showingHelp = !this.showingHelp
@@ -5303,9 +5991,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showArticleGenerateDropdown = false
     },
     toggleDate() {
-      this.showDateSelection = !this.showDateSelection
-      this.showingSources = false
-      this.showCompanySelection = false
+      if (!this.isViewOnly) {
+        this.showDateSelection = !this.showDateSelection
+        this.showingSources = false
+        this.showCompanySelection = false
+      }
     },
     toggleCompany() {
       this.showCompanySelection = !this.showCompanySelection
@@ -5345,7 +6035,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
                
               <a class="inline-link c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
               </span>
-               <img src="${citation.user.profile_image_url}" alt="">
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -5382,8 +6072,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
                 <span class="col">
                
               <a class="inline-link c-elip" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              
                 </span>
-               <img src="${citation.user.profile_image_url}" alt="">
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>      
             
               <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
@@ -5409,23 +6100,29 @@ Your goal is to create content that resonates deeply, connects authentically, an
           return `
         <sup>
 
-
           <span class="citation-wrapper-alt" >
+
             <a  class="citation-link citation-link-alt">
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
+
             <span class="citation-tooltip">
+
               <span class="c-elip">
-                ${citation.source.name}      
+                ${citation.source.name ? citation.source.name : citation.source}      
               </span>
 
               <span class="row">
-                <span class="col">
-               
-              <strong class="c-elip"  target="_blank" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                <span class="col">   
+                  <a class="inline-link c-elip" href="${
+                    citation.link ? citation.link : citation.url
+                  }" target="_blank">${citation.title}</a>
+                  <span class="c-elip" >${citation.description}</span>
                 </span>
-               <img src="${citation.image_url}" alt="">
+
+               <img src="${
+                 citation.image_url ? citation.image_url : citation.image
+               }" height="40px" width="40px" alt="">
               </span>
               
             
@@ -5434,10 +6131,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               </span>
              
             </span>
+
           </span>
-
-
-       
+    
         </sup>
       `
         }
@@ -5468,10 +6164,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                 <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+
+                <span class="c-elip" >${citation.title}</span>
+
+
                 </span>
-               <img src="${citation.image}" alt="">
+               <img src="${citation.image}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -5504,17 +6203,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
             </a>
             <span class="citation-tooltip">
               <span class="c-elip">
-                ${citation.source.name}      
+                ${citation.source.name ? citation.source.name : citation.source}      
               </span>
 
               <span class="row">
                 <span class="col">
-               
-              <strong class="c-elip" >${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.description}</a>
+                
+                <a class="inline-link c-elip " href="${
+                  citation.url ? citation.url : citation.link
+                }" target="_blank" >${citation.title}</a>
+
+                <span class="c-elip" >${citation.description}</span>
+
                 </span>
-               <img src="${citation.image_url}" alt="">
-              </span>
+
+
+                <img src="${
+                  citation.image ? citation.image : citation.image_url
+                }" height="40px" width="40px" alt="">
+
+                </span>
               
               
             
@@ -5550,10 +6258,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <strong class="c-elip">${citation.title}</strong>
-              <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+
+               <span class="c-elip" >${citation.title}</span>
+
+
                 </span>
-               <img src="${citation.image}" alt="">
+               <img src="${citation.image}" height="40px" width="40px" alt="">
               </span>
               
               
@@ -5579,25 +6290,46 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.dateStart = minDate
       }
     },
+    modeReset() {
+      this.loading = true
+      this.summary = ''
+      this.originalSearch = ''
+      this.noResultsString = ''
+      this.alternateAricles = []
+      this.followUps = []
+      this.summaries = []
+      this.latestArticles = []
+      this.latestMedia = []
+      this.addedClips = []
+      this.filteredArticles = []
+      this.googleResults = []
+      this.addedArticles = []
+      this.tweets = []
+      this.posts = []
+      this.searchSaved = false
+    },
     toggleType(type) {
-      if (type === 'social') {
-        if (this.hasTwitterIntegration) {
+      if (!this.isViewOnly) {
+        this.modeReset()
+        if (type === 'social') {
+          if (this.hasTwitterIntegration) {
+            this.mainView = type
+            this.generateNewSearch(null, false)
+            this.clearSearchText()
+            this.notifiedList = []
+          } else {
+            this.goToIntegrations()
+          }
+        } else if (type === 'write') {
+          this.getWritingStyles()
+          this.mainView = type
+          this.generateNewSearch(null, false)
+        } else {
           this.mainView = type
           this.generateNewSearch(null, false)
           this.clearSearchText()
           this.notifiedList = []
-        } else {
-          this.goToIntegrations()
         }
-      } else if (type === 'write') {
-        this.getWritingStyles()
-        this.mainView = type
-        this.generateNewSearch(null, false)
-      } else {
-        this.mainView = type
-        this.generateNewSearch(null, false)
-        this.clearSearchText()
-        this.notifiedList = []
       }
     },
     async getWritingStyles() {
@@ -6191,53 +6923,58 @@ Your goal is to create content that resonates deeply, connects authentically, an
       return { name, publication, tip }
     },
     selectJournalist(article, web = false) {
-      if (this.mainView === 'web') {
-        const author = article.author
-        const outlet = article.source
-        const headline = article.title
-        const description = article.snippet
-        const rawDate = new Date()
-        const date = this.getTimeDifferenceInMinutes(rawDate)
+      if (!this.isViewOnly) {
+        if (this.mainView === 'web') {
+          const author = article.author
+          const outlet = article.source
+          const headline = article.title
+          const description = article.snippet
+          const rawDate = new Date()
+          const date = this.getTimeDifferenceInMinutes(rawDate)
 
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
 
-        this.googleModalOpen = true
-        this.getJournalistBio()
+          this.googleModalOpen = true
+          this.getJournalistBio()
 
-        // this.draftPitch(author, outlet, headline, description, date)
-      } else if (this.mainView === 'news') {
-        const author = this.extractJournalist(article.author)
-        const outlet = article.source.name
-        const headline = article.title
-        const description = article.description
-        const date = this.getTimeDifferenceInMinutes(article.publish_date)
-        this.googleModalOpen = true
-        // this.emailJournalistModalOpen = true
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
-        this.getJournalistBio()
-        // this.draftPitch(author, outlet, headline, description, date)
+          // this.draftPitch(author, outlet, headline, description, date)
+        } else if (this.mainView === 'news' || this.mainView === 'trending') {
+          const author = this.extractJournalist(article.author)
+          const outlet = this.mainView === 'trending' ? article.source : article.source.name
+          const headline = article.title
+          const description = article.description
+          const date = this.getTimeDifferenceInMinutes(
+            this.mainView === 'trending' ? article.date : article.publish_date,
+          )
+          this.googleModalOpen = true
+          // this.emailJournalistModalOpen = true
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
+          this.getJournalistBio()
+          // this.draftPitch(author, outlet, headline, description, date)
+        } else {
+          const author = article.user.name + ' ' + '@' + article.user.username
+          const outlet = 'not available'
+          const headline = 'X/Twitter User'
+          const description = article.text
+          const date = this.getTimeDifferenceInMinutes(article.created_at)
+          this.googleModalOpen = true
+          // this.emailJournalistModalOpen = true
+          this.currentHeadline = headline
+          this.currentDescription = description
+          this.currentJournalist = author
+          this.currentPublication = outlet
+          this.currentDate = date
+          this.getJournalistBio(true)
+        }
       } else {
-        const author = article.user.name + ' ' + '@' + article.user.username
-        const outlet = 'not available'
-        const headline = 'X/Twitter User'
-        const description = article.text
-        const date = this.getTimeDifferenceInMinutes(article.created_at)
-        this.googleModalOpen = true
-        // this.emailJournalistModalOpen = true
-        this.currentHeadline = headline
-        this.currentDescription = description
-        this.currentJournalist = author
-        this.currentPublication = outlet
-        this.currentDate = date
-        this.getJournalistBio(true)
       }
     },
     extractJournalist(author) {
@@ -6384,8 +7121,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSummaryMenu = !this.showSummaryMenu
     },
     setNewSearch(txt) {
-      this.newSearch = txt
-      this.highlightCurlyBracketText()
+      if (!this.isViewOnly) {
+        this.newSearch = txt
+        this.highlightCurlyBracketText()
+      }
     },
     highlightCurlyBracketText() {
       this.$nextTick(() => {
@@ -6434,7 +7173,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           instructions: this.newTemplate,
         })
         if (response.id) {
-          // this.searchId = response.id
+          this.searchId = response.id
           this.$toast('Content saved', {
             timeout: 2000,
             position: 'top-left',
@@ -6510,17 +7249,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     setCurrentAlert(id = null) {
+      console.log('email alerts - >', this.emailAlerts)
       if (id) {
         this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
       } else {
-        this.currentAlert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+        this.currentAlert = this.emailAlerts.filter(
+          (alert) =>
+            alert.search === this.searchId ||
+            alert.thread === this.threadId ||
+            alert.thread === this.searchId,
+        )[0]
+
+        console.log('currentalert', this.currentAlert)
       }
-      this.getEmailAlerts()
+
+      // this.getEmailAlerts()
     },
     async testEmailAlert() {
       try {
         Comms.api.testEmailAlert({
-          alert_id: this.currentAlertId,
+          alert_id: this.currentAlert.id,
           social: this.mainView === 'social' ? true : false,
         })
         this.showingSave = false
@@ -6557,16 +7305,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     async getEmailAlerts() {
       try {
-        Comms.api.getEmailAlerts().then((response) => {
-          this.emailAlerts = response.results
-          this.notifiedList = response.results.map((alert) => alert.search)
-        })
+        const response = await Comms.api.getEmailAlerts()
+        let threadList = []
+        let searchList = []
+        this.emailAlerts = response.results
+        threadList = response.results.map((alert) => alert.thread)
+        searchList = response.results.map((alert) => alert.search)
+        this.notifiedList = [...threadList, ...searchList]
       } catch (e) {
         console.log(e)
       }
     },
     setAlertTime() {
-      let alert = this.emailAlerts.filter((alert) => alert.search === this.searchId)[0]
+      let alert = this.emailAlerts.filter((alert) => alert.thread === this.threadId)[0]
 
       if (alert) {
         const datetimeString = alert.run_at
@@ -6608,12 +7359,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
     // sendtoslack
     async addEmailAlert() {
       this.savingAlert = true
+
       try {
+        await this.createSearch()
         const response = await Comms.api.addEmailAlert({
           search: this.searchId,
+          thread: this.threadId,
           run_at: this.formattedDate,
           user: this.user.id,
-          title: this.searchName,
+          title: this.savedSearch.title || this.searchName,
           type: this.alertType,
           recipients: [this.alertChannel ? this.alertChannel : this.user.email],
         })
@@ -6649,7 +7403,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
         }
       } finally {
-        this.getEmailAlerts()
         this.savingAlert = false
       }
     },
@@ -6829,6 +7582,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.secondaryLoader = false
           this.secondaryLoaderAlt = true
           this.googleSearch()
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
         } else {
           this.summaries.push({
             summary: res.message
@@ -6838,6 +7594,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
+
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
 
           this.$nextTick(() => {
             this.scrollToSummariesTop()
@@ -7215,6 +7975,17 @@ Your goal is to create content that resonates deeply, connects authentically, an
         console.error('Failed to copy text: ', err)
       }
     },
+    async copyShareThread() {
+      try {
+        await navigator.clipboard.writeText(this.savedSearch.share_url)
+        this.copyShareTip = 'Copied!'
+        setTimeout(() => {
+          this.copyShareTip = 'Copy Link'
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy text: ', err)
+      }
+    },
     async copyArticleSummary(article) {
       try {
         const cleanedSummary = article.replace(/<\/?[^>]+(>|$)/g, '')
@@ -7273,6 +8044,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.relatedTopics = []
       this.showingSources = false
       this.journalisListtData = ''
+      this.searchSaved = false
+      this.followupShares = null
+      this.totalShares = null
+      this.notifiedList = []
+      this.hideShare()
     },
     resetSearch() {
       this.clearNewSearch()
@@ -7284,11 +8060,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.summary = ''
     },
     switchMainView(view) {
-      this.resetAll()
-      this.clearDetails()
-      if (view !== this.mainView) {
-        this.mainView = view
-        this.$store.dispatch('updateListName', view)
+      if (!this.isViewOnly) {
+        this.resetAll()
+        this.clearDetails()
+        if (view !== this.mainView) {
+          this.mainView = view
+          this.$store.dispatch('updateListName', view)
+        }
       }
     },
     formatNumber(num) {
@@ -7310,52 +8088,79 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
-      this.showSummaryInstructions = true
-      this.summarizing = false
+      this.citationsMounted = false
+      this.altCitationsMounted = false
       this.savedSearch = search
-      this.searchId = search.id
-      this.searchName = search.name
+      this.shareUrl = search.share_url
+      this.threadId = search.id
+      this.newSearch = search.meta_data.searchTerm
+      this.summary = search.meta_data.summary
+      this.discoverList = search.meta_data.list
+      this.summaries = search.meta_data.summaries
+      this.followUps = search.meta_data.followUps
+      this.preparedTweets = search.meta_data.preparedTweets
+      this.tweets = search.meta_data.tweets ? search.meta_data.tweets : []
+      this.googleResults = search.meta_data.googleResults
+      this.articlesFiltered = search.meta_data.articlesFiltered
+      this.filteredArticles = search.meta_data.filteredArticles
+      this.filteredResults = search.meta_data.filteredResults
+      this.tweetMedia = search.meta_data.tweetMedia
+      this.originalSearch = search.meta_data.originalSearch
+      this.mainView = search.meta_data.type
+      this.totalShares = search.meta_data.totalShares
+      this.followupShares = search.meta_data.followupShares
+      this.searchSaved = true
+      this.booleanString = search.meta_data.boolean
+        ? search.meta_data.boolean
+        : search.meta_data.searchTerm
+      this.changeSearch({ search: this.booleanString, template: this.newTemplate })
+
+      setTimeout(() => {
+        this.citationsMounted = true
+        this.altCitationsMounted = true
+      }, 3000)
+      // this.summarizing = false
+      // this.searchName = search.name
       this.setAlertTime()
+      // this.showSummaryInstructions = true
+      // if (search.hasOwnProperty('audience')) {
+      //   this.newTemplate = search.instructions
+      //   this.summary = search.generated_pitch
+      //   this.newSearch = search.type
+      //   this.savedPitch = true
+      // } else if (search.hasOwnProperty('location')) {
+      //   console.log(search)
+      //   this.newTemplate = search.content
+      //   this.summary = search.list
+      //   this.discoverList = search.results
+      //   this.newSearch = search.type || search.name
+      //   this.savedDiscovery = true
+      // } else {
+      //   this.newSearch = search.input_text
+      //   this.newTemplate = search.instructions
+      //   this.booleanString = search.search_boolean
+      //   this.metaData = search.meta_data
+      //   this.summary = ''
+      //   this.addedClips = this.$store.state.currentReportClips
+      // }
 
-      if (search.hasOwnProperty('audience')) {
-        this.newTemplate = search.instructions
-        this.summary = search.generated_pitch
-        this.newSearch = search.type
-        this.savedPitch = true
-      } else if (search.hasOwnProperty('location')) {
-        console.log(search)
-        this.newTemplate = search.content
-        this.summary = search.list
-        this.discoverList = search.results
-        this.newSearch = search.type || search.name
-        this.savedDiscovery = true
-      } else {
-        this.newSearch = search.input_text
-        this.newTemplate = search.instructions
-        this.booleanString = search.search_boolean
-        this.metaData = search.meta_data
-        this.summary = ''
-        this.addedClips = this.$store.state.currentReportClips
-      }
-
-      // this.addedClips = search.meta_data.clips ? search.meta_data.clips : []
-      this.mainView =
-        search.search_boolean === 'Ig'
-          ? 'instagram'
-          : search.type === 'SOCIAL_MEDIA'
-          ? 'social'
-          : search.type === 'NEWS'
-          ? 'news'
-          : search.hasOwnProperty('audience')
-          ? 'write'
-          : search.hasOwnProperty('location')
-          ? 'discover'
-          : ''
-      if (this.mainView !== 'write' && this.mainView !== 'discover') {
-        this.generateNewSearch(null, true, search.search_boolean)
-      } else {
-        this.changeSearch(search.type)
-      }
+      // this.mainView =
+      //   search.search_boolean === 'Ig'
+      //     ? 'instagram'
+      //     : search.type === 'SOCIAL_MEDIA'
+      //     ? 'social'
+      //     : search.type === 'NEWS'
+      //     ? 'news'
+      //     : search.hasOwnProperty('audience')
+      //     ? 'write'
+      //     : search.hasOwnProperty('location')
+      //     ? 'discover'
+      //     : ''
+      // if (this.mainView !== 'write' && this.mainView !== 'discover') {
+      //   this.generateNewSearch(null, true, search.search_boolean)
+      // } else {
+      //   this.changeSearch(search.type)
+      // }
       this.setCurrentAlert()
     },
     changeIndex() {
@@ -7611,6 +8416,28 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } else if (this.mainView === 'web') {
         this.closeRegenModal()
         this.googleSearch()
+      } else if (this.mainView === 'trending') {
+        if (!this.summary) {
+          this.loading = true
+        }
+
+        this.changeSearch({ search: this.booleanString, template: this.newTemplate })
+
+        try {
+          if (this.shouldCancel) {
+            return this.stopLoading()
+          }
+
+          await this.getTrendingClips(saved, boolean)
+
+          if (saved) {
+            this.updateSearch()
+          }
+
+          this.refreshUser()
+        } catch (e) {
+          console.log(e)
+        }
       } else if (this.mainView === 'write') {
         this.closeRegenModal()
         this.generatePitch()
@@ -7705,30 +8532,31 @@ Your goal is to create content that resonates deeply, connects authentically, an
         console.log('ERROR UPDATING SEARCH', e)
       }
     },
-    async updateSearch() {
-      try {
-        await Comms.api
-          .upateSearch({
-            id: this.searchId,
-            name: this.searchName,
-            input_text: this.newSearch,
-            meta_data: this.metaData,
-            search_boolean: this.booleanString,
-            instructions: this.newTemplate,
-          })
-          .then((response) => {
-            this.savedSearch = {
-              name: this.searchName,
-              input_text: this.newSearch,
-              meta_data: this.metaData,
-              search_boolean: this.booleanString,
-              instructions: this.newTemplate,
-            }
-            // this.$store.dispatch('setSearch', this.savedSearch)
-          })
-      } catch (e) {
-        console.log('ERROR UPDATING SEARCH', e)
-      }
+    updateSearch() {
+      this.searchSaved = false
+      // try {
+      //   await Comms.api
+      //     .upateSearch({
+      //       id: this.searchId,
+      //       name: this.searchName,
+      //       input_text: this.newSearch,
+      //       meta_data: this.metaData,
+      //       search_boolean: this.booleanString,
+      //       instructions: this.newTemplate,
+      //     })
+      //     .then((response) => {
+      //       this.savedSearch = {
+      //         name: this.searchName,
+      //         input_text: this.newSearch,
+      //         meta_data: this.metaData,
+      //         search_boolean: this.booleanString,
+      //         instructions: this.newTemplate,
+      //       }
+
+      //     })
+      // } catch (e) {
+      //   console.log('ERROR UPDATING SEARCH', e)
+      // }
     },
     clearNewSearch() {
       // this.summary = null
@@ -7749,47 +8577,47 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.selectedSearch = search
     },
     async createSearch() {
-      this.showSaveName = false
-      this.savingSearch = true
+      // this.showSaveName = false
+      // this.savingSearch = true
+      console.log('BOOLEAN STRING HERE', this.booleanString)
       try {
-        const response = await Comms.api
-          .createSearch({
-            name: this.searchName,
-            input_text: this.newSearch,
-            search_boolean: this.booleanString || 'Ig',
-            instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-            meta_data: this.metaData,
-            type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
-          })
-          .then((response) => {
-            if (response.id) {
-              this.searchId = response.id
-              this.savedSearch = {
-                name: response.name,
-                input_text: this.newSearch,
-                meta_data: this.metaData,
-                search_boolean: this.booleanString,
-                instructions: this.newTemplate ? this.newTemplate : this.newSearch,
-              }
+        const response = await Comms.api.createSearch({
+          name: this.savedSearch.title,
+          input_text: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
+          search_boolean: this.booleanString
+            ? this.booleanString
+            : this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
+          instructions: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
+          meta_data: this.metaData,
+          type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
+        })
 
-              this.$toast('Search Saved', {
-                timeout: 2000,
-                position: 'top-left',
-                type: 'success',
-                toastClassName: 'custom',
-                bodyClassName: ['custom'],
-              })
-            }
-          })
+        if (response.id) {
+          this.searchId = response.id
+          // this.$toast('Search Saved', {
+          //   timeout: 2000,
+          //   position: 'top-left',
+          //   type: 'success',
+          //   toastClassName: 'custom',
+          //   bodyClassName: ['custom'],
+          // })
+        }
       } catch (e) {
         console.log(e)
-      } finally {
-        this.$store.dispatch('getSearches')
-        setTimeout(() => {
-          this.saveModalOpen = false
-          this.savingSearch = false
-        }, 1000)
       }
+      // finally {
+      //   this.$store.dispatch('getSearches')
+      //   setTimeout(() => {
+      //     this.saveModalOpen = false
+      //     this.savingSearch = false
+      //   }, 1000)
+      // }
     },
 
     async sendSummaryEmail() {
@@ -7797,25 +8625,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
       try {
         this.sentSummaryEmail = true
 
-        let clips
-        if (this.mainView === 'social') {
-          clips = this.tweets.filter((clip, i) => {
-            if (i < 10) {
-              return clip
-            }
-          })
-        } else if (this.mainView === 'news') {
-          clips = this.filteredArticles.filter((clip, i) => {
-            if (i < 10) {
-              return clip
-            }
-          })
-        } else {
-          clips = this.addedArticles
-        }
+        // let clips
+        // if (this.mainView === 'social') {
+        //   clips = this.tweets.filter((clip, i) => {
+        //     if (i < 10) {
+        //       return clip
+        //     }
+        //   })
+        // } else if (this.mainView === 'news') {
+        //   clips = this.filteredArticles.filter((clip, i) => {
+        //     if (i < 10) {
+        //       return clip
+        //     }
+        //   })
+        // } else {
+        //   clips = this.addedArticles
+        // }
         await Comms.api.sendSummaryEmail({
-          summary: this.summary,
-          clips,
+          link: this.currentAlert.share_url,
           title: this.newSearch,
           email: this.shareEmail,
         })
@@ -7850,6 +8677,126 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
       // update controllers here
       this.$store.dispatch('updateAbortController', {})
+    },
+    async getReportClips(urls) {
+      try {
+        const response = await Comms.api.getReportClips({
+          urls: urls,
+        })
+
+        if (this.summary.length) {
+          if (!response.length) {
+            this.noResultsString = "We couldn't find any trending articles related to your search"
+          }
+
+          this.latestArticles = response.map((article) => {
+            const shareEntry = this.followupShares.find(
+              (share) => Object.keys(share)[0] === article.url,
+            )
+            const shares = shareEntry ? shareEntry[article.url] : 0
+            return {
+              ...article,
+              author:
+                Array.isArray(article.author) && article.author.length > 0
+                  ? article.author[0]
+                  : 'Unknown',
+              shares: shares,
+            }
+          })
+        } else {
+          if (!response.length) {
+            this.noResultsString = "We couldn't find any trending articles related to your search"
+          }
+          this.latestArticles = []
+          this.filteredArticles = response.map((article) => {
+            const shareEntry = this.totalShares.find(
+              (share) => Object.keys(share)[0] === article.url,
+            )
+            const shares = shareEntry ? shareEntry[article.url] : 0
+            return {
+              ...article,
+              author:
+                Array.isArray(article.author) && article.author.length > 0
+                  ? article.author[0]
+                  : 'Unknown',
+              shares: shares,
+            }
+          })
+        }
+
+        console.log(this.filteredArticles)
+        this.loading = false
+        this.getSummary(this.filteredArticles, this.newSearch)
+      } catch (e) {
+        console.error(e)
+        this.loading = false
+        this.$toast('Error gathering articles, try again', {
+          timeout: 2000,
+          position: 'top-left',
+          type: 'error',
+          toastClassName: 'custom',
+          bodyClassName: ['custom'],
+        })
+      }
+    },
+    async getTrendingClips(saved = false, boolean = '', chatTemplate = null) {
+      this.showingDropdown = false
+      if (this.summary) {
+        this.scrollToBottom()
+      }
+      try {
+        const response = await Comms.api.getTrendingClips({
+          search: this.newSearch,
+          countries: ['United States'],
+        })
+
+        if (!this.summary) {
+          this.totalShares = response.articles.articles.map((art) => {
+            return {
+              [art.url]: art.total_shares,
+            }
+          })
+        } else {
+          this.followupShares = response.articles.articles.map((art) => {
+            return {
+              [art.url]: art.total_shares,
+            }
+          })
+        }
+
+        let urls = []
+
+        urls = response.articles.articles.map((art) => {
+          return art.url
+        })
+
+        if (this.summary.length) {
+          if (!response.articles.articles.length) {
+            this.noResultsString = 'No Articles found'
+          }
+          this.getReportClips(urls)
+        } else {
+          if (!response.articles.articles.length) {
+            this.noResultsString = 'No Articles found'
+          }
+          this.latestArticles = []
+          this.booleanString = response.string.string
+          this.getReportClips(urls)
+        }
+        this.searchArticleText = ' '
+        this.searchArticleText = ''
+        this.booleanString = response.string
+
+        if (!saved && !chatTemplate) {
+          this.clearNewSearch()
+        }
+      } catch (e) {
+        this.clearNewSearch()
+        this.filteredArticles = []
+        console.log(e)
+      } finally {
+        // this.loading = false
+      }
     },
     async getClips(saved = false, boolean = '', chatTemplate = null) {
       // this.summary = null
@@ -8082,6 +9029,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         source: `Source: ${a.source.name}`,
         author: `Author: ${a.author}`,
         link: `Link: ${a.link}`,
+        shares: `Total shares: ${a.shares ? a.shares : 0}`,
       }))
     },
     async regenerateTwitterSummary(clips, instructions) {
@@ -8100,6 +9048,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.secondaryLoader = false
           this.secondaryLoaderAlt = true
           this.generateNewSearch(null, false)
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
         } else {
           this.summaries.push({
             summary: res.summary
@@ -8110,6 +9061,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
           this.secondaryLoader = false
           this.secondaryLoaderAlt = false
+
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
 
           this.$nextTick(() => {
             this.scrollToSummariesTop()
@@ -8237,12 +9192,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       if (!this.summary) {
         this.newSearch = this.newTemplate
-        if (this.mainView !== 'news') {
+        if (this.mainView !== 'news' || this.mainView !== 'trending') {
           this.generateNewSearch(null, false)
         } else {
           this.regenerateSummary()
         }
-
         return
       }
 
@@ -8257,7 +9211,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSummaryMenu = false
       this.altCitationsMounted = false
       try {
-        if (this.mainView === 'news') {
+        if (this.mainView === 'news' || this.mainView === 'trending') {
           await this.getSummary(
             clips,
             instructions,
@@ -8301,6 +9255,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           summary: res.pitch,
           clips: [],
         })
+
+        if (this.searchSaved) {
+          this.updateSearch()
+        }
+
         this.$nextTick(() => {
           this.scrollToSummariesTop()
         })
@@ -8322,6 +9281,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           company: this.selectedOrg,
           previous: this.noResultsString,
           followUp: true,
+          trending: this.mainView === 'trending' ? true : false,
         })
 
         if (res.summary.toLowerCase().includes('new search term')) {
@@ -8337,6 +9297,124 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } finally {
       }
     },
+    // async getTrendingSummary(
+    //   clips,
+    //   instructions = '',
+    //   previous,
+    //   twitter = false,
+    //   chatSummary = null,
+    //   followUp = false,
+    // ) {
+    //   this.citationsMounted = false
+
+    //   allClips = this.getArticleDescriptions(
+    //      clips,
+    //     )
+
+    //   if (!this.summary) {
+    //     this.summaryLoading = true
+    //   }
+
+    //   let openAiDown = false
+
+    //   try {
+    //     await Comms.api
+    //       .getTrendingSummary({
+    //         clips: allClips,
+    //         search: this.newSearch,
+    //         instructions: instructions,
+    //         company: this.selectedOrg,
+    //         previous: previous ? previous : null,
+    //         followUp: followUp,
+    //       })
+    //       .then((response) => {
+    //         if (this.shouldCancel) {
+    //           return this.stopLoading()
+    //         }
+    //         if (this.searchSaved) {
+    //           this.updateSearch()
+    //         }
+    //         this.originalSummary = response.summary
+    //         if (this.summary) {
+    //           if (response.summary.toLowerCase().includes('new search term')) {
+    //             this.newSearch = this.extractTerm(response.summary)
+    //             this.secondaryLoader = false
+    //             this.secondaryLoaderAlt = true
+    //             this.generateNewSearch(null, false)
+    //           } else {
+    //             this.summaries.push({
+    //               summary: response.summary
+    //                 .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    //                 .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
+    //               clips: this.latestArticles.length ? this.latestArticles : [],
+    //             })
+    //             this.secondaryLoader = false
+    //             this.secondaryLoaderAlt = false
+    //             setTimeout(() => {
+    //               this.altCitationsMounted = true
+    //             }, 5000)
+    //           }
+    //         } else {
+    //           this.summary = response.summary
+    //             .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+    //             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+    //         }
+    //       })
+    //   } catch (e) {
+    //     console.log('Error in getSummary', e)
+    //     this.laoding = false
+    //     this.summaryLoading = false
+    //     this.secondaryLoader = false
+    //     this.secondaryLoaderAlt = false
+    //     if (
+    //       e.data &&
+    //       e.data.summary === "Unknown exception: 'NoneType' object is not subscriptable"
+    //     ) {
+    //       this.$toast('OpenAI is down, please try again later.', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //       openAiDown = true
+    //     } else {
+    //       this.$toast('Something went wrong, please try again.', {
+    //         timeout: 2000,
+    //         position: 'top-left',
+    //         type: 'error',
+    //         toastClassName: 'custom',
+    //         bodyClassName: ['custom'],
+    //       })
+    //     }
+    //   } finally {
+    //     if (this.summaries.length && !this.secondaryLoader && !this.secondaryLoaderAlt) {
+    //       this.scrollToSummariesTop()
+    //     } else {
+    //       this.scrollToBottom()
+    //     }
+
+    //     if (openAiDown) {
+    //       // this.changeSearch({ search: null, template: null })
+    //       this.resetSearch()
+    //       this.abortFunctions()
+    //       return this.stopLoading()
+    //     }
+    //     const newAbortControllers = { ...this.$store.state.abortControllers }
+    //     delete newAbortControllers.getClips
+    //     this.$store.dispatch('updateAbortController', newAbortControllers)
+    //     this.summarizing = true
+    //     this.summaryLoading = false
+    //     if (chatSummary) {
+    //       this.newTemplate = ''
+    //     }
+    //     if (this.chatting) {
+    //       this.chatting = false
+    //       this.changeSearch({ search: this.booleanString, template: this.newTemplate })
+    //     }
+    //     this.refreshUser()
+    //   }
+    // },
     async getSummary(
       clips,
       instructions = '',
@@ -8380,6 +9458,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               company: this.selectedOrg,
               previous: previous ? previous : null,
               followUp: followUp,
+              trending: this.mainView === 'trending' ? true : false,
             },
             this.controllers.getSummary.controller.signal,
           )
@@ -8512,76 +9591,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       const match = input.match(/\[(.*?)\]/)
       return match ? match[1] : ''
     },
-    async getArticleSummary(url, instructions = null, length = 1000) {
-      let selectedClip = []
-      if (this.mainView === 'web') {
-        selectedClip = this.googleResults.length
-          ? this.googleResults.filter((art) => art.link === url)[0]
-          : this.googleResults.filter((art) => art.link === url)[0]
-      } else {
-        selectedClip = this.addedArticles.length
-          ? this.addedArticles.filter((art) => art.link === url)[0]
-          : this.filteredArticles.filter((art) => art.link === url)[0]
-      }
-
-      this.articleSummaryLoading = true
-      this.loadingUrl = url
-
-      try {
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        const response = await Comms.api.getArticleSummary({
-          url: url,
-          search: this.newSearch,
-          instructions: instructions,
-          length: length,
-        })
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        selectedClip['summary'] = response.summary
-
-        if (!this.addedArticles.length && this.mainView !== 'web') {
-          this.filteredArticles = this.filteredArticles.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.filteredArticles.unshift(selectedClip)
-        } else if (this.mainView === 'web') {
-          this.googleResults = this.googleResults.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.googleResults.unshift(selectedClip)
-        } else {
-          this.addedArticles = this.addedArticles.filter(
-            (clip) => clip.title !== selectedClip.title,
-          )
-          this.addedArticles.unshift(selectedClip)
-        }
-        this.searchArticleText = ' '
-        this.searchArticleText = ''
-
-        if (this.shouldCancel) {
-          return this.stopLoading()
-        }
-        this.refreshUser()
-        this.scrollToTopDivider()
-        return response.summary
-      } catch (e) {
-        console.log(e)
-        this.$toast('Request blocked by article source', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
-      } finally {
-        this.showArticleRegenerate = false
-        this.articleSummaryLoading = false
-        this.loadingUrl = null
-      }
-    },
     selectArticle(article) {
       this.$store.dispatch('updateSelectedArticle', article)
     },
@@ -8602,6 +9611,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
   },
   computed: {
+    isViewOnly() {
+      return this.$store.state.viewOnly
+    },
+    hasGoogleIntegration() {
+      return !!this.$store.state.user.hasGoogleIntegration
+    },
+    hasMicrosoftIntegration() {
+      return !!this.$store.state.user.hasMicrosoftIntegration
+    },
     sidebarArticles() {
       return this.alternateAricles.length ? this.alternateAricles : this.filteredArticles
     },
@@ -8634,7 +9652,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       return 'https://managr.ai/contact'
     },
     onboardingLink() {
-      return 'https://www.loom.com/share/115402e27c0c442b8204e19e5d65fb00?sid=c9116dfa-12f6-48bf-a68e-0dab11aa9789'
+      return 'https://www.loom.com/share/1011e37bb1324b09a3fc08623e480580?sid=8c47d7f1-7e2a-4ec9-a09a-8304059a1bee'
     },
     placeHolderText() {
       let text = ''
@@ -8670,7 +9688,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               article.source.name.toLowerCase().includes(searchText),
             article.title && article.title.toLowerCase().includes(searchText),
             article.description && article.description.toLowerCase().includes(searchText),
-            article.author && article.author.toLowerCase().includes(searchText),
+            // article.author && article.author.toLowerCase().includes(searchText),
           ]
 
           const filterConditions = []
@@ -8798,7 +9816,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     isPaid() {
       // const decryptedUser = decryptData(this.$store.state.user, process.env.VUE_APP_SECRET_KEY)
-      return !!this.$store.state.user.organizationRef.isPaid
+      return !!this.$store.state.user && this.$store.state.user.organizationRef.isPaid
     },
     searchesUsed() {
       let arr = []
@@ -8819,19 +9837,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
       return arr.length
     },
-    searchSaved() {
-      if (
-        this.newSearch &&
-        this.currentSearch &&
-        this.currentSearch.input_text === this.newSearch
-      ) {
-        return true
-      } else if (this.savedSearch && this.newSearch === this.savedSearch.input_text) {
-        return true
-      } else {
-        return false
-      }
-    },
+    // searchSaved() {
+    //   if (
+    //     this.newSearch &&
+    //     this.currentSearch &&
+    //     this.currentSearch.input_text === this.newSearch
+    //   ) {
+    //     return true
+    //   } else if (this.savedSearch && this.newSearch === this.savedSearch.input_text) {
+    //     return true
+    //   } else {
+    //     return false
+    //   }
+    // },
     fromNav() {
       return this.$store.state.fromNav
     },
@@ -9010,7 +10028,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 ::v-deep .ql-snow.ql-toolbar button {
   background: $soft-gray;
   border-radius: 4px;
-  margin-right: 4px;
+  margin: 0 4px 4px 0;
 }
 
 ::v-deep .pre-text span {
@@ -9076,7 +10094,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   }
 
   .inline-link {
-    // font-family: $base-font-family;
+    font-family: $base-font-family;
     display: inline-block;
     font-size: 14px;
     color: $dark-gray-blue;
@@ -9161,8 +10179,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       font-size: 12px !important;
     }
     img {
-      width: 40px;
-      height: 40px;
+      width: 40px !important;
+      height: 40px !important;
       margin-left: 8px;
       vertical-align: middle;
       border-radius: 4px;
@@ -9259,6 +10277,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   border: none;
   border-radius: 4px;
   padding: 0;
+  min-width: 500px;
 }
 
 ::v-deep .ql-container {
@@ -9813,7 +10832,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     align-items: flex-start;
 
     @media only screen and (max-width: 600px) {
-      left: -120%;
+      left: 0;
       width: 85vw;
     }
 
@@ -9931,7 +10950,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     align-items: flex-start;
 
     @media only screen and (max-width: 600px) {
-      left: -120%;
+      left: 0;
       width: 85vw;
     }
 
@@ -10090,6 +11109,22 @@ Your goal is to create content that resonates deeply, connects authentically, an
     img {
       margin-right: 4px;
     }
+  }
+}
+
+.left-mobile {
+  @media only screen and (max-width: 600px) {
+    left: -88px !important;
+  }
+}
+.left-mobile-l {
+  @media only screen and (max-width: 600px) {
+    left: -160px !important;
+  }
+}
+.left-mobile-m {
+  @media only screen and (max-width: 600px) {
+    left: -126px !important;
   }
 }
 
@@ -10980,6 +12015,18 @@ button:disabled {
   }
 }
 
+.a-text {
+  text-decoration: none;
+  color: #333333;
+  font-family: $base-font-family;
+  margin-top: 0 !important;
+
+  &:hover {
+    color: $lite-blue;
+    text-decoration: underline;
+  }
+}
+
 .ellipsis-text-bold {
   font-size: 22px;
   font-weight: 200;
@@ -11187,6 +12234,10 @@ button:disabled {
     font-size: 16px;
     margin: 0 8px 4px 0;
     padding: 0;
+  }
+
+  @media only screen and (max-width: 600px) {
+    top: 100%;
   }
 }
 
@@ -11494,15 +12545,6 @@ li {
   animation: fadeIn 1s forwards;
 }
 
-.m-cntnr {
-  @media only screen and (max-width: 600px) {
-    display: none;
-  }
-
-  @media only screen and (min-width: 601px) and (max-width: 1024px) {
-  }
-}
-
 .xxl-margin-top {
   margin-top: 32px;
   margin-bottom: 12px;
@@ -11636,9 +12678,9 @@ li {
       overflow-x: hidden;
       padding-top: 32px;
 
-      @media only screen and (max-width: 600px) {
-        display: none;
-      }
+      // @media only screen and (max-width: 600px) {
+      //   display: none;
+      // }
 
       @media only screen and (min-width: 601px) and (max-width: 1024px) {
         width: 40vw;
@@ -11764,6 +12806,10 @@ li {
     .content-padding {
       position: relative;
       width: 100%;
+
+      @media only screen and (max-width: 600px) {
+        padding-bottom: 80px;
+      }
 
       // &:hover {
       //   .absolute-bottom-right {
@@ -12066,6 +13112,16 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media only screen and (max-width: 600px) {
+    h1 {
+      font-size: 24px;
+    }
+
+    .row {
+      flex-flow: wrap;
+    }
+  }
 }
 
 .centered-column {
@@ -12368,13 +13424,11 @@ textarea {
 // }
 
 .input-container-gray {
-  // border: 0.5px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s ease;
   padding: 14px 0 12px 0;
   border-radius: 20px;
-  // border-radius: 6px;
-  width: 100%;
+
   color: $base-gray;
   position: relative;
   display: flex;
@@ -12393,6 +13447,11 @@ textarea {
 
   img {
     filter: invert(40%);
+  }
+
+  @media only screen and (max-width: 600px) {
+    margin-left: -4px;
+    width: 100% !important;
   }
 }
 
@@ -13388,6 +14447,10 @@ textarea::placeholder {
       -webkit-line-clamp: 2; /* Limits text to 2 lines */
       font-family: $base-font-family;
       font-weight: 200;
+
+      @media only screen and (max-width: 600px) {
+        max-width: 70vw;
+      }
     }
 
     small {
@@ -13510,6 +14573,16 @@ textarea::placeholder {
 .skeleton-img {
   height: 150px;
   width: 22%;
+}
+
+.photo-header-small {
+  height: 40vh;
+  width: 100%;
+  margin: 0;
+  object-fit: cover;
+  // vertical-align: middle;
+  object-position: top;
+  border-radius: 5px;
 }
 
 @keyframes shimmer {
@@ -13677,6 +14750,10 @@ textarea::placeholder {
       margin: 0;
       font-family: $base-font-family;
     }
+  }
+
+  @media only screen and (max-width: 600px) {
+    left: -32px;
   }
 }
 
@@ -13937,6 +15014,17 @@ textarea::placeholder {
   }
 }
 
+.share-link {
+  text-decoration: none;
+  font-size: 13px;
+  color: $dark-black-blue;
+
+  &:hover {
+    color: $lite-blue;
+    text-decoration: underline;
+  }
+}
+
 .active-toggle {
   background-color: white;
   border-radius: 16px;
@@ -13980,7 +15068,7 @@ textarea::placeholder {
 
 .scrolltainer {
   &::-webkit-scrollbar {
-    width: 32px !important;
+    width: 2px;
     height: 0px;
   }
   &::-webkit-scrollbar-thumb {
@@ -14343,6 +15431,12 @@ select {
 //   margin-right: -2px;
 // }
 
+.mobile-padding {
+  @media only screen and (max-width: 600px) {
+    padding: 0 8px !important;
+  }
+}
+
 .file-name {
   margin-top: 10px;
   font-size: 14px;
@@ -14457,5 +15551,148 @@ select {
   &:hover {
     text-decoration: underline;
   }
+}
+
+.alt-btn {
+  padding: 5px 10px;
+
+  &:hover {
+    background-color: $dark-black-blue;
+    color: white;
+
+    img {
+      filter: invert(100%);
+    }
+  }
+
+  &:disabled {
+    color: $dark-black-blue !important;
+    img {
+      filter: none !important;
+    }
+    opacity: 0.9 !important;
+  }
+}
+
+.space-between-top {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.containered {
+  z-index: 100000;
+  position: absolute;
+  top: 96px;
+  right: 25vw;
+  width: 50vw;
+  background-color: white;
+  padding: 16px 12px 16px 16px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 9px 11px rgba(0, 0, 0, 0.1);
+  margin-bottom: 32px;
+  font-family: $thin-font-family;
+  height: 80vh;
+  overflow-y: scroll;
+  p {
+    margin: 8px 0;
+  }
+
+  small {
+    color: $base-gray;
+  }
+
+  &__top {
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 12px;
+  }
+
+  &::-webkit-scrollbar {
+    width: 4px; /* Width of the scrollbar */
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Default: invisible */
+    box-shadow: none; /* No shadow when not scrolling */
+    border-radius: 6px;
+    height: 24px; /* Ensures the thumb is always 24px in height */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Smooth visibility change */
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:active::-webkit-scrollbar-thumb {
+    background-color: #d3d3d3; /* Clean light gray when scrolling */
+    box-shadow: inset 2px 2px 4px 0 rgba(0, 0, 0, 0.1); /* Subtle shadow for visibility */
+  }
+
+  &::-webkit-scrollbar-track {
+    margin-top: 12px; /* Top margin for the track */
+  }
+
+  @media only screen and (max-width: 600px) {
+    right: 12px;
+    width: 94vw !important;
+  }
+}
+
+.bold-font {
+  font-family: $base-font-family !important;
+}
+
+.abs-top-right {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  cursor: pointer;
+  background-color: $dark-black-blue;
+
+  img {
+    filter: invert(100%);
+  }
+}
+.img-mar {
+  img {
+    margin-right: 4px;
+  }
+}
+
+.mobile-min {
+  @media only screen and (max-width: 600px) {
+    min-width: 70vw !important;
+  }
+}
+
+.top-mar-mobile {
+  margin-top: 16px;
+
+  @media only screen and (max-width: 600px) {
+    margin-top: 8px;
+  }
+}
+
+.no-mar-mobile {
+  @media only screen and (max-width: 600px) {
+    margin-left: 4px !important;
+  }
+}
+
+.mobile-top {
+  @media only screen and (max-width: 600px) {
+    top: 24px !important;
+  }
+}
+
+.mobile-top-s {
+  @media only screen and (max-width: 600px) {
+    top: 22px !important;
+  }
+}
+
+.pinkbg {
+  background-color: $pinky !important;
+  margin: 0;
 }
 </style>
