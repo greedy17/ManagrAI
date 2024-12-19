@@ -2276,7 +2276,7 @@
                     "
                   />
 
-                  <div style="margin: 8px 0" class="space-between">
+                  <!-- <div style="margin: 8px 0" class="space-between">
                     <div class="row">
                       <img
                         src="@/assets/images/email-round.svg"
@@ -2295,7 +2295,7 @@
                       />
                       <span class="slider round"></span>
                     </label>
-                  </div>
+                  </div> -->
 
                   <!-- <div
                     v-if="user.slackRef && mainView === 'news'"
@@ -4477,8 +4477,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       webExamples: [
         {
-          name: `List upcoming awards...`,
-          value: `List upcoming awards...`,
+          name: ` Tell me about...`,
+          value: `Tell me about {Journalist Name, Article Headline, URL, etc.}`,
         },
         {
           name: `Create briefing sheet...`,
@@ -8050,6 +8050,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.searchSaved = false
       this.followupShares = null
       this.totalShares = null
+      this.notifiedList = []
       this.hideShare()
     },
     resetSearch() {
