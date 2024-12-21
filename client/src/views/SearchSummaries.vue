@@ -1701,13 +1701,13 @@
                 No results found. Try a new search...
               </p>
 
-              <p
+              <!-- <p
                 v-else-if="mainView === 'news'"
                 class="sub-text ellipsis-text-test"
                 style="margin: 16px 0"
               >
                 <span :title="originalSearch">{{ originalSearch }}</span>
-              </p>
+              </p> -->
 
               <p v-else class="sub-text ellipsis-text-bold" style="margin: 16px 0">
                 <span :title="newSearch">{{ newSearch }}</span>
@@ -2343,7 +2343,7 @@
                     </button>
                   </div> -->
 
-                  <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
+                  <!-- <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
                     <div class="dropdown-select">
                       <div @click.stop="showAlertChannels" class="dropdown-select-header">
                         {{ alertChannel ? alertChannelName : 'Select a Slack channel' }}
@@ -2416,7 +2416,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -2458,6 +2458,7 @@
                   />
 
                   <div class="row-end-bottom" style="margin-top: 0">
+                    <button class="primary-button" @click="testEmailAlert">Send Preview</button>
                     <button @click="hideSave" class="secondary-button">Close</button>
                     <button
                       style="margin-left: 8px"
@@ -7362,9 +7363,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       try {
         await this.createSearch()
-        console.log('search id', this.searchId)
-        console.log('thread id', this.threadId)
-        console.log('saved seearch / thread', this.savedSearch)
         const response = await Comms.api.addEmailAlert({
           search: this.searchId,
           thread: this.threadId,
@@ -8580,9 +8578,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.selectedSearch = search
     },
     async createSearch() {
-      // this.showSaveName = false
-      // this.savingSearch = true
-      console.log('BOOLEAN STRING HERE', this.booleanString)
       try {
         const response = await Comms.api.createSearch({
           name: this.savedSearch.title,

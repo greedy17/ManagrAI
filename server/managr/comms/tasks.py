@@ -537,6 +537,7 @@ def _send_news_summary(news_alert_id):
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
+    project = thread.meta_data.get("project", "")
     context = {"search_id": str(alert.search.id), "u": str(alert.user.id)}
     payload = {
         "view": {
@@ -561,10 +562,10 @@ def _send_news_summary(news_alert_id):
                     2000,
                     60.0,
                     descriptions,
-                    alert.search.search_boolean,
+                    alert.search.instructions,
                     False,
                     False,
-                    '',
+                    project,
                     False,
                     alert.search.instructions,
                     True,
