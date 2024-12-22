@@ -133,58 +133,6 @@ data "template_file" "managr_app" {
   }
 }
 
-data "template_file" "managr_crawler" {
-  for_each = { for e in var.environments : e.name => e }
-  template = file("${path.module}/templates/managr_crawler_server.json.tpl")
-
-  vars = {
-    aws_logs_group = aws_cloudwatch_log_group.managr_log_group[each.key].name
-
-    environment               = each.value.environment
-    app_image                 = each.value.app_image != "" ? each.value.app_image : "${aws_ecr_repository.managr["thinknimble/managr/server"].repository_url}:latest"
-    app_image_scheduled_tasks = each.value.app_image_scheduled_tasks != "" ? each.value.app_image_scheduled_tasks : "${aws_ecr_repository.managr["thinknimble/managr/server-tasks"].repository_url}:latest"
-    nginx_image               = "${aws_ecr_repository.managr["thinknimble/managr/nginx"].repository_url}:latest"
-    bash_image                = "${aws_ecr_repository.managr["thinknimble/managr/bash"].repository_url}:latest"
-    datadog_image             = "${aws_ecr_repository.managr["thinknimble/managr/datadog/agent"].repository_url}:latest"
-
-    fargate_cpu       = var.fargate_cpu
-    fargate_memory    = var.fargate_memory
-    aws_region        = data.aws_region.current.name
-    config_secret_arn = aws_secretsmanager_secret.managr_config[each.key].arn
-
-    allowed_hosts  = each.value.allowed_hosts != "" ? each.value.allowed_hosts : "*"
-    current_port   = 8000
-    debug          = title(each.value.debug)
-
-    use_rollbar = title(each.value.use_rollbar)
-
-    use_custom_smtp            = title(each.value.use_custom_smtp)
-    smtp_use_tls               = title(each.value.smtp_use_tls)
-    smtp_port                  = each.value.smtp_port
-    smtp_valid_testing_domains = each.value.smtp_valid_testing_domains
-
-    use_aws_storage = title(each.value.use_aws_storage)
-    aws_location = each.value.s3_bucket_location
-
-    use_nylas      = title(each.value.use_nylas)
-    use_twilio     = title(each.value.use_twilio)
-    use_zoom       = title(each.value.use_zoom)
-    use_slack      = title(each.value.use_slack)
-    use_salesforce = title(each.value.use_salesforce)
-    use_salesloft  = title(each.value.use_salesloft)
-    use_gong       = title(each.value.use_gong)
-    use_outreach   = title(each.value.use_outreach)
-    use_hubspot    = title(each.value.use_hubspot)
-    use_open_ai    = title(each.value.use_open_ai)
-    use_sso        = title(each.value.use_sso)
-    use_news_api   = title(each.value.use_news_api)
-    use_twitter_api= title(each.value.use_twitter_api)
-    use_instagram_api= title(each.value.use_instagram_api)
-  }
-}
-
-
-
 data "template_file" "managr_app_scheduled_tasks" {
   for_each = { for st in local.scheduled_tasks : "${st.env.name}.${st.task.name}" => st }
   template = file("${path.module}/templates/managr_app_tasks.json.tpl")
@@ -293,22 +241,6 @@ resource "aws_ecs_task_definition" "app" {
   volume {
     name = "nginx-conf-vol"
   }
-
-  tags = {
-    "app" = "managr"
-  }
-}
-
-resource "aws_ecs_task_definition" "crawler" {
-  for_each                 = { for e in var.environments : e.name => e }
-  family                   = "managr-app-task-${lower(each.value.name)}"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = var.fargate_cpu
-  memory                   = var.fargate_memory
-  container_definitions    = data.template_file.managr_crawler[each.key].rendered
-  task_role_arn            = aws_iam_role.ecs_task_role_ecs_exec.arn
 
   tags = {
     "app" = "managr"
