@@ -17,7 +17,7 @@ class Command(BaseCommand):
         spider_tasks = tasks.filter(task_name__contains="spider")
         locked_tasks = spider_tasks.filter(locked_at__isnull=False)
         if len(locked_tasks):
-            dt = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+            dt = datetime.now().replace(tzinfo=datetime.timezone.utc)
             for task in locked_tasks:
                 task_locked = task.locked_at.replace(tzinfo=datetime.timezone.utc)
                 seconds_since_locked = dt - task_locked
@@ -43,7 +43,8 @@ class Command(BaseCommand):
                     f"Crawler Update {settings.ENVIRONMENT}",
                     str(report.id),
                 )
-                report.end_ts = datetime.datetime.now()
+                report.end_ts = datetime.now()
+                report.sources_not_ran = sources
                 report.save()
                 problem_urls = NewsSource.problem_urls()
                 problem_urls = ", ".join(problem_urls)

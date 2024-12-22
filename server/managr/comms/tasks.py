@@ -13,7 +13,14 @@ from managr.utils.misc import custom_paginator
 from rest_framework.exceptions import ValidationError
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
-from .models import Search, NewsSource, AssistAlert, Journalist, JournalistContact, EmailTracker, Thread
+from .models import (
+    Search,
+    NewsSource,
+    AssistAlert,
+    Journalist,
+    JournalistContact,
+    Thread,
+)
 from .models import Article as InternalArticle
 from .serializers import (
     SearchSerializer,
@@ -36,7 +43,6 @@ from managr.slack.helpers.utils import block_finder
 from managr.comms.utils import (
     generate_config,
     extract_base_domain,
-    normalize_newsapi_to_model,
     normalize_article_data,
     separate_weeks,
 )
@@ -65,9 +71,9 @@ def emit_send_news_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
 
 
-def emit_share_client_summary( link, title, user_email):
+def emit_share_client_summary(link, title, user_email):
     logger.info("emit function")
-    return _share_client_summary( link, title, user_email)
+    return _share_client_summary(link, title, user_email)
 
 
 def emit_get_meta_account_info(user_id):
@@ -531,13 +537,17 @@ def _process_website_domain(urls, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    thread_id = alert.thread.id
-    thread = Thread.objects.get(id=thread_id)
-    link = thread.generate_url()
+    thread = None
+    project = None
+    link = "{settings.MANAGR_URL}/login"
+    if alert.thread:
+        thread = Thread.objects.get(id=alert.thread.id)
+        project = thread.meta_data.get("project", "")
+        link = thread.generate_url()
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
-    project = thread.meta_data.get("project", "")
+
     context = {"search_id": str(alert.search.id), "u": str(alert.user.id)}
     payload = {
         "view": {
@@ -554,7 +564,8 @@ def _send_news_summary(news_alert_id):
         if len(clips):
             try:
                 clips = [article for article in clips if article["title"] != "[Removed]"]
-                normalized_clips = normalize_newsapi_to_model(clips)
+                internal_articles = InternalArticle.search_by_query(boolean, end_time, start_time)
+                normalized_clips = normalize_article_data(clips, internal_articles, False)
                 descriptions = [clip["description"] for clip in normalized_clips]
 
                 res = Search.get_summary(
@@ -574,11 +585,13 @@ def _send_news_summary(news_alert_id):
                 email_list = [alert.user.email]
 
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                message = re.sub(r'\*(.*?)\*', r'<strong>\1</strong>', message)
-                message = re.sub(r'\[(.*?)\]\((.*?)\)', r'<a href="\2" target="_blank">\1</a>', message)
+                message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+                message = re.sub(
+                    r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
+                )
 
                 thread.meta_data["articlesFiltered"] = normalized_clips
-                thread.meta_data["filteredArticles"] = normalized_clips   
+                thread.meta_data["filteredArticles"] = normalized_clips
                 thread.meta_data["summary"] = message
                 thread.meta_data["summaries"] = []
                 thread.save()
@@ -671,7 +684,7 @@ def _send_social_summary(news_alert_id):
 
 @background()
 def _share_client_summary(link, title, user_email):
-  
+
     content = {
         "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",

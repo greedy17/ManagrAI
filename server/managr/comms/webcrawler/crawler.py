@@ -487,9 +487,9 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             print(e)
-            self.error_log.append(f"URL: {response.url} ({str(e)})")
+            self.error_log.append(f"{url}|{str(e)}")
             if source.error_log is None or len(source.error_log) <= 5:
-                source.add_error(f"{str(e)} {meta_tag_data}\n")
+                source.add_error(f"{str(e)} {meta_tag_data}")
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]
