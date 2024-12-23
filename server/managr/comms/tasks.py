@@ -591,18 +591,19 @@ def _send_news_summary(news_alert_id):
                 message = re.sub(
                     r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
                 )
-
-                thread.meta_data["articlesFiltered"] = normalized_clips
-                thread.meta_data["filteredArticles"] = normalized_clips
-                thread.meta_data["summary"] = message
-                thread.meta_data["summaries"] = []
-                thread.save()
+                if thread:
+                    thread.meta_data["articlesFiltered"] = normalized_clips
+                    thread.meta_data["filteredArticles"] = normalized_clips
+                    thread.meta_data["summary"] = message
+                    thread.meta_data["summaries"] = []
+                    thread.save()
 
                 content = {
                     "thread_url": link,
                     "website_url": f"{settings.MANAGR_URL}/login",
                     "title": f"{alert.search.name}",
                 }
+                print("here")
                 send_html_email(
                     f"ManagrAI Digest: {alert.search.name}",
                     "core/email-templates/news-email.html",
@@ -611,6 +612,7 @@ def _send_news_summary(news_alert_id):
                     context=content,
                 )
             except Exception as e:
+                print(str(e))
                 send_to_error_channel(str(e), alert.user.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
