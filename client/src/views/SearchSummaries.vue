@@ -2458,7 +2458,7 @@
                   />
 
                   <div class="row-end-bottom" style="margin-top: 0">
-                    <button class="primary-button" @click="testEmailAlert">Send Preview</button>
+                    <!-- <button class="primary-button" @click="testEmailAlert">Send Preview</button> -->
                     <button @click="hideSave" class="secondary-button">Close</button>
                     <button
                       style="margin-left: 8px"
@@ -7334,7 +7334,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
         this.searchTime = `${hours.toString().padStart(2, '0')}:${minutes
           .toString()
-          .padStart(2, '0')} ${ampm} (UTC)`
+          .padStart(2, '0')} ${ampm} `
       } else {
         return
       }
