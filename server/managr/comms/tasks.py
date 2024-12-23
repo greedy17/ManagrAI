@@ -564,7 +564,9 @@ def _send_news_summary(news_alert_id):
         if len(clips):
             try:
                 clips = [article for article in clips if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(boolean, end_time, start_time)
+                internal_articles = InternalArticle.search_by_query(
+                    boolean, str(end_time), str(start_time)
+                )
                 normalized_clips = normalize_article_data(clips, internal_articles, False)
                 descriptions = [clip["description"] for clip in normalized_clips]
 
@@ -609,7 +611,7 @@ def _send_news_summary(news_alert_id):
                     context=content,
                 )
             except Exception as e:
-                send_to_error_channel(str(e), alert.email, "send news alert")
+                send_to_error_channel(str(e), alert.user.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
             context.update(r=recipients)
