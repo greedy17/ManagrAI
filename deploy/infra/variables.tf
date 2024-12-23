@@ -216,16 +216,16 @@ variable "scheduled_tasks" {
     },
     {
       name       = "processalltaskscrawleram"
-      command    = "process_tasks --duration 7200"
-      cron       = "cron(0 10 * * ? *)"
+      command    = "process_tasks --duration 10800"
+      cron       = "cron(0 12 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
     },
     {
       name       = "processalltaskscrawlerpm"
-      command    = "process_tasks --duration 7200"
-      cron       = "cron(0 21 * * ? *)"
+      command    = "process_tasks --duration 10800"
+      cron       = "cron(0 23 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
@@ -233,7 +233,7 @@ variable "scheduled_tasks" {
     {
       name       = "batchspideram"
       command    = "batch_spiders"
-      cron       = "cron(0 11 * * ? *)"
+      cron       = "cron(0 12 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
@@ -241,7 +241,7 @@ variable "scheduled_tasks" {
     {
       name       = "batchspiderpm"
       command    = "batch_spiders"
-      cron       = "cron(0 22 * * ? *)"
+      cron       = "cron(0 23 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
