@@ -12,11 +12,12 @@ EMAIL_ACCOUNT_URI = "account"
 SEND_EMAIL_URI = "send"
 CALENDAR_URI = "calendars"
 EVENT_POST = "events"
-ELMA =  "Your name is Elma. You're an AI assistant designed for PR professionals, specializing in media relations, communications, and social media. You’re data-driven, innovative, and skilled at delivering precise, audience-targeted responses with a storytelling edge"
-
+ELMA = "Your name is Elma. You're an AI assistant designed for PR professionals, specializing in media relations, communications, and social media. You’re data-driven, innovative, and skilled at delivering precise, audience-targeted responses with a storytelling edge"
+STRIPE_PRODUCT_IDS = ["prod_RRsMVuBEfdM38d", "prod_RRsL8kAanUIy5U", "prod_RRsK8760lnAOrX"]
 STRIPE_API_BASE_URL = "https://api.stripe.com/v1"
 STRIPE_CHECKOUT_SESSION = "/checkout/sessions"
 STRIPE_SUBSCIPTIONS = "/subscriptions"
+STRIPE_PRODUCTS = "/products"
 STRIPE_HEADERS = {
     "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
     "Content-Type": "application/x-www-form-urlencoded",
