@@ -122,26 +122,29 @@ def send_html_email(
             # Ignore list elements that are neither a tuple or string
             continue
         email.attach(part)
-    if user:
-        organiation = user.organization
-        if organiation.smtp_user is not None:
-            smtp_user = user.organization.smtp_user
-            smtp_pass = user.organization.smtp_pass
-            smtp_host = settings.EMAIL_HOST
-            smtp_port = settings.EMAIL_PORT
+    try:
+        if user:
+            organiation = user.organization
+            if organiation.smtp_user is not None:
+                smtp_user = user.organization.smtp_user
+                smtp_pass = user.organization.smtp_pass
+                smtp_host = settings.EMAIL_HOST
+                smtp_port = settings.EMAIL_PORT
 
-            # Override the Django email backend settings
-            connection = get_connection(
-                backend="django.core.mail.backends.smtp.EmailBackend",
-                host=smtp_host,
-                port=smtp_port,
-                username=smtp_user,
-                password=smtp_pass,
-                use_tls=True,
-            )
-            email.connection = connection
-
-    email.send(fail_silently=False)
+                # Override the Django email backend settings
+                connection = get_connection(
+                    backend="django.core.mail.backends.smtp.EmailBackend",
+                    host=smtp_host,
+                    port=smtp_port,
+                    username=smtp_user,
+                    password=smtp_pass,
+                    use_tls=True,
+                )
+                email.connection = connection
+        print(email)
+        email.send(fail_silently=False)
+    except Exception as e:
+        print(str(e))
 
 
 def send_test_email(email_from, email_to):
