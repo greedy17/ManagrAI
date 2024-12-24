@@ -141,7 +141,6 @@ def send_html_email(
                     use_tls=True,
                 )
                 email.connection = connection
-        print(email)
         email.send(fail_silently=False)
     except Exception as e:
         print(str(e))

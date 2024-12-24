@@ -544,6 +544,8 @@ def _send_news_summary(news_alert_id):
         thread = Thread.objects.get(id=alert.thread.id)
         project = thread.meta_data.get("project", "")
         link = thread.generate_url()
+    if alert.search.search_boolean == alert.search.input_text:
+        alert.search.update_boolean()
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
@@ -603,7 +605,6 @@ def _send_news_summary(news_alert_id):
                     "website_url": f"{settings.MANAGR_URL}/login",
                     "title": f"{alert.search.name}",
                 }
-                print("here")
                 send_html_email(
                     f"ManagrAI Digest: {alert.search.name}",
                     "core/email-templates/news-email.html",
