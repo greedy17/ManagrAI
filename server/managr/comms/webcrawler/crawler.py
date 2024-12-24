@@ -407,7 +407,17 @@ class NewsSpider(scrapy.Spider):
                             continue
                     try:
                         data = json.loads(selector)
-                        selector_value = reduce(lambda d, key: d[key], data_path, data)
+                        selector_value = None
+                        for path in data_path:
+                            if isinstance(selector_value, list):
+                                selector_list = []
+                                for v in selector_value:
+                                    selector_list.append(v[path])
+                                selector_value = selector_list
+                            elif isinstance(selector_value, dict):
+                                selector_value = selector_value[path]
+                            else:
+                                selector_value = data[path]
                         selector = selector_value
                     except Exception as e:
                         print(e)
