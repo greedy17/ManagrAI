@@ -1218,6 +1218,8 @@ DO_NOT_INCLUDE_WORDS = [
     "x.com",
     ".png",
     ".jpeg",
+    "category",
+    "podcast",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]
