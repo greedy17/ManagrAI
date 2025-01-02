@@ -289,7 +289,9 @@ class UserAdminRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         org_name = validated_data.pop("organization_name")
         try:
-            org = Organization.objects.create(name=org_name, meta_data={"report_credits": 0})
+            org = Organization.objects.create(
+                name=org_name, meta_data={"report_credits": 0}, is_trial=True
+            )
             return User.objects.create_admin_user(organization=org, **validated_data)
         except IntegrityError:
             raise IntegrityError("Organization already exists")

@@ -997,6 +997,7 @@ class CrawlerReport(TimeStampModel):
     blocked_urls = models.IntegerField(default=0)
     start_ts = models.CharField(max_length=255, blank=True, null=True)
     end_ts = models.CharField(max_length=255, blank=True, null=True)
+    sources_not_ran = ArrayField(models.CharField(max_length=255), null=True, default=list)
 
     def create_report_data(self):
         from managr.core.utils import calculate_total_time

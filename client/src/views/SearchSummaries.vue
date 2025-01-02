@@ -1701,13 +1701,13 @@
                 No results found. Try a new search...
               </p>
 
-              <p
+              <!-- <p
                 v-else-if="mainView === 'news'"
                 class="sub-text ellipsis-text-test"
                 style="margin: 16px 0"
               >
                 <span :title="originalSearch">{{ originalSearch }}</span>
-              </p>
+              </p> -->
 
               <p v-else class="sub-text ellipsis-text-bold" style="margin: 16px 0">
                 <span :title="newSearch">{{ newSearch }}</span>
@@ -2276,7 +2276,7 @@
                     "
                   />
 
-                  <div style="margin: 8px 0" class="space-between">
+                  <!-- <div style="margin: 8px 0" class="space-between">
                     <div class="row">
                       <img
                         src="@/assets/images/email-round.svg"
@@ -2295,7 +2295,7 @@
                       />
                       <span class="slider round"></span>
                     </label>
-                  </div>
+                  </div> -->
 
                   <!-- <div
                     v-if="user.slackRef && mainView === 'news'"
@@ -2343,7 +2343,7 @@
                     </button>
                   </div> -->
 
-                  <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
+                  <!-- <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
                     <div class="dropdown-select">
                       <div @click.stop="showAlertChannels" class="dropdown-select-header">
                         {{ alertChannel ? alertChannelName : 'Select a Slack channel' }}
@@ -2416,7 +2416,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -2458,6 +2458,7 @@
                   />
 
                   <div class="row-end-bottom" style="margin-top: 0">
+                    <!-- <button class="primary-button" @click="testEmailAlert">Send Preview</button> -->
                     <button @click="hideSave" class="secondary-button">Close</button>
                     <button
                       style="margin-left: 8px"
@@ -4477,8 +4478,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       webExamples: [
         {
-          name: `List upcoming awards...`,
-          value: `List upcoming awards...`,
+          name: ` Tell me about...`,
+          value: `Tell me about {Journalist Name, Article Headline, URL, etc.}`,
         },
         {
           name: `Create briefing sheet...`,
@@ -7333,7 +7334,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
         this.searchTime = `${hours.toString().padStart(2, '0')}:${minutes
           .toString()
-          .padStart(2, '0')} ${ampm} (UTC)`
+          .padStart(2, '0')} ${ampm} `
       } else {
         return
       }
@@ -8577,9 +8578,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.selectedSearch = search
     },
     async createSearch() {
-      // this.showSaveName = false
-      // this.savingSearch = true
-      console.log('BOOLEAN STRING HERE', this.booleanString)
       try {
         const response = await Comms.api.createSearch({
           name: this.savedSearch.title,
@@ -8862,6 +8860,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
       }
     },
+    // async getYouTube(){
+    //   try {
+    //     const res = await Comms.api.getYouTube({
+
+    //     })
+
+    //     console.log(res)
+    //   } catch(e) {
+    //     console.log(e)
+    //   }
+
+    // },
     async getTweets(saved = false) {
       // this.summary = null
 
@@ -8880,8 +8890,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           search: this.newSearch,
           user_id: this.user.id,
           project: this.selectedOrg,
+          query: this.newSearch,
         })
-        console.log(res)
+
+        console.log('social response', res)
 
         if (this.summary.length) {
           if (!res.tweets.length) {
@@ -8904,16 +8916,33 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.getTweetSummary()
         }
 
+        // if (this.summary.length) {
+        //   if (!res.data.length) {
+        //     this.noResultsString = 'No results. Try again'
+        //     this.tweetMedia = []
+        //   }
+        //   this.booleanString = 'boolean'
+        //   this.latestArticles = res.data
+        //   this.latestMedia = {}
+
+        //   this.getTweetSummary()
+        // } else {
+        //   if (!res.data.length) {
+        //     this.noResultsString = 'No results. Try again'
+        //   }
+
+        //   this.latestArticles = []
+        //   this.latestMedia = []
+        //   this.tweets = res.data
+        //   this.tweetMedia = {}
+        //   this.getTweetSummary()
+        // }
+
         this.showingDropdown = false
       } catch (e) {
-        // this.tweetError = e.data.error
-        // this.booleanString = e.data.string
         this.loading = false
         this.summaryLoading = false
         console.log('ERROR IS HERE', e)
-        // this.tweets = []
-        // this.tweetMedia = null
-        // this.clearNewSearch()
       } finally {
         this.refreshUser()
         this.loading = false
@@ -9082,7 +9111,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async getTweetSummary(instructions = '') {
+      // this.getYoutube()
       this.citationsMounted = false
+
       let tweets = this.prepareTweetSummary(
         this.latestArticles.length ? this.latestArticles : this.tweets,
       )

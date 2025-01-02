@@ -1118,10 +1118,12 @@ def get_trend_articles(topics, countries):
 
 
 def get_tweet_data(request):
-    user = User.objects.get(id=request.GET.get("user_id"))
+    user_id  = request.data['params'].get('user_id')
+    user = User.objects.get(id=user_id)
     twitter_account = user.twitter_account
-    search = request.GET.get("search")
-    project = request.GET.get("project", None)
+    search = request.data['params'].get('search')
+    project = request.data['params'].get('project', None)
+
     query_input = None
     next_token = False
     tweet_data = {}
@@ -1204,24 +1206,35 @@ def get_tweet_data(request):
     return tweet_data
 
 
+# def normalize_youtube_data(data):
+#     normalized_data = []
+#     for video in data:
+#         video_data = {}
+#         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
+#         video_data["text"] = video["title"]
+#         video_data["created_at"] = video["publishedAt"]
+#         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
+#         video_data["author"] = video["snippet"]["channelTitle"]
+#         normalized_data.append(video_data)
+#     return normalized_data
+
 def normalize_youtube_data(data):
     normalized_data = []
     for video in data:
         video_data = {}
         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-        video_data["text"] = video["title"]
-        video_data["created_at"] = video["publishedAt"]
-        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
-        video_data["author"] = video["snippet"]["channelTitle"]
+        video_data["text"] = video["snippet"]["title"] 
+        video_data["created_at"] = video["snippet"]["publishedAt"] 
+        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"] 
+        video_data["author"] = video["snippet"]["channelTitle"] 
         normalized_data.append(video_data)
     return normalized_data
 
 
 def get_youtube_data(request):
     headers = {"Accept": "application/json"}
-    query = request.data.get("query")
+    query = request.data['params'].get('query')
     youtube_data = {}
-
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query)
     try:
         with Variable_Client(30) as client:

@@ -876,7 +876,9 @@ class UserLoginView(mixins.CreateModelMixin, generics.GenericAPIView):
             if not user.is_active:
                 raise ValidationError(
                     {
-                        "non_field_errors": [("Account is deactivated. " " Please contact support.")],
+                        "non_field_errors": [
+                            ("Account is deactivated. " " Please contact support.")
+                        ],
                     }
                 )
         except User.DoesNotExist:
@@ -1409,6 +1411,36 @@ class UserViewSet(
                 else:
                     return Response(data={"error": "Failed to create Checkout session"}, status=500)
         return Response(data={"error": "Invalid request method"}, status=400)
+
+    @action(
+        methods=["GET"],
+        permission_classes=[permissions.IsAuthenticated],
+        detail=False,
+        url_path="plans",
+    )
+    def get_plans(self, request, *args, **kwargs):
+        product_ids = core_consts.STRIPE_PRODUCT_IDS
+        product_params = {}
+        for i, p in enumerate(product_ids):
+            product_params[f"id{i}"] = p
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Bearer {settings.STRIPE_API_KEY}",
+        }
+        url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_PRODUCTS
+        with Variable_Client() as client:
+            r = client.get(
+                url,
+                params=product_params,
+                headers=headers,
+            )
+            if r.status_code == 200:
+                data = r.json()
+                products = data.get("data")
+                # emit_process_check_subscription_status(session_id, str(request.user.id))
+                return Response(data={"products": products})
+            else:
+                return Response(data={"error": "Failed to get list of products"}, status=500)
 
 
 class ActivationLinkView(APIView):

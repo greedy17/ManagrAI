@@ -558,7 +558,7 @@ urlpatterns = [
         name="youtube-stats",
     ),
     path(
-        "social-data/",
+        "social-media-data/",
         comms_views.get_social_media_data,
         name="socal-data",
     ),

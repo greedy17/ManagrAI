@@ -15,6 +15,7 @@ from .models import (
     EmailTracker,
     JournalistContact,
     CompanyDetails,
+    Thread,
 )
 
 # Register your models here.
@@ -155,6 +156,11 @@ class CustomCompanyDetail(admin.ModelAdmin):
     list_filter = ("user__organization",)
 
 
+class CustomThread(admin.ModelAdmin):
+    list_display = ("user", "title")
+    list_filter = ("user__organization",)
+
+
 admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
@@ -168,3 +174,4 @@ admin.site.register(Journalist, CustomJournalAdmin)
 admin.site.register(EmailTracker, CustomEmailTrackerAdmin)
 admin.site.register(JournalistContact, CustomJournalistContactAdmin)
 admin.site.register(CompanyDetails, CustomCompanyDetail)
+admin.site.register(Thread, CustomThread)

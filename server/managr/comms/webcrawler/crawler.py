@@ -407,7 +407,17 @@ class NewsSpider(scrapy.Spider):
                             continue
                     try:
                         data = json.loads(selector)
-                        selector_value = reduce(lambda d, key: d[key], data_path, data)
+                        selector_value = None
+                        for path in data_path:
+                            if isinstance(selector_value, list):
+                                selector_list = []
+                                for v in selector_value:
+                                    selector_list.append(v[path])
+                                selector_value = selector_list
+                            elif isinstance(selector_value, dict):
+                                selector_value = selector_value[path]
+                            else:
+                                selector_value = data[path]
                         selector = selector_value
                     except Exception as e:
                         print(e)
@@ -487,9 +497,9 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             print(e)
-            self.error_log.append(f"URL: {response.url} ({str(e)})")
+            self.error_log.append(f"{url}|{str(e)}")
             if source.error_log is None or len(source.error_log) <= 5:
-                source.add_error(f"{str(e)} {meta_tag_data}\n")
+                source.add_error(f"{str(e)} {meta_tag_data}")
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]

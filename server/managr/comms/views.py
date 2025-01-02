@@ -3676,7 +3676,7 @@ def rewrite_report(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_social_media_data(request):
-    user = request.data.user
+    user = request.user
     return_data = {}
     social_data_list = []
     errors = []
@@ -3684,7 +3684,10 @@ def get_social_media_data(request):
     if "error" in youtube_data.keys():
         errors.append(youtube_data["error"])
     else:
-        social_data_list.extend(youtube_data["data"])
+        if youtube_data:        
+            social_data_list.extend(youtube_data["data"])
+        else:
+            social_data_list.extend(youtube_data)  
     if user.has_twitter_integration:
         twitter_data = get_tweet_data(request)
         if "error" in twitter_data.keys():
@@ -3692,11 +3695,11 @@ def get_social_media_data(request):
         else:
             return_data["query_string"] = twitter_data["query_string"]
             return_data["includes"] = twitter_data["includes"]
-            social_data_list.extend(twitter_data)
+            social_data_list.extend(twitter_data)      
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
-    if errors:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+    # if errors:
+    #     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
     return Response(status=status.HTTP_200_OK, data=return_data)
 
 

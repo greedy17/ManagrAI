@@ -99,11 +99,8 @@ fargateStagingDeployment: &fargateStagingDeployment
 
     - TASK_FAMILY="managr-app-task-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-staging" IMAGE_TAG="staging-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 fargateProdDeployment: &fargateProdDeployment
   name: Deploy Prod to AWS Fargate
@@ -156,11 +153,7 @@ fargateProdDeployment: &fargateProdDeployment
         # DEBUG: '<string>' # Optional
 
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processalltasks-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-processsyncqueues-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
     - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-runalerts-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-clearsfstaledata-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcedata-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
-    # - SCHEDULED_TASK_FAMILY="managr-app-scheduled-tasks-syncresourcefields-prod" IMAGE_TAG="prod-$BITBUCKET_COMMIT" ./deploy/update-task.sh
 
 pipelines:
   pull-requests:
