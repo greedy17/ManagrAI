@@ -99,6 +99,7 @@ from managr.comms.utils import (
     get_trend_articles,
     get_youtube_data,
     get_tweet_data,
+    convert_social_search,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -153,7 +154,6 @@ def getclips(request):
             query_input, date_to, date_from, False, is_report
         )
         articles = normalize_article_data(articles, internal_articles, is_report)
-        print(articles)
         if not articles:
             suggestions = Search.no_results(user.email, query_input)
             query_input = suggestions.get("choices")[0].get("message").get("content")
@@ -1171,7 +1171,6 @@ class PitchViewSet(
         style = request.data.get("style")
         pitch_id = request.data.get("pitch_id", False)
 
-        print("STYLE IS HERE --- > :", style)
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -3680,24 +3679,28 @@ def get_social_media_data(request):
     return_data = {}
     social_data_list = []
     errors = []
+    params = request.data.get("params")
+    query = params.get("query")
+    project = params.get("project", None)
+    converted_search = convert_social_search(query, user.email, project)
     max = 0
     if user.has_twitter_integration:
         max = 25
     else:
-        max = 50    
-    youtube_data = get_youtube_data(request, max)
+        max = 50
+    youtube_data = get_youtube_data(converted_search, max)
     if "error" in youtube_data.keys():
         errors.append(youtube_data["error"])
-    else:   
-        social_data_list.extend(youtube_data["data"])    
+    else:
+        social_data_list.extend(youtube_data["data"])
     if user.has_twitter_integration:
-        twitter_data = get_tweet_data(request)
+        twitter_data = get_tweet_data(converted_search, user)
         if "error" in twitter_data.keys():
             errors.append(twitter_data["error"])
         else:
             return_data["string"] = twitter_data["string"]
             return_data["includes"] = twitter_data["includes"]
-            social_data_list.extend(twitter_data["data"])           
+            social_data_list.extend(twitter_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
     # return_data["data"] = social_data_list
@@ -3723,7 +3726,6 @@ def get_youtube_stats(request):
             else:
                 res = res.json()
                 videos = {"error": res["error"]["message"]}
-                print(vars(res))
     except Exception as e:
         print(e)
         videos = {"error": str(e)}

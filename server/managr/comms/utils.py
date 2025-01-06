@@ -1120,14 +1120,33 @@ def get_trend_articles(topics, countries):
         return {"error": str(e)}
 
 
-def get_tweet_data(request):
-    user_id  = request.data['params'].get('user_id')
-    user = User.objects.get(id=user_id)
-    twitter_account = user.twitter_account
-    search = request.data['params'].get('search')
-    project = request.data['params'].get('project', None)
+def convert_social_search(search, user_email, project):
+    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        user_email,
+        prompt,
+        token_amount=500,
+        top_p=0.1,
+    )
 
-    query_input = None
+    with Variable_Client() as client:
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_consts.OPEN_AI_HEADERS,
+        )
+    r = open_ai_exceptions._handle_response(r)
+    query_input = r.get("choices")[0].get("message").get("content")
+    query_input = query_input.replace("AND", " ").replace("```", "").replace("\n", "")
+    return query_input
+
+
+def get_tweet_data(query_input, user):
+    twitter_account = user.twitter_account
+    query_input = query_input + " lang:en -is:retweet"
+    if "from:" not in query_input:
+        query_input = query_input + " is:verified"
     next_token = False
     tweet_data = {}
     tweet_list = []
@@ -1136,34 +1155,12 @@ def get_tweet_data(request):
         try:
             if attempts >= 10:
                 break
-            if query_input is None:
-                url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-                prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
-                body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                    user.email,
-                    prompt,
-                    token_amount=500,
-                    top_p=0.1,
-                )
-
-                with Variable_Client() as client:
-                    r = client.post(
-                        url,
-                        data=json.dumps(body),
-                        headers=core_consts.OPEN_AI_HEADERS,
-                    )
-                r = open_ai_exceptions._handle_response(r)
-                query_input = r.get("choices")[0].get("message").get("content")
-                query_input = query_input.replace("AND", " ")
-                query_input = query_input + " lang:en -is:retweet"
-                if "from:" not in query_input:
-                    query_input = query_input + " is:verified"
             tweet_res = twitter_account.get_tweets(query_input, next_token)
             tweets = tweet_res.get("data", None)
             includes = tweet_res.get("includes", None)
             attempts += 1
             if not tweets:
-                suggestions = twitter_account.no_results(user.email, search)
+                suggestions = twitter_account.no_results(user.email, query_input)
                 query_input = suggestions.get("choices")[0].get("message").get("content")
             if tweets:
                 if "next_token" in tweet_res["meta"].keys():
@@ -1231,26 +1228,27 @@ def get_tweet_data(request):
 #         normalized_data.append(video_data)
 #     return normalized_data
 
+
 def normalize_youtube_data(data):
     normalized_data = []
     for video in data:
         video_data = {}
         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-        video_data["text"] = video["snippet"]["description"] 
-        video_data["title"] = video["snippet"]["title"] 
-        video_data["created_at"] = video["snippet"]["publishedAt"] 
-        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"] 
+        video_data["text"] = video["snippet"]["description"]
+        video_data["title"] = video["snippet"]["title"]
+        video_data["created_at"] = video["snippet"]["publishedAt"]
+        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"]
         video_data["author"] = video["snippet"]["channelTitle"]
         video_data["is_youtube"] = True
         normalized_data.append(video_data)
     return normalized_data
 
 
-def get_youtube_data(request, max):
+def get_youtube_data(query, max):
     headers = {"Accept": "application/json"}
-    query = request.data['params'].get('query')
     youtube_data = {}
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
+    print(params)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
