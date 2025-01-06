@@ -1220,6 +1220,7 @@ DO_NOT_INCLUDE_WORDS = [
     ".jpeg",
     "category",
     "podcast",
+    "author",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]

@@ -551,7 +551,6 @@ class NewsSource(TimeStampModel):
     def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
         six_hours = datetime.now() - timedelta(hours=6)
         active_sources = cls.objects.filter(is_active=True, scrape_type=type)
-        # filters sources that have been filled out but haven't been run yet to create the regex and scrape for the first time
         if scrape_ready and new:
             active_sources = active_sources.filter(
                 article_link_selector__isnull=False, article_link_regex__isnull=True
@@ -657,6 +656,7 @@ class NewsSource(TimeStampModel):
         return
 
     def calculate_posting_frequency(self):
+        alpha = 0.3
         publish_dates = list(self.articles.all().values_list("publish_date", flat=True))
         parsed_dates = []
         for date in publish_dates:
@@ -668,11 +668,14 @@ class NewsSource(TimeStampModel):
         time_diffs = [
             (unique_dates[i] - unique_dates[i - 1]).days for i in range(1, len(unique_dates))
         ]
+        ema = time_diffs[0]
+        for diff in time_diffs[1:]:
+            ema = alpha * diff + (1 - alpha) * ema
         if time_diffs:
             avg_interval_days = sum(time_diffs) / len(time_diffs)
         else:
             avg_interval_days = 0
-        self.posting_frequency = math.ceil(avg_interval_days)
+        self.posting_frequency = math.ceil(ema)
         return self.save()
 
     def check_if_stopped(self):
