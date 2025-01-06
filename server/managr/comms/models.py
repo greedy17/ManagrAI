@@ -688,6 +688,8 @@ class NewsSource(TimeStampModel):
             days_since_last_article = (today - article_date).days
             if days_since_last_article > self.posting_frequency:
                 self.is_stopped = True
+                if days_since_last_article > 30:
+                    self.is_active = False
             else:
                 self.is_stopped = False
         self.save()
