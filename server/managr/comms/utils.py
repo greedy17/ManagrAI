@@ -1169,37 +1169,36 @@ def get_tweet_data(request):
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
                 user_data = tweet_res["includes"].get("users")
-                media_ref = {d["media_key"]: d for d in tweet_res["includes"]["users"]}
-                print('MEDIA REF', media_ref)
-                print('TWEETS HERE', tweets)
+                # media_ref = {d["media_key"]: d for d in user_data}
                 for tweet in tweets:
-                    if len(tweet_list) > 39:
+                    if len(tweet_list) > 24:
                         break
-                    # for user in user_data:
-                    #     if user["id"] == tweet["author_id"]:
-                    #         if user["public_metrics"]["followers_count"] > 10000:
-                    #             tweet["user"] = user
-                    #             if "attachments" in tweet.keys():
-                    #                 print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
-                    #                 media_key = tweet["attachments"]["media_keys"][0]
-                    #                 media_obj = media_ref[media_key]
-                    #                 print('MEDIA OBJ', media_obj)
-                    #                 media_url = (
-                    #                     media_obj["variants"][0]["url"]
-                    #                     if "variants" in media_obj.keys()
-                    #                     else media_obj["url"]
-                    #                 )
-                    #                 print('MEDIA URL', media_url)
-                    #                 tweet["image_url"] = media_url
-                    #             tweet_list.append(tweet)
-                    #         break
                     for user in user_data:
-                            if user["id"] == tweet["author_id"]:
-                                if user["public_metrics"]["followers_count"] > 10000:
-                                    tweet["user"] = user
-                                    tweet_list.append(tweet)
-                                break
-            if len(tweet_list) < 40 and tweets:
+                        if user["id"] == tweet["author_id"]:
+                            if user["public_metrics"]["followers_count"] > 10000:
+                                tweet["user"] = user
+                                tweet["is_youtube"] = False
+                                # if "attachments" in tweet.keys():
+                                #     print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
+                                #     media_key = tweet["attachments"]["media_keys"][0]
+                                #     media_obj = media_ref[media_key]
+                                #     print('MEDIA OBJ', media_obj)
+                                #     media_url = (
+                                #         media_obj["variants"][0]["url"]
+                                #         if "variants" in media_obj.keys()
+                                #         else media_obj["url"]
+                                #     )
+                                #     print('MEDIA URL', media_url)
+                                #     tweet["image_url"] = media_url
+                                tweet_list.append(tweet)
+                            break
+                    # for user in user_data:
+                    #         if user["id"] == tweet["author_id"]:
+                    #             if user["followers"] > 10000:
+                    #                 tweet["user"] = user
+                    #                 tweet_list.append(tweet)
+                    #             break
+            if len(tweet_list) < 25 and tweets:
                 continue
             tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
             break
@@ -1237,19 +1236,21 @@ def normalize_youtube_data(data):
     for video in data:
         video_data = {}
         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-        video_data["text"] = video["snippet"]["title"] 
+        video_data["text"] = video["snippet"]["description"] 
+        video_data["title"] = video["snippet"]["title"] 
         video_data["created_at"] = video["snippet"]["publishedAt"] 
         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"] 
-        video_data["author"] = video["snippet"]["channelTitle"] 
+        video_data["author"] = video["snippet"]["channelTitle"]
+        video_data["is_youtube"] = True
         normalized_data.append(video_data)
     return normalized_data
 
 
-def get_youtube_data(request):
+def get_youtube_data(request, max):
     headers = {"Accept": "application/json"}
     query = request.data['params'].get('query')
     youtube_data = {}
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query)
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)

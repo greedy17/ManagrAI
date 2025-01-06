@@ -1084,7 +1084,7 @@
                         />
                         <img
                           v-else-if="mainView === 'social'"
-                          src="@/assets/images/twitter-x.svg"
+                          src="@/assets/images/thumb.svg"
                           height="15px"
                           alt=""
                         />
@@ -1160,11 +1160,11 @@
                             :class="{ activeswitch: mainView === 'social' }"
                           >
                             <span>
-                              <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
+                              <img src="@/assets/images/thumb.svg" height="11px" alt="" />
                               Social
                             </span>
 
-                            <p>Search through top social post</p>
+                            <p>Search top social post across YouTube and X</p>
                           </div>
 
                           <div
@@ -2574,7 +2574,7 @@
                 >
                   <img
                     v-if="mainView === 'news'"
-                    src="@/assets/images/twitter-x.svg"
+                    src="@/assets/images/thumb.svg"
                     height="16px"
                     alt=""
                   />
@@ -2792,7 +2792,7 @@
                   >
                     <img
                       v-if="mainView === 'news'"
-                      src="@/assets/images/twitter-x.svg"
+                      src="@/assets/images/thumb.svg"
                       height="16px"
                       alt=""
                     />
@@ -2832,7 +2832,7 @@
                   </div>
 
                   <div @click="toggleType('social')" style="cursor: pointer" class="s-wrapper">
-                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+                    <img src="@/assets/images/thumb.svg" height="16px" alt="" />
                     <div class="s-tooltip">
                       {{
                         isViewOnly
@@ -3268,7 +3268,7 @@
                 />
                 <img
                   v-else-if="mainView === 'social'"
-                  src="@/assets/images/twitter-x.svg"
+                  src="@/assets/images/thumb.svg"
                   height="15px"
                   alt=""
                 />
@@ -3329,11 +3329,11 @@
                     :class="{ activeswitch: mainView === 'social' }"
                   >
                     <span>
-                      <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
+                      <img src="@/assets/images/thumb.svg" height="11px" alt="" />
                       Social
                     </span>
 
-                    <p>Search through top social post</p>
+                    <p>Search top social post across YouTube and X</p>
                   </div>
 
                   <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
@@ -4030,15 +4030,33 @@
                   <div>
                     <div style="margin: 0 0 4px -2px" class="row">
                       <img
+                        v-if="tweet.is_youtube"
+                        :src="youtubePlaceholder"
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <img
+                        v-else
                         :src="twitterPlaceholder"
                         height="12px"
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
-                      <small>{{ tweet.user.username }}</small>
+
+                      <small v-if="!tweet.is_youtube">{{ tweet.user.username }}</small>
+                      <small v-else> {{ tweet.author }}</small>
                     </div>
 
-                    <p @click="openTweet(tweet.user.username, tweet.id)" style="cursor: pointer">
+                    <p
+                      v-if="!tweet.is_youtube"
+                      @click="openTweet(tweet.user.username, tweet.id)"
+                      style="cursor: pointer"
+                    >
+                      {{ tweet.text }}
+                    </p>
+
+                    <p v-else @click="openTweetAlt(tweet.url)" style="cursor: pointer">
                       {{ tweet.text }}
                     </p>
                     <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
@@ -4048,16 +4066,28 @@
                     </div> -->
                   </div>
 
-                  <div @click="openTweet(tweet.user.username, tweet.id)">
+                  <div v-if="!tweet.is_youtube" @click="openTweet(tweet.user.username, tweet.id)">
                     <img :src="tweet.user.profile_image_url" class="card-photo-header" />
+                  </div>
+
+                  <div v-else @click="openTweetAlt(tweet.url)">
+                    <img :src="tweet.image_url" class="card-photo-header" />
                   </div>
                 </div>
                 <div class="row" style="margin: -4px 0 0 10px">
-                  <p @click="selectJournalist(tweet)" class="turq-text">
+                  <p v-if="!tweet.is_youtube" @click="selectJournalist(tweet)" class="turq-text">
                     @ <span>{{ tweet.user.username }}</span>
                   </p>
 
-                  <div class="row" style="margin-left: 12px; font-size: 12px">
+                  <p v-else class="turq-text" style="cursor: text">
+                    <span>{{ tweet.author }}</span>
+                  </p>
+
+                  <div
+                    v-if="!tweet.is_youtube"
+                    class="row"
+                    style="margin-left: 12px; font-size: 12px"
+                  >
                     <img src="@/assets/images/users.svg" height="11px" alt="" />
                     <p style="margin-left: 2px; font-size: 13px">
                       {{ formatNumber(tweet.user.public_metrics.followers_count) }}
@@ -4136,6 +4166,7 @@ www.forbes.com/article-3
       citationSvg: require('@/assets/images/info.svg'),
       globePlaceholder: require('@/assets/images/globe.svg'),
       twitterPlaceholder: require('@/assets/images/twitter-x.svg'),
+      youtubePlaceholder: require('@/assets/images/youtube.png'),
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -6020,7 +6051,34 @@ Your goal is to create content that resonates deeply, connects authentically, an
           : this.filteredTweets[citationIndex]
 
         if (citation) {
-          return `
+          if (citation.is_youtube) {
+            return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.author}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip " href="${citation.url}" target="_blank" >${citation.title}</a>
+              </span>
+               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+              </span>
+              
+              
+             
+            </span>
+          </span>   
+        </sup>
+      `
+          } else {
+            return `
         <sup>
           <span class="citation-wrapper-alt" >
             <a  class="citation-link citation-link-alt">
@@ -6049,6 +6107,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           </span>   
         </sup>
       `
+          }
         }
         return match
       })
@@ -6058,7 +6117,35 @@ Your goal is to create content that resonates deeply, connects authentically, an
         const citationIndex = parseInt(p1)
         const citation = this.tweets[citationIndex]
         if (citation) {
-          return `
+          if (citation.is_youtube) {
+            return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.author}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${citation.title}</a>
+              
+                </span>
+               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+              </span>      
+            
+            
+             
+            </span>
+          </span>
+        </sup>
+      `
+          } else {
+            return `
         <sup>
           <span class="citation-wrapper" >
             <a  class="citation-link citation-link-alt">
@@ -6086,6 +6173,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           </span>
         </sup>
       `
+          }
         }
         return match
       })
@@ -7850,6 +7938,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     openTweet(username, id) {
       window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
     },
+    openTweetAlt(url) {
+      window.open(`${url}`, '_blank')
+    },
     addSuggestion(ex) {
       this.newSearch = ex
       this.hideDropdown()
@@ -8896,22 +8987,22 @@ Your goal is to create content that resonates deeply, connects authentically, an
         console.log('social response', res)
 
         if (this.summary.length) {
-          if (!res.tweets.length) {
+          if (!res.data.length) {
             this.noResultsString = res.string
             this.tweetMedia = []
           }
           this.booleanString = res.string
-          this.latestArticles = res.tweets
+          this.latestArticles = res.data
           this.latestMedia = res.includes.media
           this.getTweetSummary()
         } else {
-          if (!res.tweets.length) {
+          if (!res.data.length) {
             this.noResultsString = res.string
           }
 
           this.latestArticles = []
           this.latestMedia = []
-          this.tweets = res.tweets
+          this.tweets = res.data
           this.tweetMedia = res.includes.media
           this.getTweetSummary()
         }
@@ -9015,15 +9106,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
     prepareTweetSummary(tweets) {
       let tweetList = []
       for (let i = 0; i < tweets.length; i++) {
-        tweetList.push({
-          citationIndex: i,
-          name: tweets[i].user.name,
-          tweet: tweets[i].text,
-          followerCount: tweets[i].user.public_metrics.followers_count,
-          date: tweets[i].created_at,
-          link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
-        })
+        if (!tweets[i].is_youtube) {
+          tweetList.push({
+            citationIndex: i,
+            name: tweets[i].user.name,
+            tweet: tweets[i].text,
+            followerCount: tweets[i].user.public_metrics.followers_count,
+            date: tweets[i].created_at,
+            link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+          })
+        } else {
+          tweetList.push({
+            citationIndex: i,
+            name: tweets[i].author,
+            description: tweets[i].text ? tweets[i].text : tweets[i].title,
+            date: tweets[i].created_at,
+            link: tweets[i].url,
+          })
+        }
       }
+      console.log('TWEET LIST IS HERE ----- > :', tweetList)
       return tweetList
     },
     prepareIgSummary(posts) {
@@ -9758,23 +9860,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     filteredTweets: {
       get() {
-        let tweetsFiltered = this.tweets.filter((tweet) => {
-          const searchText = this.searchTweetText.toLowerCase()
+        let tweetsFiltered = this.tweets
+        // let tweetsFiltered = this.tweets.filter((tweet) => {
+        //   const searchText = this.searchTweetText.toLowerCase()
 
-          const searchConditions = [
-            // tweet.user.public_metrics.followers_count.includes(searchText),
-            tweet.user.name && tweet.user.name.toLowerCase().includes(searchText),
-            tweet.user.username && tweet.user.username.toLowerCase().includes(searchText),
-            tweet.text && tweet.text.toLowerCase().includes(searchText),
-          ]
+        //   const searchConditions = [
+        //     // tweet.user.public_metrics.followers_count.includes(searchText),
+        //     tweet.user.name && tweet.user.name.toLowerCase().includes(searchText),
+        //     tweet.user.username && tweet.user.username.toLowerCase().includes(searchText),
+        //     tweet.text && tweet.text.toLowerCase().includes(searchText),
+        //   ]
 
-          const filterConditions = []
+        //   const filterConditions = []
 
-          return (
-            searchConditions.some((condition) => condition) &&
-            filterConditions.every((condition) => condition)
-          )
-        })
+        //   return (
+        //     searchConditions.some((condition) => condition) &&
+        //     filterConditions.every((condition) => condition)
+        //   )
+        // })
 
         return tweetsFiltered
       },

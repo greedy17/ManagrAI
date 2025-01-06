@@ -3680,14 +3680,16 @@ def get_social_media_data(request):
     return_data = {}
     social_data_list = []
     errors = []
-    youtube_data = get_youtube_data(request)
+    max = 0
+    if user.has_twitter_integration:
+        max = 25
+    else:
+        max = 50    
+    youtube_data = get_youtube_data(request, max)
     if "error" in youtube_data.keys():
         errors.append(youtube_data["error"])
-    else:
-        if youtube_data:        
-            social_data_list.extend(youtube_data["data"])
-        else:
-            social_data_list.extend(youtube_data)  
+    else:   
+        social_data_list.extend(youtube_data["data"])    
     if user.has_twitter_integration:
         twitter_data = get_tweet_data(request)
         if "error" in twitter_data.keys():
@@ -3695,9 +3697,10 @@ def get_social_media_data(request):
         else:
             return_data["string"] = twitter_data["string"]
             return_data["includes"] = twitter_data["includes"]
-            social_data_list.extend(twitter_data)           
+            social_data_list.extend(twitter_data["data"])           
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
+    # return_data["data"] = social_data_list
     if errors:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
     return Response(status=status.HTTP_200_OK, data=return_data)
