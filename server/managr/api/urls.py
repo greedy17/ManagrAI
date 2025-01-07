@@ -553,6 +553,16 @@ urlpatterns = [
         name="rewrite-report",
     ),
     path(
+        "youtube-stats/",
+        comms_views.get_youtube_stats,
+        name="youtube-stats",
+    ),
+    path(
+        "social-media-data/",
+        comms_views.get_social_media_data,
+        name="socal-data",
+    ),
+    path(
         "trending/",
         comms_views.get_trending_articles,
         name="trending-articles",

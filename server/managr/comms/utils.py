@@ -19,7 +19,7 @@ from dateutil import parser
 from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
-from .exceptions import _handle_response
+from . import exceptions as comms_exceptions
 from .models import NewsSource, Journalist, JournalistContact
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
@@ -374,6 +374,9 @@ def normalize_newsapi_to_model(api_data):
 
 
 def merge_sort_dates(arr, key="publish_date"):
+
+    # arr = [item for item in arr if isinstance(item, dict) and key in item]
+
     if len(arr) > 1:
         mid = len(arr) // 2
         sub_array1 = arr[:mid]
@@ -408,7 +411,9 @@ def normalize_article_data(api_data, article_models, is_report, for_test=False):
     normalized_list.extend(normalized_api_list)
     normalized_model_list = [article.fields_to_dict(for_test) for article in article_models]
     normalized_list.extend(normalized_model_list)
+    print(normalized_list)
     sorted_arr = merge_sort_dates(normalized_list)
+    print(sorted_arr)
     ordered_dict = OrderedDict()
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
@@ -494,7 +499,7 @@ def get_news_api_sources():
     news_url = comms_consts.NEW_API_URI + "/" + "sources"
     with Variable_Client() as client:
         new_res = client.get(news_url, headers=comms_consts.NEWS_API_HEADERS)
-    return _handle_response(new_res)
+    return comms_exceptions._handle_response(new_res)
 
 
 def remove_api_sources():
@@ -1113,3 +1118,150 @@ def get_trend_articles(topics, countries):
                 results = {"error": "There was an error process your request"}
     except Exception as e:
         return {"error": str(e)}
+
+
+def convert_social_search(search, user_email, project):
+    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+    prompt = comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(search, project)
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        user_email,
+        prompt,
+        token_amount=500,
+        top_p=0.1,
+    )
+
+    with Variable_Client() as client:
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_consts.OPEN_AI_HEADERS,
+        )
+    r = open_ai_exceptions._handle_response(r)
+    query_input = r.get("choices")[0].get("message").get("content")
+    query_input = query_input.replace("AND", " ").replace("```", "").replace("\n", "")
+    return query_input
+
+
+def get_tweet_data(query_input, user):
+    twitter_account = user.twitter_account
+    query_input = query_input + " lang:en -is:retweet"
+    if "from:" not in query_input:
+        query_input = query_input + " is:verified"
+    next_token = False
+    tweet_data = {}
+    tweet_list = []
+    attempts = 1
+    while True:
+        try:
+            if attempts >= 10:
+                break
+            tweet_res = twitter_account.get_tweets(query_input, next_token)
+            tweets = tweet_res.get("data", None)
+            includes = tweet_res.get("includes", None)
+            attempts += 1
+            if not tweets:
+                suggestions = twitter_account.no_results(user.email, query_input)
+                query_input = suggestions.get("choices")[0].get("message").get("content")
+            if tweets:
+                if "next_token" in tweet_res["meta"].keys():
+                    next_token = tweet_res["meta"]["next_token"]
+                user_data = tweet_res["includes"].get("users")
+                # media_ref = {d["media_key"]: d for d in user_data}
+                for tweet in tweets:
+                    if len(tweet_list) > 24:
+                        break
+                    for user in user_data:
+                        if user["id"] == tweet["author_id"]:
+                            if user["public_metrics"]["followers_count"] > 10000:
+                                tweet["user"] = user
+                                tweet["is_youtube"] = False
+                                # if "attachments" in tweet.keys():
+                                #     print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
+                                #     media_key = tweet["attachments"]["media_keys"][0]
+                                #     media_obj = media_ref[media_key]
+                                #     print('MEDIA OBJ', media_obj)
+                                #     media_url = (
+                                #         media_obj["variants"][0]["url"]
+                                #         if "variants" in media_obj.keys()
+                                #         else media_obj["url"]
+                                #     )
+                                #     print('MEDIA URL', media_url)
+                                #     tweet["image_url"] = media_url
+                                tweet_list.append(tweet)
+                            break
+                    # for user in user_data:
+                    #         if user["id"] == tweet["author_id"]:
+                    #             if user["followers"] > 10000:
+                    #                 tweet["user"] = user
+                    #                 tweet_list.append(tweet)
+                    #             break
+            if len(tweet_list) < 25 and tweets:
+                continue
+            tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
+            break
+        except KeyError as e:
+            tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
+        except comms_exceptions.TooManyRequestsError:
+            if len(tweet_list):
+                break
+            else:
+                tweet_data = {
+                    "error": f"We've hit an issue contacting Twitter for {query_input}",
+                    "string": query_input,
+                }
+        except Exception as e:
+            has_error = True
+            tweet_data["error"] = str(e)
+            break
+    return tweet_data
+
+
+# def normalize_youtube_data(data):
+#     normalized_data = []
+#     for video in data:
+#         video_data = {}
+#         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
+#         video_data["text"] = video["title"]
+#         video_data["created_at"] = video["publishedAt"]
+#         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
+#         video_data["author"] = video["snippet"]["channelTitle"]
+#         normalized_data.append(video_data)
+#     return normalized_data
+
+
+def normalize_youtube_data(data):
+    normalized_data = []
+    for video in data:
+        video_data = {}
+        video_data["id"] = video["id"]["videoId"]
+        video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
+        video_data["text"] = video["snippet"]["description"]
+        video_data["title"] = video["snippet"]["title"]
+        video_data["created_at"] = video["snippet"]["publishedAt"]
+        video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"]
+        video_data["author"] = video["snippet"]["channelTitle"]
+        video_data["is_youtube"] = True
+        normalized_data.append(video_data)
+    return normalized_data
+
+
+def get_youtube_data(query, max):
+    headers = {"Accept": "application/json"}
+    youtube_data = {}
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                videos = res["items"]
+                print('VIDEOS', videos)
+                normalized_data = normalize_youtube_data(videos)
+                youtube_data["data"] = normalized_data
+            else:
+                res = res.json()
+                youtube_data["error"] = res["error"]["message"]
+                print(vars(res))
+    except Exception as e:
+        print(e)
+    return youtube_data
