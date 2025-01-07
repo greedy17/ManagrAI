@@ -222,7 +222,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
 def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     prompt = f"""
-    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
+    Here are the top 5 search results for {person} on Twitter or YouTube (if it's twitter the @ will be included. Otherwise it's YouTube): \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
     Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. 
     Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. 
     Output must be JSON:

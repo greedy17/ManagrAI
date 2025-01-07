@@ -817,6 +817,15 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async analyzeVideo(data) {
+        try {
+            const res = await this.client.post('youtube-stats/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
 }
 
 class TwitterAccountAPI extends ModelAPI {

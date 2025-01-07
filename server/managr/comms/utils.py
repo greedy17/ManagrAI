@@ -1233,6 +1233,7 @@ def normalize_youtube_data(data):
     normalized_data = []
     for video in data:
         video_data = {}
+        video_data["id"] = video["id"]["videoId"]
         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
         video_data["text"] = video["snippet"]["description"]
         video_data["title"] = video["snippet"]["title"]
@@ -1248,13 +1249,13 @@ def get_youtube_data(query, max):
     headers = {"Accept": "application/json"}
     youtube_data = {}
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
-    print(params)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"]
+                print('VIDEOS', videos)
                 normalized_data = normalize_youtube_data(videos)
                 youtube_data["data"] = normalized_data
             else:

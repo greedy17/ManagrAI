@@ -3733,11 +3733,11 @@ def get_social_media_data(request):
 def get_youtube_stats(request):
     video_id = request.data.get("video_id")
     headers = {"Accept": "application/json"}
-
     params = comms_consts.YOUTUBE_VIDEO_PARAMS(video_id)
+
     try:
         with Variable_Client(30) as client:
-            res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
+            res = client.get(comms_consts.YOUTUBE_VIDEO_URI, params=params, headers=headers)
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"][0]["statistics"]
@@ -3747,4 +3747,5 @@ def get_youtube_stats(request):
     except Exception as e:
         print(e)
         videos = {"error": str(e)}
-    return videos
+        Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=videos)
+    return Response(status=status.HTTP_200_OK, data=videos)

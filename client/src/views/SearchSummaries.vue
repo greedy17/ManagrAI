@@ -3721,7 +3721,11 @@
             </div>
             <div style="margin-bottom: 12px">
               <img
-                :src="mainView === 'news' ? currentArticle.image_url : currentArticle.image"
+                :src="
+                  mainView === 'news' || mainView === 'social'
+                    ? currentArticle.image_url
+                    : currentArticle.image
+                "
                 class="photo-header-small"
               />
             </div>
@@ -3746,7 +3750,7 @@
               </div>
             </div>
 
-            <div style="margin-bottom: 12px">
+            <div v-if="mainView !== 'social'" style="margin-bottom: 12px">
               <img
                 @error="onImageError($event)"
                 :src="currentArticle.image_url"
@@ -3754,30 +3758,55 @@
               />
             </div>
 
+            <div v-else style="margin-bottom: 12px">
+              <iframe
+                :src="`https://www.youtube.com/embed/${currentArticle.id}`"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                width="100%"
+                height="360"
+              ></iframe>
+            </div>
+
             <div class="space-between-top no-letter-margin">
               <div class="col">
-                <p style="margin: 0" class="bold-font">
+                <p v-if="mainView !== 'social'" style="margin: 0" class="bold-font">
                   {{
                     currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
                   }}
                 </p>
+
+                <p v-else style="margin: 0" class="bold-font">YouTube</p>
+
                 <div style="margin-top: 8px; color: #3b8ec0" class="row">
                   <span>by</span>
                   <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
                 </div>
               </div>
-              <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
+              <small v-if="mainView !== 'social'">{{
+                getTimeDifferenceInMinutes(currentArticle.publish_date)
+              }}</small>
+              <small v-else>{{ getTimeDifferenceInMinutes(currentArticle.created_at) }}</small>
             </div>
 
             <div>
               <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
-                <a :href="currentArticle.link" target="_blank" class="bold-txt a-text">
+                <a
+                  v-if="mainView !== 'social'"
+                  :href="currentArticle.link"
+                  target="_blank"
+                  class="bold-txt a-text"
+                >
+                  {{ currentArticle.title }}
+                </a>
+                <a v-else :href="currentArticle.url" target="_blank" class="bold-txt a-text">
                   {{ currentArticle.title }}
                 </a>
               </div>
             </div>
 
-            <div class="space-between bottom-margin-m">
+            <div v-if="mainView !== 'social'" class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="12px" alt="" />
                 <p style="font-size: 14px" class="bold-font">
@@ -3844,6 +3873,62 @@
                   </p>
                 </div>
               </section>
+            </div>
+
+            <div v-else class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <p style="font-size: 14px" class="bold-font">
+                  {{
+                    currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.viewCount) : 0
+                  }}
+                </p>
+              </div>
+
+              <section class="row img-mar img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/thumb.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.likeCount) : 0
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/heart.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic
+                        ? formatNumberAlt(currentArticle.traffic.favoriteCount)
+                        : 0
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic
+                        ? formatNumberAlt(currentArticle.traffic.commentCount)
+                        : 0
+                    }}
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div v-if="mainView === 'social'">
+            <p class="bold-text">Description:</p>
+            <div style="margin-top: 12px; font-size: 15px !important">
+              <p>{{ currentArticle.text ? currentArticle.text : 'None' }}</p>
             </div>
           </div>
 
@@ -4106,7 +4191,7 @@
                     @ <span>{{ tweet.user.username }}</span>
                   </p>
 
-                  <p v-else class="turq-text" style="cursor: text">
+                  <p v-else class="turq-text" @click="selectJournalist(tweet)">
                     <span>{{ tweet.author }}</span>
                   </p>
 
@@ -4120,6 +4205,24 @@
                       {{ formatNumber(tweet.user.public_metrics.followers_count) }}
                     </p>
                   </div>
+
+                  <button
+                    v-else
+                    @click="analyzeVideo(tweet.id, tweet)"
+                    style="margin-left: auto"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -5166,6 +5269,23 @@ Your goal is to create content that resonates deeply, connects authentically, an
       const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 
       return url.replace(domainRegex, '')
+    },
+    async analyzeVideo(id, tweet) {
+      this.loadingAnalytics = true
+      this.showingAnalytics = true
+
+      this.currentArticle = tweet
+
+      try {
+        const res = await Comms.api.analyzeVideo({
+          video_id: id,
+        })
+        console.log(res)
+        this.loadingAnalytics = false
+        this.currentArticle.traffic = res
+      } catch (e) {
+        console.log(e)
+      }
     },
     async getTrafficData(url, article) {
       this.loadingAnalytics = true
@@ -7076,9 +7196,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.getJournalistBio()
           // this.draftPitch(author, outlet, headline, description, date)
         } else {
-          const author = article.user.name + ' ' + '@' + article.user.username
-          const outlet = 'not available'
-          const headline = 'X/Twitter User'
+          const author = article.is_youtube
+            ? article.author
+            : article.user.name + ' ' + '@' + article.user.username
+          const outlet = article.is_youtube ? 'YouTube' : 'not available'
+          const headline = article.is_youtube ? 'Youtube Channel' : 'X/Twitter User'
           const description = article.text
           const date = this.getTimeDifferenceInMinutes(article.created_at)
           this.googleModalOpen = true
