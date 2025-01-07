@@ -65,6 +65,8 @@ BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
 BUZZSUMO_SEARCH_URI = "https://api.buzzsumo.com/search/articles.json"
 BUZZSUMO_TRENDS_URI = "https://api.buzzsumo.com/search/trends.json"
 
+BLUESKY_SEARCH_URI = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+
 
 def SEMRUSH_PARAMS(urls):
     return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
