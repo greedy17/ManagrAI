@@ -163,9 +163,17 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
+    // async getTweets(data) {
+    //     try {
+    //         const res = await this.client.get(CommsApi.ENDPOINT + 'tweets/', { params: data })
+    //         return res.data
+    //     } catch (e) {
+    //         apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+    //     }
+    // }
     async getTweets(data) {
         try {
-            const res = await this.client.get(CommsApi.ENDPOINT + 'tweets/', { params: data })
+            const res = await this.client.post('social-media-data/', { params: data })
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
@@ -803,6 +811,15 @@ class CommsApi extends ModelAPI {
     async shareThread(data) {
         try {
             const res = await this.client.get(`threads/shared`, { params: data })
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+    async analyzeVideo(data) {
+        try {
+            const res = await this.client.post('youtube-stats/', data)
             return res.data
         } catch (e) {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)

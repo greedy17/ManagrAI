@@ -1012,13 +1012,13 @@
                 <section>
                   <div style="margin: 8px 0 0 8px; width: 100%" class="row">
                     <!-- :placeholder="placeHolderText" -->
-                    <div
+                    <!-- <div
                       @click="goToIntegrations"
                       v-if="mainView === 'social' && !hasTwitterIntegration"
                       class="abs-input-text"
                     >
                       <p>Connect X here</p>
-                    </div>
+                    </div> -->
                     <textarea
                       style="margin-left: -8px; width: 100%"
                       :rows="1"
@@ -1026,17 +1026,10 @@
                       @keyup.enter="generateNewSearch($event, false)"
                       class="area-input"
                       autocomplete="off"
-                      :placeholder="
-                        mainView === 'social' && !hasTwitterIntegration ? '' : 'Message Elma...'
-                      "
+                      :placeholder="'Message Elma...'"
                       v-model="newSearch"
                       v-autoresize
-                      :disabled="
-                        loading ||
-                        summaryLoading ||
-                        (mainView === 'social' && !hasTwitterIntegration) ||
-                        isViewOnly
-                      "
+                      :disabled="loading || summaryLoading || isViewOnly"
                     />
 
                     <div
@@ -1084,7 +1077,7 @@
                         />
                         <img
                           v-else-if="mainView === 'social'"
-                          src="@/assets/images/twitter-x.svg"
+                          src="@/assets/images/thumb.svg"
                           height="15px"
                           alt=""
                         />
@@ -1160,11 +1153,11 @@
                             :class="{ activeswitch: mainView === 'social' }"
                           >
                             <span>
-                              <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
+                              <img src="@/assets/images/thumb.svg" height="11px" alt="" />
                               Social
                             </span>
 
-                            <p>Search through top social post</p>
+                            <p>Search top social post across YouTube and X</p>
                           </div>
 
                           <div
@@ -1322,6 +1315,16 @@
                           </button>
                         </footer>
                       </div>
+                    </div>
+
+                    <div
+                      @click="goToIntegrations"
+                      style="margin-right: 12px; margin-top: 16px"
+                      v-if="mainView === 'social' && !hasTwitterIntegration"
+                      class="image-container s-wrapper"
+                    >
+                      <img src="@/assets/images/twitter-x.svg" height="14px" alt="" />
+                      <div style="width: 120px" class="s-tooltip">Enable X searching</div>
                     </div>
 
                     <div
@@ -2508,50 +2511,57 @@
               class="row"
               v-else-if="mainView === 'social'"
             >
-              <!-- <div style="width: 24%" v-for="(media, i) in tweetMedia.slice(0, 4)" :key="i">
+              <div v-if="tweetMedia.length">
+                <div
+                  style="width: 24%"
+                  v-for="media in tweetMedia.slice(0, 4)"
+                  :key="media.media_key"
+                >
+                  <div>
+                    <img
+                      @click="setOriginalArticles"
+                      v-if="media.type === 'photo'"
+                      :src="media.url"
+                      class="card-photo-header-small"
+                      alt=""
+                    />
+
+                    <video
+                      @click="setOriginalArticles"
+                      v-else-if="media.type === 'video'"
+                      class="card-photo-header-small"
+                      controls
+                    >
+                      <source :src="media.variants[1].url" type="video/mp4" />
+                    </video>
+
+                    <video
+                      @click="setOriginalArticles"
+                      v-else-if="media.type === 'animated_gif'"
+                      class="card-photo-header-small"
+                      autoplay
+                      loop
+                      muted
+                      playsinline
+                    >
+                      <source :src="media.variants[0].url" type="video/mp4" />
+                    </video>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else
+                style="width: 24%"
+                v-for="(tweet, i) in filteredTweets.slice(0, 4)"
+                :key="i"
+              >
                 <img
                   @click="setOriginalArticles"
-                  :src="media"
+                  :src="tweet.image_url"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
-              </div> -->
-
-              <div
-                style="width: 24%"
-                v-for="media in tweetMedia.slice(0, 4)"
-                :key="media.media_key"
-              >
-                <div>
-                  <img
-                    @click="setOriginalArticles"
-                    v-if="media.type === 'photo'"
-                    :src="media.url"
-                    class="card-photo-header-small"
-                    alt=""
-                  />
-
-                  <video
-                    @click="setOriginalArticles"
-                    v-else-if="media.type === 'video'"
-                    class="card-photo-header-small"
-                    controls
-                  >
-                    <source :src="media.variants[1].url" type="video/mp4" />
-                  </video>
-
-                  <video
-                    @click="setOriginalArticles"
-                    v-else-if="media.type === 'animated_gif'"
-                    class="card-photo-header-small"
-                    autoplay
-                    loop
-                    muted
-                    playsinline
-                  >
-                    <source :src="media.variants[0].url" type="video/mp4" />
-                  </video>
-                </div>
               </div>
             </div>
 
@@ -2574,7 +2584,7 @@
                 >
                   <img
                     v-if="mainView === 'news'"
-                    src="@/assets/images/twitter-x.svg"
+                    src="@/assets/images/thumb.svg"
                     height="16px"
                     alt=""
                   />
@@ -2589,9 +2599,7 @@
                       isViewOnly
                         ? 'Locked'
                         : mainView === 'news'
-                        ? !hasTwitterIntegration
-                          ? 'Connect Twiiter'
-                          : 'Switch to Social'
+                        ? 'Switch to Social'
                         : 'Switch to News'
                     }}
                   </div>
@@ -2740,7 +2748,7 @@
                   </div>
 
                   <div
-                    v-else-if="mainView === 'social'"
+                    v-else-if="mainView === 'social' && tweetMedia.length"
                     style="margin-left: 4px"
                     class="row"
                     v-for="media in tweetMedia.slice(0, 3)"
@@ -2771,6 +2779,17 @@
                       </video>
                     </div>
                   </div>
+
+                  <div v-else-if="mainView === 'social'" style="margin-left: 4px" class="row">
+                    <img
+                      v-for="(tweet, i) in filteredTweets.slice(0, 3)"
+                      :key="i"
+                      :src="tweet.image_url"
+                      @error="onImageError($event)"
+                      alt=""
+                      class="circle-img"
+                    />
+                  </div>
                 </button>
 
                 <button
@@ -2792,7 +2811,7 @@
                   >
                     <img
                       v-if="mainView === 'news'"
-                      src="@/assets/images/twitter-x.svg"
+                      src="@/assets/images/thumb.svg"
                       height="16px"
                       alt=""
                     />
@@ -2807,9 +2826,7 @@
                         isViewOnly
                           ? 'Locked'
                           : mainView === 'news'
-                          ? !hasTwitterIntegration
-                            ? 'Connect Twiiter'
-                            : 'Switch to Social'
+                          ? 'Switch to Social'
                           : 'Switch to News'
                       }}
                     </div>
@@ -2832,7 +2849,7 @@
                   </div>
 
                   <div @click="toggleType('social')" style="cursor: pointer" class="s-wrapper">
-                    <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+                    <img src="@/assets/images/thumb.svg" height="16px" alt="" />
                     <div class="s-tooltip">
                       {{
                         isViewOnly
@@ -3051,7 +3068,7 @@
                     </div>
 
                     <div
-                      v-else-if="mainView === 'social'"
+                      v-else-if="mainView === 'social' && summary.media"
                       style="margin-left: 4px"
                       class="row"
                       v-for="media in summary.media.slice(0, 3)"
@@ -3080,6 +3097,16 @@
                           <source :src="media.variants[0].url" type="video/mp4" />
                         </video>
                       </div>
+                    </div>
+
+                    <div
+                      v-else-if="mainView === 'social'"
+                      style="margin-left: 4px"
+                      class="row"
+                      v-for="(result, i) in summary.clips.slice(0, 3)"
+                      :key="i"
+                    >
+                      <img :src="result.image" alt="" class="circle-img" />
                     </div>
                   </button>
 
@@ -3268,7 +3295,7 @@
                 />
                 <img
                   v-else-if="mainView === 'social'"
-                  src="@/assets/images/twitter-x.svg"
+                  src="@/assets/images/thumb.svg"
                   height="15px"
                   alt=""
                 />
@@ -3329,11 +3356,11 @@
                     :class="{ activeswitch: mainView === 'social' }"
                   >
                     <span>
-                      <img src="@/assets/images/twitter-x.svg" height="11px" alt="" />
+                      <img src="@/assets/images/thumb.svg" height="11px" alt="" />
                       Social
                     </span>
 
-                    <p>Search through top social post</p>
+                    <p>Search top social post across YouTube and X</p>
                   </div>
 
                   <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
@@ -3694,7 +3721,11 @@
             </div>
             <div style="margin-bottom: 12px">
               <img
-                :src="mainView === 'news' ? currentArticle.image_url : currentArticle.image"
+                :src="
+                  mainView === 'news' || mainView === 'social'
+                    ? currentArticle.image_url
+                    : currentArticle.image
+                "
                 class="photo-header-small"
               />
             </div>
@@ -3719,7 +3750,7 @@
               </div>
             </div>
 
-            <div style="margin-bottom: 12px">
+            <div v-if="mainView !== 'social'" style="margin-bottom: 12px">
               <img
                 @error="onImageError($event)"
                 :src="currentArticle.image_url"
@@ -3727,30 +3758,55 @@
               />
             </div>
 
+            <div v-else style="margin-bottom: 12px">
+              <iframe
+                :src="`https://www.youtube.com/embed/${currentArticle.id}`"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                width="100%"
+                height="360"
+              ></iframe>
+            </div>
+
             <div class="space-between-top no-letter-margin">
               <div class="col">
-                <p style="margin: 0" class="bold-font">
+                <p v-if="mainView !== 'social'" style="margin: 0" class="bold-font">
                   {{
                     currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
                   }}
                 </p>
+
+                <p v-else style="margin: 0" class="bold-font">YouTube</p>
+
                 <div style="margin-top: 8px; color: #3b8ec0" class="row">
                   <span>by</span>
                   <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
                 </div>
               </div>
-              <small>{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small>
+              <small v-if="mainView !== 'social'">{{
+                getTimeDifferenceInMinutes(currentArticle.publish_date)
+              }}</small>
+              <small v-else>{{ getTimeDifferenceInMinutes(currentArticle.created_at) }}</small>
             </div>
 
             <div>
               <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
-                <a :href="currentArticle.link" target="_blank" class="bold-txt a-text">
+                <a
+                  v-if="mainView !== 'social'"
+                  :href="currentArticle.link"
+                  target="_blank"
+                  class="bold-txt a-text"
+                >
+                  {{ currentArticle.title }}
+                </a>
+                <a v-else :href="currentArticle.url" target="_blank" class="bold-txt a-text">
                   {{ currentArticle.title }}
                 </a>
               </div>
             </div>
 
-            <div class="space-between bottom-margin-m">
+            <div v-if="mainView !== 'social'" class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="12px" alt="" />
                 <p style="font-size: 14px" class="bold-font">
@@ -3817,6 +3873,62 @@
                   </p>
                 </div>
               </section>
+            </div>
+
+            <div v-else class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <p style="font-size: 14px" class="bold-font">
+                  {{
+                    currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.viewCount) : 0
+                  }}
+                </p>
+              </div>
+
+              <section class="row img-mar img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/thumb.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic ? formatNumberAlt(currentArticle.traffic.likeCount) : 0
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/heart.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic
+                        ? formatNumberAlt(currentArticle.traffic.favoriteCount)
+                        : 0
+                    }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/comment.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{
+                      currentArticle.traffic
+                        ? formatNumberAlt(currentArticle.traffic.commentCount)
+                        : 0
+                    }}
+                  </p>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div v-if="mainView === 'social'">
+            <p class="bold-text">Description:</p>
+            <div style="margin-top: 12px; font-size: 15px !important">
+              <p>{{ currentArticle.text ? currentArticle.text : 'None' }}</p>
             </div>
           </div>
 
@@ -4030,16 +4142,34 @@
                   <div>
                     <div style="margin: 0 0 4px -2px" class="row">
                       <img
+                        v-if="tweet.is_youtube"
+                        :src="youtubePlaceholder"
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <img
+                        v-else
                         :src="twitterPlaceholder"
                         height="12px"
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
-                      <small>{{ tweet.user.username }}</small>
+
+                      <small v-if="!tweet.is_youtube">{{ tweet.user.username }}</small>
+                      <small v-else> {{ tweet.author }}</small>
                     </div>
 
-                    <p @click="openTweet(tweet.user.username, tweet.id)" style="cursor: pointer">
+                    <p
+                      v-if="!tweet.is_youtube"
+                      @click="openTweet(tweet.user.username, tweet.id)"
+                      style="cursor: pointer"
+                    >
                       {{ tweet.text }}
+                    </p>
+
+                    <p v-else @click="openTweetAlt(tweet.url)" style="cursor: pointer">
+                      {{ tweet.title ? tweet.title : tweet.text }}
                     </p>
                     <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
                       <p class="thin-text">
@@ -4048,21 +4178,51 @@
                     </div> -->
                   </div>
 
-                  <div @click="openTweet(tweet.user.username, tweet.id)">
+                  <div v-if="!tweet.is_youtube" @click="openTweet(tweet.user.username, tweet.id)">
                     <img :src="tweet.user.profile_image_url" class="card-photo-header" />
+                  </div>
+
+                  <div v-else @click="openTweetAlt(tweet.url)">
+                    <img :src="tweet.image_url" class="card-photo-header" />
                   </div>
                 </div>
                 <div class="row" style="margin: -4px 0 0 10px">
-                  <p @click="selectJournalist(tweet)" class="turq-text">
+                  <p v-if="!tweet.is_youtube" @click="selectJournalist(tweet)" class="turq-text">
                     @ <span>{{ tweet.user.username }}</span>
                   </p>
 
-                  <div class="row" style="margin-left: 12px; font-size: 12px">
+                  <p v-else class="turq-text" @click="selectJournalist(tweet)">
+                    <span>{{ tweet.author }}</span>
+                  </p>
+
+                  <div
+                    v-if="!tweet.is_youtube"
+                    class="row"
+                    style="margin-left: 12px; font-size: 12px"
+                  >
                     <img src="@/assets/images/users.svg" height="11px" alt="" />
                     <p style="margin-left: 2px; font-size: 13px">
                       {{ formatNumber(tweet.user.public_metrics.followers_count) }}
                     </p>
                   </div>
+
+                  <button
+                    v-else
+                    @click="analyzeVideo(tweet.id, tweet)"
+                    style="margin-left: auto"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -4136,6 +4296,7 @@ www.forbes.com/article-3
       citationSvg: require('@/assets/images/info.svg'),
       globePlaceholder: require('@/assets/images/globe.svg'),
       twitterPlaceholder: require('@/assets/images/twitter-x.svg'),
+      youtubePlaceholder: require('@/assets/images/youtube.png'),
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
@@ -5109,6 +5270,23 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       return url.replace(domainRegex, '')
     },
+    async analyzeVideo(id, tweet) {
+      this.loadingAnalytics = true
+      this.showingAnalytics = true
+
+      this.currentArticle = tweet
+
+      try {
+        const res = await Comms.api.analyzeVideo({
+          video_id: id,
+        })
+        console.log(res)
+        this.loadingAnalytics = false
+        this.currentArticle.traffic = res
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getTrafficData(url, article) {
       this.loadingAnalytics = true
       this.showingAnalytics = true
@@ -6020,7 +6198,34 @@ Your goal is to create content that resonates deeply, connects authentically, an
           : this.filteredTweets[citationIndex]
 
         if (citation) {
-          return `
+          if (citation.is_youtube) {
+            return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.author}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip " href="${citation.url}" target="_blank" >${citation.title}</a>
+              </span>
+               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+              </span>
+              
+              
+             
+            </span>
+          </span>   
+        </sup>
+      `
+          } else {
+            return `
         <sup>
           <span class="citation-wrapper-alt" >
             <a  class="citation-link citation-link-alt">
@@ -6049,6 +6254,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           </span>   
         </sup>
       `
+          }
         }
         return match
       })
@@ -6058,7 +6264,35 @@ Your goal is to create content that resonates deeply, connects authentically, an
         const citationIndex = parseInt(p1)
         const citation = this.tweets[citationIndex]
         if (citation) {
-          return `
+          if (citation.is_youtube) {
+            return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.author}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${citation.title}</a>
+              
+                </span>
+               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+              </span>      
+            
+            
+             
+            </span>
+          </span>
+        </sup>
+      `
+          } else {
+            return `
         <sup>
           <span class="citation-wrapper" >
             <a  class="citation-link citation-link-alt">
@@ -6086,6 +6320,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           </span>
         </sup>
       `
+          }
         }
         return match
       })
@@ -6313,14 +6548,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
       if (!this.isViewOnly) {
         this.modeReset()
         if (type === 'social') {
-          if (this.hasTwitterIntegration) {
-            this.mainView = type
-            this.generateNewSearch(null, false)
-            this.clearSearchText()
-            this.notifiedList = []
-          } else {
-            this.goToIntegrations()
-          }
+          this.mainView = type
+          this.generateNewSearch(null, false)
+          this.clearSearchText()
+          this.notifiedList = []
+
+          //  else {
+          //   this.goToIntegrations()
+          // }
         } else if (type === 'write') {
           this.getWritingStyles()
           this.mainView = type
@@ -6961,9 +7196,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.getJournalistBio()
           // this.draftPitch(author, outlet, headline, description, date)
         } else {
-          const author = article.user.name + ' ' + '@' + article.user.username
-          const outlet = 'not available'
-          const headline = 'X/Twitter User'
+          const author = article.is_youtube
+            ? article.author
+            : article.user.name + ' ' + '@' + article.user.username
+          const outlet = article.is_youtube ? 'YouTube' : 'not available'
+          const headline = article.is_youtube ? 'Youtube Channel' : 'X/Twitter User'
           const description = article.text
           const date = this.getTimeDifferenceInMinutes(article.created_at)
           this.googleModalOpen = true
@@ -7849,6 +8086,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     openTweet(username, id) {
       window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
+    },
+    openTweetAlt(url) {
+      window.open(`${url}`, '_blank')
     },
     addSuggestion(ex) {
       this.newSearch = ex
@@ -8860,6 +9100,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
       }
     },
+    // async getYouTube(){
+    //   try {
+    //     const res = await Comms.api.getYouTube({
+
+    //     })
+
+    //     console.log(res)
+    //   } catch(e) {
+    //     console.log(e)
+    //   }
+
+    // },
     async getTweets(saved = false) {
       // this.summary = null
 
@@ -8878,40 +9130,65 @@ Your goal is to create content that resonates deeply, connects authentically, an
           search: this.newSearch,
           user_id: this.user.id,
           project: this.selectedOrg,
+          query: this.newSearch,
         })
-        console.log(res)
+
+        console.log('social response', res)
 
         if (this.summary.length) {
-          if (!res.tweets.length) {
+          if (!res.data.length) {
             this.noResultsString = res.string
             this.tweetMedia = []
           }
           this.booleanString = res.string
-          this.latestArticles = res.tweets
-          this.latestMedia = res.includes.media
+          this.latestArticles = res.data
+          if (res.includes) {
+            this.latestMedia = res.includes.media
+          }
+
           this.getTweetSummary()
         } else {
-          if (!res.tweets.length) {
+          if (!res.data.length) {
             this.noResultsString = res.string
           }
 
           this.latestArticles = []
           this.latestMedia = []
-          this.tweets = res.tweets
-          this.tweetMedia = res.includes.media
+          this.tweets = res.data
+          if (res.includes) {
+            this.tweetMedia = res.includes.media
+          }
+
           this.getTweetSummary()
         }
 
+        // if (this.summary.length) {
+        //   if (!res.data.length) {
+        //     this.noResultsString = 'No results. Try again'
+        //     this.tweetMedia = []
+        //   }
+        //   this.booleanString = 'boolean'
+        //   this.latestArticles = res.data
+        //   this.latestMedia = {}
+
+        //   this.getTweetSummary()
+        // } else {
+        //   if (!res.data.length) {
+        //     this.noResultsString = 'No results. Try again'
+        //   }
+
+        //   this.latestArticles = []
+        //   this.latestMedia = []
+        //   this.tweets = res.data
+        //   this.tweetMedia = {}
+        //   this.getTweetSummary()
+        // }
+
         this.showingDropdown = false
       } catch (e) {
-        // this.tweetError = e.data.error
-        // this.booleanString = e.data.string
         this.loading = false
         this.summaryLoading = false
         console.log('ERROR IS HERE', e)
-        // this.tweets = []
-        // this.tweetMedia = null
-        // this.clearNewSearch()
       } finally {
         this.refreshUser()
         this.loading = false
@@ -8984,15 +9261,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
     prepareTweetSummary(tweets) {
       let tweetList = []
       for (let i = 0; i < tweets.length; i++) {
-        tweetList.push({
-          citationIndex: i,
-          name: tweets[i].user.name,
-          tweet: tweets[i].text,
-          followerCount: tweets[i].user.public_metrics.followers_count,
-          date: tweets[i].created_at,
-          link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
-        })
+        if (!tweets[i].is_youtube) {
+          tweetList.push({
+            citationIndex: i,
+            name: tweets[i].user.name,
+            tweet: tweets[i].text,
+            followerCount: tweets[i].user.public_metrics.followers_count,
+            date: tweets[i].created_at,
+            link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+          })
+        } else {
+          tweetList.push({
+            citationIndex: i,
+            name: tweets[i].author,
+            description: tweets[i].text ? tweets[i].text : tweets[i].title,
+            date: tweets[i].created_at,
+            link: tweets[i].url,
+          })
+        }
       }
+      console.log('TWEET LIST IS HERE ----- > :', tweetList)
       return tweetList
     },
     prepareIgSummary(posts) {
@@ -9080,7 +9368,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async getTweetSummary(instructions = '') {
+      // this.getYoutube()
       this.citationsMounted = false
+
       let tweets = this.prepareTweetSummary(
         this.latestArticles.length ? this.latestArticles : this.tweets,
       )
@@ -9725,23 +10015,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     filteredTweets: {
       get() {
-        let tweetsFiltered = this.tweets.filter((tweet) => {
-          const searchText = this.searchTweetText.toLowerCase()
+        let tweetsFiltered = this.tweets
+        // let tweetsFiltered = this.tweets.filter((tweet) => {
+        //   const searchText = this.searchTweetText.toLowerCase()
 
-          const searchConditions = [
-            // tweet.user.public_metrics.followers_count.includes(searchText),
-            tweet.user.name && tweet.user.name.toLowerCase().includes(searchText),
-            tweet.user.username && tweet.user.username.toLowerCase().includes(searchText),
-            tweet.text && tweet.text.toLowerCase().includes(searchText),
-          ]
+        //   const searchConditions = [
+        //     // tweet.user.public_metrics.followers_count.includes(searchText),
+        //     tweet.user.name && tweet.user.name.toLowerCase().includes(searchText),
+        //     tweet.user.username && tweet.user.username.toLowerCase().includes(searchText),
+        //     tweet.text && tweet.text.toLowerCase().includes(searchText),
+        //   ]
 
-          const filterConditions = []
+        //   const filterConditions = []
 
-          return (
-            searchConditions.some((condition) => condition) &&
-            filterConditions.every((condition) => condition)
-          )
-        })
+        //   return (
+        //     searchConditions.some((condition) => condition) &&
+        //     filterConditions.every((condition) => condition)
+        //   )
+        // })
 
         return tweetsFiltered
       },

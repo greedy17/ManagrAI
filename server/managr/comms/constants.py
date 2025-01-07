@@ -57,6 +57,23 @@ TWITTER_AUTHORIZATION_QUERY_PARAMS = {
 GOOGLE_SEARCH_URI = "https://www.googleapis.com/customsearch/v1"
 GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
+YOUTUBE_SEARCH_URI = "https://www.googleapis.com/youtube/v3/search"
+YOUTUBE_VIDEO_URI = "https://www.googleapis.com/youtube/v3/videos"
+YOUTUBE_SEARCH_PARAMS = lambda query, max: {
+    "part": "snippet",
+    "q": query,
+    "order": "viewCount",
+    "relevanceLanguage": "en",
+    "type": "video",
+    "maxResults": max,
+    "key": GOOGLE_SEARCH_KEY,
+}
+
+YOUTUBE_VIDEO_PARAMS = lambda video_id: {
+    "part": "statistics",
+    "id": video_id,
+    "key": GOOGLE_SEARCH_KEY,
+}
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
@@ -207,7 +224,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
 def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     prompt = f"""
-    Here are the top 5 search results for {person} on Twitter: \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
+    Here are the top 5 search results for {person} on Twitter or YouTube (if it's twitter the @ will be included. Otherwise it's YouTube): \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
     Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. 
     Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. 
     Output must be JSON:
@@ -554,14 +571,14 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate response based on the news tweets below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets as it pertains to their search term, and identify key influencers based on follower count. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
+    Today is {date}. Please provide a concise and accurate response based on the tweets and youtube clips below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets and clips as it pertains to their search term, and identify key influencers based on follower count and relevancy of the youtube clip. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
     Input Format:
 
     User Request: {search}
-    Tweets: {tweets}
+    Tweets and/or clips: {tweets}
     Project details (campaign, media pitch, etc): {project}
    
     Output format:
@@ -583,13 +600,13 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets and/or youtube clips below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
     Follow these instructions carefully:
     
-    1. The user is most likely asking a follow up question (query) based on the previous response and the tweets. Also assume the user's follow up is related to the current topic, event, entity, or company.
+    1. The user is most likely asking a follow up question (query) based on the previous response and the tweets / clips. Also assume the user's follow up is related to the current topic, event, entity, or company.
     2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
@@ -597,7 +614,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     Input Format:
     Previous response: {previous}
     User Request: {instructions}
-    Tweets: {tweets}
+    Tweets and/or clips: {tweets}
     Project details (campaign, media pitch, etc): {project}
     
     Output format:

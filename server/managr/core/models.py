@@ -25,6 +25,8 @@ from managr.utils.misc import (
 from managr.api.emails import create_gmail_message, create_ms_message
 from managr.utils.client import HttpClient, Variable_Client
 from managr.core import constants as core_consts
+from managr.comms import constants as comms_consts
+from managr.core import exceptions as open_ai_exceptions
 from managr.organization import constants as org_consts
 from managr.slack.helpers import block_builders
 from managr.core.nylas.auth import convert_local_time_to_unix
@@ -406,6 +408,68 @@ class User(AbstractUser, TimeStampModel):
         else:
             self.meta_data[key] = {"total": 1, "timestamps": [str(datetime.now().date())]}
         return self.save()
+    
+    def get_summary(
+        self,
+        user,
+        tokens,
+        timeout,
+        tweets,
+        input_text,
+        company,
+        instructions=False,
+        for_client=False,
+    ):
+        elma = core_consts.ELMA
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+        if "from:" in input_text:
+            instructions = comms_consts.TWITTER_USERNAME_INSTRUCTIONS(company)
+        prompt = comms_consts.OPEN_AI_TWITTER_SUMMARY(
+            datetime.now().date(), tweets, input_text, company, elma, for_client
+        )
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
+
+    def get_summary_follow_up(self, user, tokens, timeout, previous, tweets, project, instructions):
+        elma = core_consts.ELMA
+        url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+
+        prompt = comms_consts.TWITTER_SUMMARY_FOLLOW_UP(
+            datetime.now().date(),
+            tweets,
+            previous,
+            project,
+            elma,
+            instructions,
+        )
+
+        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+            user.email,
+            prompt,
+            "You are a VP of Communications",
+            token_amount=tokens,
+            top_p=0.1,
+        )
+        with Variable_Client(timeout) as client:
+            r = client.post(
+                url,
+                data=json.dumps(body),
+                headers=core_consts.OPEN_AI_HEADERS,
+            )
+        return open_ai_exceptions._handle_response(r)
+
 
     @property
     def has_hit_summary_limit(self):

@@ -97,6 +97,9 @@ from managr.comms.utils import (
     get_article_data,
     get_social_data,
     get_trend_articles,
+    get_youtube_data,
+    get_tweet_data,
+    convert_social_search,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -740,7 +743,8 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
-        twitter_account = user.twitter_account
+        if user.has_twitter_integration:
+            twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -748,20 +752,37 @@ class PRSearchViewSet(
         while True:
             try:
                 if follow_up:
-                    res = twitter_account.get_summary_follow_up(
-                        request.user, token_amount, timeout, previous, tweets, company, instructions
-                    )
+                    if user.has_twitter_integration:
+                        res = twitter_account.get_summary_follow_up(
+                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                        )
+                    else:
+                        res = user.get_summary_follow_up(
+                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                        )  
                 else:
-                    res = twitter_account.get_summary(
-                        request.user,
-                        token_amount,
-                        timeout,
-                        tweets,
-                        search,
-                        company,
-                        instructions,
-                        True,
-                    )
+                    if user.has_twitter_integration:
+                        res = twitter_account.get_summary(
+                            request.user,
+                            token_amount,
+                            timeout,
+                            tweets,
+                            search,
+                            company,
+                            instructions,
+                            True,
+                        )
+                    else:
+                        res = user.get_summary(
+                            request.user,
+                            token_amount,
+                            timeout,
+                            tweets,
+                            search,
+                            company,
+                            instructions,
+                            True,
+                        )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("tweet_summaries")
                 break
@@ -1167,6 +1188,7 @@ class PitchViewSet(
         instructions = request.data.get("instructions")
         style = request.data.get("style")
         pitch_id = request.data.get("pitch_id", False)
+
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -3665,3 +3687,65 @@ def rewrite_report(request):
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": message})
     return Response(status=status.HTTP_200_OK, data={"summary": message})
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_social_media_data(request):
+    user = request.user
+    return_data = {}
+    social_data_list = []
+    errors = []
+    params = request.data.get("params")
+    query = params.get("query")
+    project = params.get("project", None)
+    converted_search = convert_social_search(query, user.email, project)
+    max = 0
+    if user.has_twitter_integration:
+        max = 25
+    else:
+        max = 50
+    youtube_data = get_youtube_data(converted_search, max)
+    if "error" in youtube_data.keys():
+        errors.append(youtube_data["error"])
+    else:
+        social_data_list.extend(youtube_data["data"])
+    if user.has_twitter_integration:
+        twitter_data = get_tweet_data(converted_search, user)
+        if "error" in twitter_data.keys():
+            errors.append(twitter_data["error"])
+        else:
+            return_data["string"] = twitter_data["string"]
+            return_data["includes"] = twitter_data["includes"]
+            social_data_list.extend(twitter_data["data"])
+    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
+    return_data["data"] = sorted_social_data
+    # return_data["data"] = social_data_list
+    if errors:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+    return Response(status=status.HTTP_200_OK, data=return_data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_youtube_stats(request):
+    video_id = request.data.get("video_id")
+    headers = {"Accept": "application/json"}
+    params = comms_consts.YOUTUBE_VIDEO_PARAMS(video_id)
+
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.YOUTUBE_VIDEO_URI, params=params, headers=headers)
+            if res.status_code == 200:
+                res = res.json()
+                videos = res["items"][0]["statistics"]
+            else:
+                res = res.json()
+                videos = {"error": res["error"]["message"]}
+    except Exception as e:
+        print(e)
+        videos = {"error": str(e)}
+        Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=videos)
+    return Response(status=status.HTTP_200_OK, data=videos)
