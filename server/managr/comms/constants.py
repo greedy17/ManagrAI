@@ -1235,6 +1235,9 @@ DO_NOT_INCLUDE_WORDS = [
     "x.com",
     ".png",
     ".jpeg",
+    "category",
+    "podcast",
+    "author",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]
