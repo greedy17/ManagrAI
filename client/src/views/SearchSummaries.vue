@@ -1012,13 +1012,13 @@
                 <section>
                   <div style="margin: 8px 0 0 8px; width: 100%" class="row">
                     <!-- :placeholder="placeHolderText" -->
-                    <div
+                    <!-- <div
                       @click="goToIntegrations"
                       v-if="mainView === 'social' && !hasTwitterIntegration"
                       class="abs-input-text"
                     >
                       <p>Connect X here</p>
-                    </div>
+                    </div> -->
                     <textarea
                       style="margin-left: -8px; width: 100%"
                       :rows="1"
@@ -1026,17 +1026,10 @@
                       @keyup.enter="generateNewSearch($event, false)"
                       class="area-input"
                       autocomplete="off"
-                      :placeholder="
-                        mainView === 'social' && !hasTwitterIntegration ? '' : 'Message Elma...'
-                      "
+                      :placeholder="'Message Elma...'"
                       v-model="newSearch"
                       v-autoresize
-                      :disabled="
-                        loading ||
-                        summaryLoading ||
-                        (mainView === 'social' && !hasTwitterIntegration) ||
-                        isViewOnly
-                      "
+                      :disabled="loading || summaryLoading || isViewOnly"
                     />
 
                     <div
@@ -1322,6 +1315,16 @@
                           </button>
                         </footer>
                       </div>
+                    </div>
+
+                    <div
+                      @click="goToIntegrations"
+                      style="margin-right: 12px; margin-top: 16px"
+                      v-if="mainView === 'social' && !hasTwitterIntegration"
+                      class="image-container s-wrapper"
+                    >
+                      <img src="@/assets/images/twitter-x.svg" height="14px" alt="" />
+                      <div style="width: 120px" class="s-tooltip">Enable X searching</div>
                     </div>
 
                     <div
@@ -2508,50 +2511,57 @@
               class="row"
               v-else-if="mainView === 'social'"
             >
-              <!-- <div style="width: 24%" v-for="(media, i) in tweetMedia.slice(0, 4)" :key="i">
+              <div v-if="tweetMedia.length">
+                <div
+                  style="width: 24%"
+                  v-for="media in tweetMedia.slice(0, 4)"
+                  :key="media.media_key"
+                >
+                  <div>
+                    <img
+                      @click="setOriginalArticles"
+                      v-if="media.type === 'photo'"
+                      :src="media.url"
+                      class="card-photo-header-small"
+                      alt=""
+                    />
+
+                    <video
+                      @click="setOriginalArticles"
+                      v-else-if="media.type === 'video'"
+                      class="card-photo-header-small"
+                      controls
+                    >
+                      <source :src="media.variants[1].url" type="video/mp4" />
+                    </video>
+
+                    <video
+                      @click="setOriginalArticles"
+                      v-else-if="media.type === 'animated_gif'"
+                      class="card-photo-header-small"
+                      autoplay
+                      loop
+                      muted
+                      playsinline
+                    >
+                      <source :src="media.variants[0].url" type="video/mp4" />
+                    </video>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else
+                style="width: 24%"
+                v-for="(tweet, i) in filteredTweets.slice(0, 4)"
+                :key="i"
+              >
                 <img
                   @click="setOriginalArticles"
-                  :src="media"
+                  :src="tweet.image_url"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
-              </div> -->
-
-              <div
-                style="width: 24%"
-                v-for="media in tweetMedia.slice(0, 4)"
-                :key="media.media_key"
-              >
-                <div>
-                  <img
-                    @click="setOriginalArticles"
-                    v-if="media.type === 'photo'"
-                    :src="media.url"
-                    class="card-photo-header-small"
-                    alt=""
-                  />
-
-                  <video
-                    @click="setOriginalArticles"
-                    v-else-if="media.type === 'video'"
-                    class="card-photo-header-small"
-                    controls
-                  >
-                    <source :src="media.variants[1].url" type="video/mp4" />
-                  </video>
-
-                  <video
-                    @click="setOriginalArticles"
-                    v-else-if="media.type === 'animated_gif'"
-                    class="card-photo-header-small"
-                    autoplay
-                    loop
-                    muted
-                    playsinline
-                  >
-                    <source :src="media.variants[0].url" type="video/mp4" />
-                  </video>
-                </div>
               </div>
             </div>
 
@@ -2589,9 +2599,7 @@
                       isViewOnly
                         ? 'Locked'
                         : mainView === 'news'
-                        ? !hasTwitterIntegration
-                          ? 'Connect Twiiter'
-                          : 'Switch to Social'
+                        ? 'Switch to Social'
                         : 'Switch to News'
                     }}
                   </div>
@@ -2740,7 +2748,7 @@
                   </div>
 
                   <div
-                    v-else-if="mainView === 'social'"
+                    v-else-if="mainView === 'social' && tweetMedia.length"
                     style="margin-left: 4px"
                     class="row"
                     v-for="media in tweetMedia.slice(0, 3)"
@@ -2770,6 +2778,17 @@
                         <source :src="media.variants[0].url" type="video/mp4" />
                       </video>
                     </div>
+                  </div>
+
+                  <div v-else-if="mainView === 'social'" style="margin-left: 4px" class="row">
+                    <img
+                      v-for="(tweet, i) in filteredTweets.slice(0, 3)"
+                      :key="i"
+                      :src="tweet.image_url"
+                      @error="onImageError($event)"
+                      alt=""
+                      class="circle-img"
+                    />
                   </div>
                 </button>
 
@@ -2807,9 +2826,7 @@
                         isViewOnly
                           ? 'Locked'
                           : mainView === 'news'
-                          ? !hasTwitterIntegration
-                            ? 'Connect Twiiter'
-                            : 'Switch to Social'
+                          ? 'Switch to Social'
                           : 'Switch to News'
                       }}
                     </div>
@@ -3051,7 +3068,7 @@
                     </div>
 
                     <div
-                      v-else-if="mainView === 'social'"
+                      v-else-if="mainView === 'social' && summary.media"
                       style="margin-left: 4px"
                       class="row"
                       v-for="media in summary.media.slice(0, 3)"
@@ -3080,6 +3097,16 @@
                           <source :src="media.variants[0].url" type="video/mp4" />
                         </video>
                       </div>
+                    </div>
+
+                    <div
+                      v-else-if="mainView === 'social'"
+                      style="margin-left: 4px"
+                      class="row"
+                      v-for="(result, i) in summary.clips.slice(0, 3)"
+                      :key="i"
+                    >
+                      <img :src="result.image" alt="" class="circle-img" />
                     </div>
                   </button>
 
@@ -4057,7 +4084,7 @@
                     </p>
 
                     <p v-else @click="openTweetAlt(tweet.url)" style="cursor: pointer">
-                      {{ tweet.text }}
+                      {{ tweet.title ? tweet.title : tweet.text }}
                     </p>
                     <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
                       <p class="thin-text">
@@ -6401,14 +6428,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
       if (!this.isViewOnly) {
         this.modeReset()
         if (type === 'social') {
-          if (this.hasTwitterIntegration) {
-            this.mainView = type
-            this.generateNewSearch(null, false)
-            this.clearSearchText()
-            this.notifiedList = []
-          } else {
-            this.goToIntegrations()
-          }
+          this.mainView = type
+          this.generateNewSearch(null, false)
+          this.clearSearchText()
+          this.notifiedList = []
+
+          //  else {
+          //   this.goToIntegrations()
+          // }
         } else if (type === 'write') {
           this.getWritingStyles()
           this.mainView = type
@@ -8993,7 +9020,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           }
           this.booleanString = res.string
           this.latestArticles = res.data
-          this.latestMedia = res.includes.media
+          if (res.includes) {
+            this.latestMedia = res.includes.media
+          }
+
           this.getTweetSummary()
         } else {
           if (!res.data.length) {
@@ -9003,7 +9033,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.latestArticles = []
           this.latestMedia = []
           this.tweets = res.data
-          this.tweetMedia = res.includes.media
+          if (res.includes) {
+            this.tweetMedia = res.includes.media
+          }
+
           this.getTweetSummary()
         }
 

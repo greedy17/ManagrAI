@@ -743,7 +743,8 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
-        twitter_account = user.twitter_account
+        if user.has_twitter_integration:
+            twitter_account = user.twitter_account
         has_error = False
         attempts = 1
         token_amount = 1000
@@ -751,20 +752,37 @@ class PRSearchViewSet(
         while True:
             try:
                 if follow_up:
-                    res = twitter_account.get_summary_follow_up(
-                        request.user, token_amount, timeout, previous, tweets, company, instructions
-                    )
+                    if user.has_twitter_integration:
+                        res = twitter_account.get_summary_follow_up(
+                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                        )
+                    else:
+                        res = user.get_summary_follow_up(
+                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                        )  
                 else:
-                    res = twitter_account.get_summary(
-                        request.user,
-                        token_amount,
-                        timeout,
-                        tweets,
-                        search,
-                        company,
-                        instructions,
-                        True,
-                    )
+                    if user.has_twitter_integration:
+                        res = twitter_account.get_summary(
+                            request.user,
+                            token_amount,
+                            timeout,
+                            tweets,
+                            search,
+                            company,
+                            instructions,
+                            True,
+                        )
+                    else:
+                        res = user.get_summary(
+                            request.user,
+                            token_amount,
+                            timeout,
+                            tweets,
+                            search,
+                            company,
+                            instructions,
+                            True,
+                        )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
                 user.add_meta_data("tweet_summaries")
                 break
