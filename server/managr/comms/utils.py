@@ -1142,7 +1142,7 @@ def convert_social_search(search, user_email, project):
     return query_input
 
 
-def get_tweet_data(query_input, user):
+def get_tweet_data(query_input, max=50, user=None, date_from=None):
     twitter_account = user.twitter_account
     query_input = query_input + " lang:en -is:retweet"
     if "from:" not in query_input:
@@ -1245,17 +1245,16 @@ def normalize_youtube_data(data):
     return normalized_data
 
 
-def get_youtube_data(query, max):
+def get_youtube_data(query, max=50, user=None, date_from=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, str(date_from))
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"]
-                print('VIDEOS', videos)
                 normalized_data = normalize_youtube_data(videos)
                 youtube_data["data"] = normalized_data
             else:
@@ -1265,3 +1264,24 @@ def get_youtube_data(query, max):
     except Exception as e:
         print(e)
     return youtube_data
+
+
+def get_bluesky_data(query, max=50, user=None, date_from=None):
+    bluesky_data = {}
+    params = {
+        "q": query,
+    }
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
+            if res.status_code == 200:
+                res = res.json()
+                videos = res["items"]
+                normalized_data = normalize_youtube_data(videos)
+                bluesky_data["data"] = normalized_data
+            else:
+                res = res.json()
+                bluesky_data["error"] = res["error"]["message"]
+    except Exception as e:
+        print(e)
+    return bluesky_data

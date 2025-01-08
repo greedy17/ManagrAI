@@ -100,6 +100,7 @@ from managr.comms.utils import (
     get_youtube_data,
     get_tweet_data,
     convert_social_search,
+    get_bluesky_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -754,12 +755,24 @@ class PRSearchViewSet(
                 if follow_up:
                     if user.has_twitter_integration:
                         res = twitter_account.get_summary_follow_up(
-                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                            request.user,
+                            token_amount,
+                            timeout,
+                            previous,
+                            tweets,
+                            company,
+                            instructions,
                         )
                     else:
                         res = user.get_summary_follow_up(
-                            request.user, token_amount, timeout, previous, tweets, company, instructions
-                        )  
+                            request.user,
+                            token_amount,
+                            timeout,
+                            previous,
+                            tweets,
+                            company,
+                            instructions,
+                        )
                 else:
                     if user.has_twitter_integration:
                         res = twitter_account.get_summary(
@@ -3693,6 +3706,11 @@ def rewrite_report(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_social_media_data(request):
+    social_switcher = {
+        "youtube": get_youtube_data,
+        "twitter": get_tweet_data,
+        "blueskey": get_bluesky_data,
+    }
     user = request.user
     return_data = {}
     social_data_list = []
@@ -3702,26 +3720,24 @@ def get_social_media_data(request):
     project = params.get("project", None)
     converted_search = convert_social_search(query, user.email, project)
     max = 0
+    social_values = ["youtube", "bluesky"]
     if user.has_twitter_integration:
         max = 25
+        social_values.append("twitter")
     else:
         max = 50
-    youtube_data = get_youtube_data(converted_search, max)
-    if "error" in youtube_data.keys():
-        errors.append(youtube_data["error"])
-    else:
-        social_data_list.extend(youtube_data["data"])
-    if user.has_twitter_integration:
-        twitter_data = get_tweet_data(converted_search, user)
-        if "error" in twitter_data.keys():
-            errors.append(twitter_data["error"])
+    date_from = datetime.now() - timedelta(days=7)
+    for value in social_values:
+        data_func = social_switcher[value]
+        social_data = data_func(converted_search, max=max, user=user, date_from=date_from)
+        if "error" in social_data.keys():
+            errors.append(social_data["error"])
         else:
-            return_data["string"] = twitter_data["string"]
-            return_data["includes"] = twitter_data["includes"]
-            social_data_list.extend(twitter_data["data"])
+            if value == "twitter":
+                return_data["includes"] = social_data["includes"]
+            social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
-    # return_data["data"] = social_data_list
     if errors:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
     return Response(status=status.HTTP_200_OK, data=return_data)
