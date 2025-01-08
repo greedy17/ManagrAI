@@ -489,7 +489,7 @@
               <div v-outside-click="hideDetails" v-show="showingDetails" class="drop-options-alt">
                 <header>
                   <h4>Projects</h4>
-                  <p>Let Elma know what you're working on (e.g. campaign, pitch, launch)</p>
+                  <p>Let ManagrAI know what you're working on (e.g. campaign, pitch, launch)</p>
                   <!-- <section class="h-padding">
                     <section>
                       <p style="margin: 0; padding: 4px 0 0 4px; color: #9596b4">Personal</p>
@@ -1541,7 +1541,7 @@
               Activity
             </p>
             <p :class="{ activelink: section === 'insights' }" @click="setSection('insights')">
-              Ask Elma
+              Ask ManagrAI
             </p>
             <p :class="{ activelink: section === 'edit' }" @click="setSection('edit')">Edit</p>
           </div>
