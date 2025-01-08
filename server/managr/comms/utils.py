@@ -1174,7 +1174,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None):
                         if user["id"] == tweet["author_id"]:
                             if user["public_metrics"]["followers_count"] > 10000:
                                 tweet["user"] = user
-                                tweet["is_youtube"] = False
+                                tweet["type"] = "twitter"
                                 # if "attachments" in tweet.keys():
                                 #     print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
                                 #     media_key = tweet["attachments"]["media_keys"][0]
@@ -1240,8 +1240,31 @@ def normalize_youtube_data(data):
         video_data["created_at"] = video["snippet"]["publishedAt"]
         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"]
         video_data["author"] = video["snippet"]["channelTitle"]
-        video_data["is_youtube"] = True
+        video_data["type"] = "youtube"
         normalized_data.append(video_data)
+    return normalized_data
+
+
+def normalize_bluesky_data(data):
+    normalized_data = []
+    for post in data:
+        post_data = {}
+        post_data["id"] = post["cid"]
+        post_data["url"] = post["uid"]
+        post_data["text"] = post["record"]["text"]
+        post_data["created_at"] = post["record"]["createdAt"]
+        if "images" in post["embed"].keys():
+            post_data["image_url"] = post["embed"]["images"][0]["thumb"]
+        post_data["author"] = post["author"]["displayName"]
+        post_data["type"] = "bluesky"
+        stats = {
+            "replies": post["replyCount"],
+            "reposts": post["repostCount"],
+            "likes": post["likeCount"],
+            "quotes": post["quoteCount"],
+        }
+        post_data["stats"] = stats
+        normalized_data.append(post_data)
     return normalized_data
 
 
@@ -1268,16 +1291,14 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
 
 def get_bluesky_data(query, max=50, user=None, date_from=None):
     bluesky_data = {}
-    params = {
-        "q": query,
-    }
+    params = {"q": query, "sort": "top", "since": str(date_from.date())}
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
             if res.status_code == 200:
                 res = res.json()
-                videos = res["items"]
-                normalized_data = normalize_youtube_data(videos)
+                videos = res["posts"]
+                normalized_data = normalize_bluesky_data(videos)
                 bluesky_data["data"] = normalized_data
             else:
                 res = res.json()
