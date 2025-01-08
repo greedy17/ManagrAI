@@ -1248,7 +1248,8 @@ def normalize_youtube_data(data):
 def get_youtube_data(query, max):
     headers = {"Accept": "application/json"}
     youtube_data = {}
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max)
+    publishedAfter = get_published_after_value()
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, publishedAfter)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
@@ -1265,3 +1266,16 @@ def get_youtube_data(query, max):
     except Exception as e:
         print(e)
     return youtube_data
+
+def get_published_after_value():
+    # Get the current UTC time
+    now = datetime.now(pytz.utc)
+    
+    # Subtract 7 days
+    seven_days_ago = now - timedelta(days=7)
+    
+    # Format the date-time in RFC 3339 format
+    published_after = seven_days_ago.isoformat().replace('+00:00', 'Z')
+    
+    return published_after
+

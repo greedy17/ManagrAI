@@ -2511,7 +2511,7 @@
               class="row"
               v-else-if="mainView === 'social'"
             >
-              <div v-if="tweetMedia.length">
+              <div class="row" style="width: 100%; gap: 8px" v-if="tweetMedia.length">
                 <div
                   style="width: 24%"
                   v-for="media in tweetMedia.slice(0, 4)"
