@@ -1248,30 +1248,33 @@ def normalize_youtube_data(data):
 def normalize_bluesky_data(data):
     normalized_data = []
     for post in data:
-        post_data = {}
-        post_data["id"] = post["cid"]
-        post_data["url"] = post["uid"]
-        post_data["text"] = post["record"]["text"]
-        post_data["created_at"] = post["record"]["createdAt"]
-        if "images" in post["embed"].keys():
-            post_data["image_url"] = post["embed"]["images"][0]["thumb"]
-        post_data["author"] = post["author"]["displayName"]
-        post_data["type"] = "bluesky"
-        stats = {
-            "replies": post["replyCount"],
-            "reposts": post["repostCount"],
-            "likes": post["likeCount"],
-            "quotes": post["quoteCount"],
-        }
-        post_data["stats"] = stats
-        normalized_data.append(post_data)
+        try:
+            post_data = {}
+            post_data["id"] = post["cid"]
+            post_data["url"] = post["uri"]
+            post_data["text"] = post["record"]["text"]
+            post_data["created_at"] = post["record"]["createdAt"]
+            if "embed" in post.keys() and "images" in post["embed"].keys():
+                post_data["image_url"] = post["embed"]["images"][0]["thumb"]
+            post_data["author"] = post["author"]["displayName"]
+            post_data["type"] = "bluesky"
+            stats = {
+                "replies": post["replyCount"],
+                "reposts": post["repostCount"],
+                "likes": post["likeCount"],
+                "quotes": post["quoteCount"],
+            }
+            post_data["stats"] = stats
+            normalized_data.append(post_data)
+        except Exception as e:
+            continue
     return normalized_data
 
 
 def get_youtube_data(query, max=50, user=None, date_from=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, str(date_from))
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, date_from.isoformat())
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
@@ -1283,7 +1286,6 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
             else:
                 res = res.json()
                 youtube_data["error"] = res["error"]["message"]
-                print(vars(res))
     except Exception as e:
         print(e)
     return youtube_data
@@ -1291,14 +1293,14 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
 
 def get_bluesky_data(query, max=50, user=None, date_from=None):
     bluesky_data = {}
-    params = {"q": query, "sort": "top", "since": str(date_from.date()), "limit": max}
+    params = {"q": query, "sort": "top", "since": date_from.isoformat(), "limit": max}
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
             if res.status_code == 200:
                 res = res.json()
-                videos = res["posts"]
-                normalized_data = normalize_bluesky_data(videos)
+                posts = res["posts"]
+                normalized_data = normalize_bluesky_data(posts)
                 bluesky_data["data"] = normalized_data
             else:
                 res = res.json()

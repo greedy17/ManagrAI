@@ -17,7 +17,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from .pagination import PageNumberPagination
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
 from managr.core.models import TaskResults
@@ -3709,7 +3709,7 @@ def get_social_media_data(request):
     social_switcher = {
         "youtube": get_youtube_data,
         "twitter": get_tweet_data,
-        "blueskey": get_bluesky_data,
+        "bluesky": get_bluesky_data,
     }
     user = request.user
     return_data = {}
@@ -3726,7 +3726,7 @@ def get_social_media_data(request):
         social_values.append("twitter")
     else:
         max = 50
-    date_from = datetime.now() - timedelta(days=7)
+    date_from = datetime.now(timezone.utc) - timedelta(days=7)
     for value in social_values:
         data_func = social_switcher[value]
         social_data = data_func(converted_search, max=max, user=user, date_from=date_from)
