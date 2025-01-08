@@ -1002,7 +1002,7 @@
         <div class="small-container letter-spacing">
           <div>
             <div class="centered">
-              <h1>Your AI-powered PR assistant, Elma</h1>
+              <h1>What would you like to search ?</h1>
             </div>
           </div>
 
@@ -1026,7 +1026,7 @@
                       @keyup.enter="generateNewSearch($event, false)"
                       class="area-input"
                       autocomplete="off"
-                      :placeholder="'Message Elma...'"
+                      :placeholder="'Message ManagrAI...'"
                       v-model="newSearch"
                       v-autoresize
                       :disabled="loading || summaryLoading || isViewOnly"
@@ -1122,7 +1122,7 @@
                         <header>
                           <h4>Mode</h4>
 
-                          <p>Select the type of task you'd like Elma to assist with</p>
+                          <p>Select the type of task you'd like ManagrAI to assist with</p>
                         </header>
                         <section>
                           <div
@@ -1133,7 +1133,31 @@
                               <img src="@/assets/images/globe.svg" height="11px" alt="" />
                               News
                             </span>
-                            <p>Search through real-time news outlets</p>
+                            <p>Search real-time news</p>
+                          </div>
+
+                          <div
+                            @click="switchMainView('social')"
+                            :class="{ activeswitch: mainView === 'social' }"
+                          >
+                            <span>
+                              <img src="@/assets/images/thumb.svg" height="11px" alt="" />
+                              Social
+                            </span>
+
+                            <p>Search top social posts</p>
+                          </div>
+
+                          <div
+                            @click="switchMainView('web')"
+                            :class="{ activeswitch: mainView === 'web' }"
+                          >
+                            <span>
+                              <img src="@/assets/images/google.svg" height="11px" alt="" />
+                              Web
+                            </span>
+
+                            <p>Search web data</p>
                           </div>
 
                           <div
@@ -1146,30 +1170,6 @@
                             </span>
 
                             <p>Discover trending headlines from around the world</p>
-                          </div>
-
-                          <div
-                            @click="switchMainView('social')"
-                            :class="{ activeswitch: mainView === 'social' }"
-                          >
-                            <span>
-                              <img src="@/assets/images/thumb.svg" height="11px" alt="" />
-                              Social
-                            </span>
-
-                            <p>Search top social post across YouTube and X</p>
-                          </div>
-
-                          <div
-                            @click="switchMainView('web')"
-                            :class="{ activeswitch: mainView === 'web' }"
-                          >
-                            <span>
-                              <img src="@/assets/images/google.svg" height="11px" alt="" />
-                              Web
-                            </span>
-
-                            <p>Search through filtered web data</p>
                           </div>
 
                           <div
@@ -1361,7 +1361,9 @@
                       >
                         <header>
                           <h4>Projects</h4>
-                          <p>Let Elma know what you're working on (e.g. campaign, pitch, launch)</p>
+                          <p>
+                            Let ManagrAI know what you're working on (e.g. campaign, pitch, launch)
+                          </p>
                           <!-- <button
                             @click="toggleDetailsInputModal"
                             class="secondary-button-no-border"
@@ -2511,7 +2513,7 @@
               class="row"
               v-else-if="mainView === 'social'"
             >
-              <div v-if="tweetMedia.length">
+              <div class="row" style="width: 100%; gap: 8px" v-if="tweetMedia.length">
                 <div
                   style="width: 24%"
                   v-for="media in tweetMedia.slice(0, 4)"
@@ -2558,7 +2560,7 @@
               >
                 <img
                   @click="setOriginalArticles"
-                  :src="tweet.image_url"
+                  :src="tweet.image_url ? tweet.image_url : blueskyPlaceholder"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -3325,7 +3327,7 @@
                 <header>
                   <h4>Mode</h4>
 
-                  <p>Select the type of task you'd like Elma to assist with</p>
+                  <p>Select the type of task you'd like ManagrAI to assist with</p>
                 </header>
                 <section>
                   <div
@@ -3336,7 +3338,28 @@
                       <img src="@/assets/images/globe.svg" height="11px" alt="" />
                       News
                     </span>
-                    <p>Search through real-time news outlets</p>
+                    <p>Search real-time news</p>
+                  </div>
+
+                  <div
+                    @click="switchMainView('social')"
+                    :class="{ activeswitch: mainView === 'social' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/thumb.svg" height="11px" alt="" />
+                      Social
+                    </span>
+
+                    <p>Search top social posts</p>
+                  </div>
+
+                  <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
+                    <span>
+                      <img src="@/assets/images/google.svg" height="11px" alt="" />
+                      Web
+                    </span>
+
+                    <p>Search web data</p>
                   </div>
 
                   <div
@@ -3349,27 +3372,6 @@
                     </span>
 
                     <p>Discover trending headlines from around the world</p>
-                  </div>
-
-                  <div
-                    @click="switchMainView('social')"
-                    :class="{ activeswitch: mainView === 'social' }"
-                  >
-                    <span>
-                      <img src="@/assets/images/thumb.svg" height="11px" alt="" />
-                      Social
-                    </span>
-
-                    <p>Search top social post across YouTube and X</p>
-                  </div>
-
-                  <div @click="switchMainView('web')" :class="{ activeswitch: mainView === 'web' }">
-                    <span>
-                      <img src="@/assets/images/google.svg" height="11px" alt="" />
-                      Web
-                    </span>
-
-                    <p>Search through filtered web data</p>
                   </div>
 
                   <div
@@ -3440,7 +3442,7 @@
               >
                 <header>
                   <h4>Projects</h4>
-                  <p>Let Elma know what you're working on (e.g. campaign, pitch, launch)</p>
+                  <p>Let ManagrAI know what you're working on (e.g. campaign, pitch, launch)</p>
                   <!-- <button
                             @click="toggleDetailsInputModal"
                             class="secondary-button-no-border"
@@ -3760,6 +3762,7 @@
 
             <div v-else style="margin-bottom: 12px">
               <iframe
+                v-if="currentArticle.type === 'youtube'"
                 :src="`https://www.youtube.com/embed/${currentArticle.id}`"
                 frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -3767,6 +3770,13 @@
                 width="100%"
                 height="360"
               ></iframe>
+
+              <img
+                v-else
+                @error="onImageError($event)"
+                :src="currentArticle.image_url ? currentArticle.image_url : blueskyPlaceholder"
+                class="photo-header-small"
+              />
             </div>
 
             <div class="space-between-top no-letter-margin">
@@ -3777,7 +3787,9 @@
                   }}
                 </p>
 
-                <p v-else style="margin: 0" class="bold-font">YouTube</p>
+                <p v-else style="margin: 0" class="bold-font">
+                  {{ currentArticle.type === 'youtube' ? 'YouTube' : 'Bluesky' }}
+                </p>
 
                 <div style="margin-top: 8px; color: #3b8ec0" class="row">
                   <span>by</span>
@@ -3801,7 +3813,13 @@
                   {{ currentArticle.title }}
                 </a>
                 <a v-else :href="currentArticle.url" target="_blank" class="bold-txt a-text">
-                  {{ currentArticle.title }}
+                  {{
+                    currentArticle.title
+                      ? currentArticle.title
+                      : currentArticle.traffic
+                      ? currentArticle.traffic.description
+                      : 'View Post'
+                  }}
                 </a>
               </div>
             </div>
@@ -3875,7 +3893,10 @@
               </section>
             </div>
 
-            <div v-else class="space-between bottom-margin-m">
+            <div
+              v-else-if="currentArticle.type === 'youtube'"
+              class="space-between bottom-margin-m"
+            >
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="12px" alt="" />
                 <p style="font-size: 14px" class="bold-font">
@@ -3919,6 +3940,50 @@
                         ? formatNumberAlt(currentArticle.traffic.commentCount)
                         : 0
                     }}
+                  </p>
+                </div>
+              </section>
+            </div>
+
+            <div
+              v-else-if="currentArticle.type === 'bluesky'"
+              class="space-between bottom-margin-m"
+            >
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="12px" alt="" />
+                <p style="font-size: 14px" class="bold-font">
+                  {{
+                    currentArticle.traffic
+                      ? formatNumberAlt(currentArticle.traffic.followersCount)
+                      : 0
+                  }}
+                </p>
+              </div>
+
+              <section class="row img-mar img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/heart.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{ currentArticle.stats ? formatNumberAlt(currentArticle.stats.likes) : 0 }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/commentAlt.svg" height="12px" alt="" />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{ currentArticle.stats ? formatNumberAlt(currentArticle.stats.replies) : 0 }}
+                  </p>
+                </div>
+
+                <div style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/arrows-retweet.svg"
+                    height="12px"
+                    alt=""
+                  />
+                  <p style="font-size: 14px" class="bold-font">
+                    {{ currentArticle.stats ? formatNumberAlt(currentArticle.stats.reposts) : 0 }}
                   </p>
                 </div>
               </section>
@@ -4142,26 +4207,33 @@
                   <div>
                     <div style="margin: 0 0 4px -2px" class="row">
                       <img
-                        v-if="tweet.is_youtube"
+                        v-if="tweet.type === 'youtube'"
                         :src="youtubePlaceholder"
                         height="12px"
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
                       <img
-                        v-else
+                        v-else-if="tweet.type === 'bluesky'"
+                        :src="blueskyPlaceholder"
+                        height="14px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <img
+                        v-else-if="tweet.type === 'twitter'"
                         :src="twitterPlaceholder"
                         height="12px"
                         alt=""
                         style="margin: 0 4px 0 1px"
                       />
 
-                      <small v-if="!tweet.is_youtube">{{ tweet.user.username }}</small>
+                      <small v-if="tweet.type === 'twitter'">{{ tweet.user.username }}</small>
                       <small v-else> {{ tweet.author }}</small>
                     </div>
 
                     <p
-                      v-if="!tweet.is_youtube"
+                      v-if="tweet.type === 'twitter'"
                       @click="openTweet(tweet.user.username, tweet.id)"
                       style="cursor: pointer"
                     >
@@ -4178,16 +4250,33 @@
                     </div> -->
                   </div>
 
-                  <div v-if="!tweet.is_youtube" @click="openTweet(tweet.user.username, tweet.id)">
+                  <div
+                    v-if="tweet.type === 'twitter'"
+                    @click="openTweet(tweet.user.username, tweet.id)"
+                  >
                     <img :src="tweet.user.profile_image_url" class="card-photo-header" />
                   </div>
 
                   <div v-else @click="openTweetAlt(tweet.url)">
-                    <img :src="tweet.image_url" class="card-photo-header" />
+                    <img
+                      v-if="tweet.type === 'youtube'"
+                      :src="tweet.image_url"
+                      class="card-photo-header"
+                    />
+                    <img
+                      v-else
+                      :src="tweet.image_url ? tweet.image_url : blueskyPlaceholder"
+                      @error="onImageErrorAlt($event)"
+                      class="card-photo-header"
+                    />
                   </div>
                 </div>
                 <div class="row" style="margin: -4px 0 0 10px">
-                  <p v-if="!tweet.is_youtube" @click="selectJournalist(tweet)" class="turq-text">
+                  <p
+                    v-if="tweet.type === 'twitter'"
+                    @click="selectJournalist(tweet)"
+                    class="turq-text"
+                  >
                     @ <span>{{ tweet.user.username }}</span>
                   </p>
 
@@ -4196,7 +4285,7 @@
                   </p>
 
                   <div
-                    v-if="!tweet.is_youtube"
+                    v-if="tweet.type === 'twitter'"
                     class="row"
                     style="margin-left: 12px; font-size: 12px"
                   >
@@ -4296,6 +4385,7 @@ www.forbes.com/article-3
       citationSvg: require('@/assets/images/info.svg'),
       globePlaceholder: require('@/assets/images/globe.svg'),
       twitterPlaceholder: require('@/assets/images/twitter-x.svg'),
+      blueskyPlaceholder: require('@/assets/images/bluesky.png'),
       youtubePlaceholder: require('@/assets/images/youtube.png'),
       responseEmpty: false,
       bioModalOpen: false,
@@ -5061,18 +5151,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
         }
       }
     },
-    // summaries(newVal, oldVal) {
-    //   if (!this.hasWatchedOnce) {
-    //     // Ignore the first change and set the flag
-    //     this.hasWatchedOnce = true
-    //     return
-    //   }
-
-    //   if (newVal !== oldVal) {
-    //     console.log('values', newVal, oldVal)
-    //     this.searchSaved = false
-    //   }
-    // },
   },
   updated() {
     if (!this.citationsMounted) {
@@ -5273,16 +5351,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
     async analyzeVideo(id, tweet) {
       this.loadingAnalytics = true
       this.showingAnalytics = true
-
       this.currentArticle = tweet
 
       try {
-        const res = await Comms.api.analyzeVideo({
-          video_id: id,
-        })
-        console.log(res)
+        if (tweet.type === 'bluesky') {
+          const res = await Comms.api.getBlueskyProfile({
+            id: id,
+          })
+
+          console.log(res)
+          this.currentArticle.traffic = res
+        } else {
+          const res = await Comms.api.analyzeVideo({
+            video_id: id,
+          })
+
+          console.log(res)
+          this.currentArticle.traffic = res
+        }
+
         this.loadingAnalytics = false
-        this.currentArticle.traffic = res
       } catch (e) {
         console.log(e)
       }
@@ -5531,6 +5619,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
 
       reader.readAsDataURL(file)
+    },
+    onImageErrorAlt(event) {
+      event.target.src = this.blueskyPlaceholder
     },
     onImageError(event) {
       event.target.src = this.logoPlaceholder
@@ -6198,7 +6289,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           : this.filteredTweets[citationIndex]
 
         if (citation) {
-          if (citation.is_youtube) {
+          if (citation.type !== 'twitter') {
             return `
         <sup>
           <span class="citation-wrapper-alt" >
@@ -6206,16 +6297,28 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="c-elip">
+
+                <span class="span-row">
+            <img height="16px" width="16px" src="${
+              citation.type === 'youtube'
+                ? `${this.youtubePlaceholder}`
+                : `${this.blueskyPlaceholder}`
+            }" alt="">
+               <span class="c-elip">
                 ${citation.author}      
               </span>
+            </span>
 
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip " href="${citation.url}" target="_blank" >${citation.title}</a>
+              <a class="inline-link c-elip " href="${citation.url}" target="_blank" >${
+              citation.text ? citation.text : citation.title
+            }</a>
               </span>
-               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.image_url ? citation.image_url : blueskyPlaceholder
+               }" height="40px" width="40px" alt="">
               </span>
               
               
@@ -6232,9 +6335,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="c-elip">
+             <span class="span-row">
+              <img height="16px" width="16px" src="${this.twitterPlaceholder}" alt="">
+               <span class="c-elip">
                 ${citation.user.username}      
               </span>
+            </span>
 
               <span class="row">
                 <span class="col">
@@ -6264,7 +6370,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         const citationIndex = parseInt(p1)
         const citation = this.tweets[citationIndex]
         if (citation) {
-          if (citation.is_youtube) {
+          if (citation.type !== 'twitter') {
             return `
         <sup>
           <span class="citation-wrapper" >
@@ -6272,17 +6378,30 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="c-elip">
+
+            <span class="span-row">
+            <img height="16px" width="16px" src="${
+              citation.type === 'youtube'
+                ? `${this.youtubePlaceholder}`
+                : `${this.blueskyPlaceholder}`
+            }" alt="">
+               <span class="c-elip">
                 ${citation.author}      
               </span>
+            </span>
+             
 
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${citation.title}</a>
+              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${
+              citation.text ? citation.text : citation.title
+            }</a>
               
                 </span>
-               <img src="${citation.image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.image_url ? citation.image_url : this.blueskyPlaceholder
+               }" height="40px" width="40px" alt="">
               </span>      
             
             
@@ -6299,9 +6418,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <img class="inline-svg" src="${this.citationSvg}" alt="">
             </a>
             <span class="citation-tooltip">
-              <span class="c-elip">
+
+            <span class="span-row">
+              <img height="16px" width="16px" src="${this.twitterPlaceholder}" alt="">
+               <span class="c-elip">
                 ${citation.user.username}      
               </span>
+            </span>
+             
 
               <span class="row">
                 <span class="col">
@@ -7196,11 +7320,22 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.getJournalistBio()
           // this.draftPitch(author, outlet, headline, description, date)
         } else {
-          const author = article.is_youtube
-            ? article.author
-            : article.user.name + ' ' + '@' + article.user.username
-          const outlet = article.is_youtube ? 'YouTube' : 'not available'
-          const headline = article.is_youtube ? 'Youtube Channel' : 'X/Twitter User'
+          const author =
+            article.type !== 'twitter'
+              ? article.author
+              : article.user.name + ' ' + '@' + article.user.username
+          const outlet =
+            article.type === 'youtube'
+              ? 'YouTube'
+              : article.type === 'bluesky'
+              ? 'Bluesky social media page'
+              : 'not available'
+          const headline =
+            article.type === 'youtube'
+              ? 'Youtube Channel'
+              : article.type === 'bluesky'
+              ? 'Bluesky User'
+              : 'X/Twitter User'
           const description = article.text
           const date = this.getTimeDifferenceInMinutes(article.created_at)
           this.googleModalOpen = true
@@ -9100,18 +9235,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
       }
     },
-    // async getYouTube(){
-    //   try {
-    //     const res = await Comms.api.getYouTube({
-
-    //     })
-
-    //     console.log(res)
-    //   } catch(e) {
-    //     console.log(e)
-    //   }
-
-    // },
     async getTweets(saved = false) {
       // this.summary = null
 
@@ -9261,7 +9384,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     prepareTweetSummary(tweets) {
       let tweetList = []
       for (let i = 0; i < tweets.length; i++) {
-        if (!tweets[i].is_youtube) {
+        if (tweets[i].type === 'twitter') {
           tweetList.push({
             citationIndex: i,
             name: tweets[i].user.name,
@@ -9270,13 +9393,22 @@ Your goal is to create content that resonates deeply, connects authentically, an
             date: tweets[i].created_at,
             link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
           })
+        } else if (tweets[i].type === 'youtube') {
+          tweetList.push({
+            citationIndex: i,
+            name: tweets[i].author,
+            description: tweets[i].text ? tweets[i].text : tweets[i].title ? tweets[i].title : '',
+            date: tweets[i].created_at,
+            link: tweets[i].url,
+          })
         } else {
           tweetList.push({
             citationIndex: i,
             name: tweets[i].author,
-            description: tweets[i].text ? tweets[i].text : tweets[i].title,
+            description: tweets[i].text ? tweets[i].text : '',
             date: tweets[i].created_at,
             link: tweets[i].url,
+            interactions: tweets[i].stats,
           })
         }
       }
@@ -9368,7 +9500,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async getTweetSummary(instructions = '') {
-      // this.getYoutube()
       this.citationsMounted = false
 
       let tweets = this.prepareTweetSummary(
@@ -9953,7 +10084,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } else if (this.mainView === 'web') {
         text = 'Search the web...'
       } else if (this.mainView === 'write') {
-        text = 'Message Elma...'
+        text = 'Message ManagrAI...'
       } else if (this.mainView === 'discover') {
         text = 'Find relevant journalists...'
       }
@@ -10493,6 +10624,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+  }
+
+  .span-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    img {
+      height: 14px !important;
+      width: 14px !important;
+      margin-right: 8px;
+      margin-left: 0 !important;
+    }
   }
 
   .c-elip-small {
@@ -14870,7 +15014,7 @@ textarea::placeholder {
   margin: 0;
   object-fit: cover;
   // vertical-align: middle;
-  object-position: top;
+  // object-position: top;
   border-radius: 5px;
 }
 

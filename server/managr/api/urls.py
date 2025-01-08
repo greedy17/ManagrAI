@@ -558,6 +558,11 @@ urlpatterns = [
         name="youtube-stats",
     ),
     path(
+        "bluesky-profile/",
+        comms_views.get_bluesky_profile,
+        name="bluesky-profile",
+    ),
+    path(
         "social-media-data/",
         comms_views.get_social_media_data,
         name="socal-data",

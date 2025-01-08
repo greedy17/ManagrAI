@@ -267,10 +267,10 @@
           </div>
           <div class="card__body">
             <div class="row-center" style="display: flex">
-              <h3 class="card__title">X/Twitter</h3>
+              <h3 class="card__title">X</h3>
               <div v-if="hasTwitterIntegration" class="green-dot"></div>
             </div>
-            <p>Connect to search Twitter</p>
+            <p>Connect to search X</p>
           </div>
 
           <div class="card__footer">

@@ -1166,36 +1166,17 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None):
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
                 user_data = tweet_res["includes"].get("users")
-                # media_ref = {d["media_key"]: d for d in user_data}
                 for tweet in tweets:
-                    if len(tweet_list) > 24:
+                    if len(tweet_list) > 19:
                         break
                     for user in user_data:
                         if user["id"] == tweet["author_id"]:
                             if user["public_metrics"]["followers_count"] > 10000:
                                 tweet["user"] = user
                                 tweet["type"] = "twitter"
-                                # if "attachments" in tweet.keys():
-                                #     print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
-                                #     media_key = tweet["attachments"]["media_keys"][0]
-                                #     media_obj = media_ref[media_key]
-                                #     print('MEDIA OBJ', media_obj)
-                                #     media_url = (
-                                #         media_obj["variants"][0]["url"]
-                                #         if "variants" in media_obj.keys()
-                                #         else media_obj["url"]
-                                #     )
-                                #     print('MEDIA URL', media_url)
-                                #     tweet["image_url"] = media_url
                                 tweet_list.append(tweet)
                             break
-                    # for user in user_data:
-                    #         if user["id"] == tweet["author_id"]:
-                    #             if user["followers"] > 10000:
-                    #                 tweet["user"] = user
-                    #                 tweet_list.append(tweet)
-                    #             break
-            if len(tweet_list) < 25 and tweets:
+            if len(tweet_list) < 20 and tweets:
                 continue
             tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
             break
@@ -1250,8 +1231,14 @@ def normalize_bluesky_data(data):
     for post in data:
         try:
             post_data = {}
-            post_data["id"] = post["cid"]
-            post_data["url"] = post["uri"]
+            post_data["id"] = post["author"]["did"]
+            post_data["handle"] = post["author"]["handle"]
+
+            uri_parts = post["uri"].split('/')
+            did = uri_parts[2]
+            post_id = uri_parts[4]
+
+            post_data["url"] = f"https://bsky.app/profile/{did}/post/{post_id}"
             post_data["text"] = post["record"]["text"]
             post_data["created_at"] = post["record"]["createdAt"]
             if "embed" in post.keys() and "images" in post["embed"].keys():

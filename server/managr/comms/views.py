@@ -3722,10 +3722,10 @@ def get_social_media_data(request):
     max = 0
     social_values = ["youtube", "bluesky"]
     if user.has_twitter_integration:
-        max = 25
+        max = 20
         social_values.append("twitter")
     else:
-        max = 50
+        max = 25
     date_from = datetime.now(timezone.utc) - timedelta(days=7)
     for value in social_values:
         data_func = social_switcher[value]
@@ -3757,6 +3757,7 @@ def get_youtube_stats(request):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"][0]["statistics"]
+                print('YT VIDEOS HERE --- > ', videos)
             else:
                 res = res.json()
                 videos = {"error": res["error"]["message"]}
@@ -3765,3 +3766,25 @@ def get_youtube_stats(request):
         videos = {"error": str(e)}
         Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=videos)
     return Response(status=status.HTTP_200_OK, data=videos)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_bluesky_profile(request):
+    id = request.data.get("id")
+    data = {}
+    params = {"actor": id }
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
+            if res.status_code == 200:
+                res = res.json()   
+                data = res      
+            else:
+                res = res.json()
+                data["error"] = res["message"]
+    except Exception as e:
+        print(e)
+        Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
+    return Response(status=status.HTTP_200_OK, data=data)
