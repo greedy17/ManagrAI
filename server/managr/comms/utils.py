@@ -1291,7 +1291,7 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
 
 def get_bluesky_data(query, max=50, user=None, date_from=None):
     bluesky_data = {}
-    params = {"q": query, "sort": "top", "since": str(date_from.date())}
+    params = {"q": query, "sort": "top", "since": str(date_from.date()), "limit": max}
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
