@@ -906,10 +906,8 @@
     <Modal class="bio-modal med-modal" v-if="contactsModalOpen">
       <div class="bio-container med-container">
         <div class="header-alt">
-          <h2 style="margin: 12px 0">Add Contact</h2>
-          <p>
-            ManagrAI will research the contact, offer a real-time bio, and provide pitching tips
-          </p>
+          <h2 style="margin: 12px 0">Search Contact</h2>
+          <p>Get a real-time bio along with pitching tips and contact details</p>
         </div>
 
         <div style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%">
@@ -1095,7 +1093,7 @@
                         />
 
                         <small>{{
-                          mainView === 'discover' ? 'Contacts' : toCamelCase(mainView)
+                          mainView === 'discover' ? 'Media Contacts' : toCamelCase(mainView)
                         }}</small>
                         <!-- <img
                         v-if="!showingSources"
@@ -1185,7 +1183,7 @@
                           </div>
 
                           <div
-                            @click="switchMainView('discover')"
+                            @click="toggleContactsModal()"
                             :class="{ activeswitch: mainView === 'discover' }"
                           >
                             <span>
@@ -1193,7 +1191,7 @@
                               Media Contacts
                             </span>
 
-                            <p>Find the right journalists for your story</p>
+                            <p>Search media contacts</p>
                           </div>
                         </section>
                       </div>
@@ -3395,7 +3393,7 @@
                       Media Contacts
                     </span>
 
-                    <p>Find the right journalists for your story</p>
+                    <p>Search media contacts</p>
                   </div>
 
                   <div
@@ -5630,6 +5628,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.bioModalOpen = !this.bioModalOpen
     },
     toggleContactsModal() {
+      this.hideSources()
       this.contactsModalOpen = !this.contactsModalOpen
     },
     hideJournalistSuggestions() {
@@ -5638,32 +5637,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
     toggleJournalistSuggestions() {
       this.showJournalistSuggestions = true
       this.scrollToChatTop()
-    },
-    setAndChat(chat) {
-      if (!this.isPaid && this.searchesUsed >= 20) {
-        this.openPaidModal(
-          'You have reached your usage limit for the month. Please upgrade your plan.',
-        )
-        return
-      }
-      this.responseEmpty = false
-      this.userResponse = null
-      this.secondResponse = null
-      this.thirdResponse = null
-      this.detailTitle = ''
-      this.currentDetails = ''
-      this.selectedOrg = ''
-      this.chatSearch = ''
-      if (chat.view !== 'network') {
-        this.currentChat = chat
-        this.mainView = chat.view
-        setTimeout(() => {
-          this.chatting = true
-          this.$store.dispatch('updateListName', chat.view)
-        }, 50)
-      } else {
-        this.toggleContactsModal()
-      }
     },
     setChatSuggestion(val) {
       this.chatSearch = val
@@ -6317,7 +6290,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             }</a>
               </span>
                <img src="${
-                 citation.image_url ? citation.image_url : blueskyPlaceholder
+                 citation.image_url ? citation.image_url : this.blueskyPlaceholder
                }" height="40px" width="40px" alt="">
               </span>
               
