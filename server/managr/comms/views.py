@@ -828,7 +828,6 @@ class PRSearchViewSet(
         if has_error:
             send_to_error_channel(message, user.email, "tweet summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-
         return Response(data={"summary": message})
 
     @action(
@@ -3298,7 +3297,6 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
-        print(file_name)
         try:
             if file_name.endswith(".xlsx"):
                 workbook = load_workbook(file_obj, data_only=True)
@@ -3757,7 +3755,6 @@ def get_youtube_stats(request):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"][0]["statistics"]
-                print('YT VIDEOS HERE --- > ', videos)
             else:
                 res = res.json()
                 videos = {"error": res["error"]["message"]}
@@ -3774,13 +3771,13 @@ def get_youtube_stats(request):
 def get_bluesky_profile(request):
     id = request.data.get("id")
     data = {}
-    params = {"actor": id }
+    params = {"actor": id}
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
             if res.status_code == 200:
-                res = res.json()   
-                data = res      
+                res = res.json()
+                data = res
             else:
                 res = res.json()
                 data["error"] = res["message"]

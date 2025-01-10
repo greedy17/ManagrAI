@@ -658,6 +658,8 @@ class NewsSource(TimeStampModel):
     def calculate_posting_frequency(self):
         alpha = 0.3
         publish_dates = list(self.articles.all().values_list("publish_date", flat=True))
+        if len(publish_dates) <= 1:
+            return f"Not enough articles synced for {self.domain}"
         parsed_dates = []
         for date in publish_dates:
             try:
@@ -671,10 +673,6 @@ class NewsSource(TimeStampModel):
         ema = time_diffs[0]
         for diff in time_diffs[1:]:
             ema = alpha * diff + (1 - alpha) * ema
-        if time_diffs:
-            avg_interval_days = sum(time_diffs) / len(time_diffs)
-        else:
-            avg_interval_days = 0
         self.posting_frequency = math.ceil(ema)
         return self.save()
 
@@ -907,8 +905,9 @@ class TwitterAccount(TimeStampModel):
             response = client.get(url, headers=headers, params=params)
             return self._handle_response(response)
 
+    @classmethod
     def get_summary(
-        self,
+        cls,
         user,
         tokens,
         timeout,

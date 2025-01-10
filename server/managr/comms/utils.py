@@ -1169,10 +1169,13 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None):
                 for tweet in tweets:
                     if len(tweet_list) > 19:
                         break
-                    for user in user_data:
-                        if user["id"] == tweet["author_id"]:
-                            if user["public_metrics"]["followers_count"] > 10000:
-                                tweet["user"] = user
+                    for u in user_data:
+                        if u["id"] == tweet["author_id"]:
+                            if u["public_metrics"]["followers_count"] > 10000:
+                                tweet["tweet_link"] = (
+                                    f"https://twitter.com/{u['username']}/status/{tweet['id']}"
+                                )
+                                tweet["user"] = u
                                 tweet["type"] = "twitter"
                                 tweet_list.append(tweet)
                             break
@@ -1234,7 +1237,7 @@ def normalize_bluesky_data(data):
             post_data["id"] = post["author"]["did"]
             post_data["handle"] = post["author"]["handle"]
 
-            uri_parts = post["uri"].split('/')
+            uri_parts = post["uri"].split("/")
             did = uri_parts[2]
             post_id = uri_parts[4]
 
