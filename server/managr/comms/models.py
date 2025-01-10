@@ -658,8 +658,6 @@ class NewsSource(TimeStampModel):
     def calculate_posting_frequency(self):
         alpha = 0.3
         publish_dates = list(self.articles.all().values_list("publish_date", flat=True))
-        if len(publish_dates) <= 1:
-            return f"Not enough articles synced for {self.domain}"
         parsed_dates = []
         for date in publish_dates:
             try:
@@ -667,13 +665,18 @@ class NewsSource(TimeStampModel):
             except ValueError:
                 parsed_dates.append(datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S"))
         unique_dates = sorted({date.date() for date in parsed_dates})
+        if len(unique_dates) <= 1:
+            return f"Not enough articles synced for {source.domain}"
         time_diffs = [
             (unique_dates[i] - unique_dates[i - 1]).days for i in range(1, len(unique_dates))
         ]
-        ema = time_diffs[0]
-        for diff in time_diffs[1:]:
-            ema = alpha * diff + (1 - alpha) * ema
-        self.posting_frequency = math.ceil(ema)
+        if len(time_diffs):
+            ema = time_diffs[0]
+            for diff in time_diffs[1:]:
+                ema = alpha * diff + (1 - alpha) * ema
+            self.posting_frequency = math.ceil(ema)
+        else:
+            print(f"Unique: {unique_dates}\nTime Diffs: {time_diffs}")
         return self.save()
 
     def check_if_stopped(self):
