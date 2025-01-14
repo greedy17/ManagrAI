@@ -7,7 +7,6 @@ import tempfile
 import requests
 import pytz
 import io
-import base64
 from datetime import datetime, timezone, timedelta
 from newspaper import Article, ArticleException
 from functools import reduce

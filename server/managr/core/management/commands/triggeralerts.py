@@ -1,9 +1,10 @@
+import pytz
 import datetime
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from managr.comms.models import AssistAlert
 from managr.comms.tasks import emit_send_news_summary, emit_send_social_summary
-from managr.comms.utils import convert_to_server_time
+from django.utils.timezone import make_aware
 
 
 class Command(BaseCommand):
@@ -29,13 +30,14 @@ class Command(BaseCommand):
             if settings.IN_DEV or options["test"]:
                 run_at = str(datetime.datetime.now())
             else:
-                run_at = convert_to_server_time(alert.run_at, alert.user.timezone)
+                user_tz = pytz.timezone(alert.user.timezone)
+                run_at = make_aware(alert.run_at, timezone=user_tz)
                 run_at = run_at.replace(
                     year=current_day.year, month=current_day.month, day=current_day.day
                 )
-            run_at = str(run_at)
-            if alert.search.type == "NEWS":
-                emit_send_news_summary(str(alert.id), run_at)
-            else:
-                emit_send_social_summary(str(alert.id), run_at)
+                run_at = str(run_at)
+                if alert.search.type == "NEWS":
+                    emit_send_news_summary(str(alert.id), run_at)
+                else:
+                    emit_send_social_summary(str(alert.id), run_at)
         return
