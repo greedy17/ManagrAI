@@ -393,31 +393,23 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(
     if not trending:
 
         body = f"""
-
-        {elma}.
-
-        Today is {date}. User is asking a question based on recent media coverage. Please provide an output per the users request (see below) based on the news coverage below (see below). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. Example: “Top storylines covering Lululemon” = List top stories covering Lululemon. Example 2: "List top journalist covering Lululemon” = return a list of journalist. Example 3: Lululemon = List top headlines about Lululemon along with any additional insights (sentiment, key messages)
-        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
-        
-        Input Format:
-
-        User Request: {search}
-        Media Coverage: {clips}
-        Project details (campaign, media pitch, etc): {project}
-    
-        Output format:
-
-        **Heading** in `<h2>` tags,
-        Sections with `<strong>` subheadings,
-        Ordered or unordered lists using `<ol>` or `<ul>`,
-        Paragraphs with `<p>`, and
-        Line breaks `<br>` between main points for clarity.
-        Do not include ```html in your response.
-
-        Keep responses structured and consistent for easy reading in a Vue.js app.
-        """
-
+                {elma}.
+                Today is {date}. Please provide a concise and accurate response based on the trending news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the news coverage for their project.
+                Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+                Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+                Input Format:
+                User Request: {search}
+                News Coverage: {clips}
+                Project details (campaign, media pitch, etc): {project}
+                Output format:
+                **Heading** in `<h2>` tags,
+                Sections with `<strong>` subheadings,
+                Ordered or unordered lists using `<ol>` or `<ul>`,
+                Paragraphs with `<p>`, and
+                Line breaks `<br>` between main points for clarity.
+                Do not include ```html in your response.
+                Keep responses structured and consistent for easy reading in a Vue.js app.
+                """
     else:
 
         body = f"""
@@ -1224,6 +1216,8 @@ DO_NOT_TRACK_LIST = [
     "https://www.tiktok.com",
     "https://www.instagram.com",
     "https://www.facebook.com",
+    "https://www.x.com",
+    "https://www.linkedin.com",
 ]
 
 
@@ -1243,6 +1237,7 @@ DO_NOT_INCLUDE_WORDS = [
     "category",
     "podcast",
     "author",
+    ".jpeg",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]
@@ -1280,6 +1275,8 @@ EXCLUDE_DOMAINS = [
     "securityaffairs.com",
     "fuckingyoung.es",
     "pypi.org",
+    "biztoc.com",
+    "kicksonfire.com",
 ]
 
 JOURNALIST_CHOICES = [

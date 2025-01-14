@@ -567,58 +567,55 @@ def _send_news_summary(news_alert_id):
     }
     if alert.type in ["EMAIL", "BOTH"]:
         clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
-        if len(clips):
-            try:
-                clips = [article for article in clips if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(
-                    boolean, str(end_time), str(start_time)
-                )
-                normalized_clips = normalize_article_data(clips, internal_articles, False)
-                descriptions = [clip["description"] for clip in normalized_clips]
+        try:
+            clips = [article for article in clips if article["title"] != "[Removed]"]
+            internal_articles = InternalArticle.search_by_query(
+                boolean, str(end_time), str(start_time)
+            )
+            normalized_clips = normalize_article_data(clips, internal_articles, False)
+            descriptions = [clip["description"] for clip in normalized_clips]
 
-                res = Search.get_summary(
-                    alert.user,
-                    2000,
-                    60.0,
-                    descriptions,
-                    alert.search.instructions,
-                    False,
-                    False,
-                    project,
-                    False,
-                    alert.search.instructions,
-                    True,
-                )
+            res = Search.get_summary(
+                alert.user,
+                2000,
+                60.0,
+                descriptions,
+                alert.search.instructions,
+                False,
+                False,
+                project,
+                False,
+                alert.search.instructions,
+                True,
+            )
 
-                email_list = [alert.user.email]
+            email_list = [alert.user.email]
 
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-                message = re.sub(
-                    r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
-                )
-                if thread:
-                    thread.meta_data["articlesFiltered"] = normalized_clips
-                    thread.meta_data["filteredArticles"] = normalized_clips
-                    thread.meta_data["summary"] = message
-                    thread.meta_data["summaries"] = []
-                    thread.save()
+            message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+            message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+            message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
+            if thread:
+                thread.meta_data["articlesFiltered"] = normalized_clips
+                thread.meta_data["filteredArticles"] = normalized_clips
+                thread.meta_data["summary"] = message
+                thread.meta_data["summaries"] = []
+                thread.save()
 
-                content = {
-                    "thread_url": link,
-                    "website_url": f"{settings.MANAGR_URL}/login",
-                    "title": f"{alert.search.name}",
-                }
-                send_html_email(
-                    f"ManagrAI Digest: {alert.search.name}",
-                    "core/email-templates/news-email.html",
-                    settings.DEFAULT_FROM_EMAIL,
-                    email_list,
-                    context=content,
-                )
-            except Exception as e:
-                print(str(e))
-                send_to_error_channel(str(e), alert.user.email, "send news alert")
+            content = {
+                "thread_url": link,
+                "website_url": f"{settings.MANAGR_URL}/login",
+                "title": f"{alert.search.name}",
+            }
+            send_html_email(
+                f"ManagrAI Digest: {alert.search.name}",
+                "core/email-templates/news-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                email_list,
+                context=content,
+            )
+        except Exception as e:
+            print(str(e))
+            send_to_error_channel(str(e), alert.user.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
             context.update(r=recipients)
