@@ -837,8 +837,8 @@ class AssistAlert(TimeStampModel):
         if self.search.search_boolean == self.search.input_text:
             self.search.update_boolean()
         boolean = self.search.search_boolean
-        end_time = datetime.datetime.now()
-        start_time = end_time - datetime.timedelta(hours=24)
+        end_time = datetime.now()
+        start_time = end_time - timedelta(hours=24)
         clips = self.search.get_clips(boolean, end_time, start_time)["articles"]
         try:
             clips = [article for article in clips if article["title"] != "[Removed]"]
