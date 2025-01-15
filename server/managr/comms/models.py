@@ -667,7 +667,7 @@ class NewsSource(TimeStampModel):
                 parsed_dates.append(datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S"))
         unique_dates = sorted({date.date() for date in parsed_dates})
         if len(unique_dates) <= 1:
-            return f"Not enough articles synced for {source.domain}"
+            return f"Not enough articles synced for {self.domain}"
         time_diffs = [
             (unique_dates[i] - unique_dates[i - 1]).days for i in range(1, len(unique_dates))
         ]
