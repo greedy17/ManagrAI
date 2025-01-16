@@ -326,7 +326,26 @@
                     </section>
 
                     <div v-if="savedThreads.length">
-                      <p v-for="(search, i) in savedThreads" :key="i" @click="selectSearch(search)">
+                      <p
+                        v-for="(search, i) in savedThreads"
+                        :key="i"
+                        @click="selectSearch(search)"
+                        class="row"
+                      >
+                        <img
+                          v-if="search.meta_data.type === 'news'"
+                          src="@/assets/images/globe.svg"
+                          height="13px"
+                          alt=""
+                          style="margin-right: 10px; filter: invert(40%)"
+                        />
+                        <img
+                          style="margin-right: 10px; filter: invert(40%)"
+                          v-else
+                          src="@/assets/images/thumb.svg"
+                          height="13px"
+                          alt=""
+                        />
                         {{ search.title }}
                       </p>
                     </div>
@@ -381,7 +400,10 @@
             <div></div>
             <div class="chat-window__chat-bubble row">
               <img src="@/assets/images/profile.svg" height="12px" alt="" />
-              <p>{{ urlCount }} URLs uploaded</p>
+              <p>
+                {{ urlCount }}
+                {{ selectedSearch.meta_data.type === 'news' ? 'URLs uploaded' : 'Posts uploaded' }}
+              </p>
             </div>
           </div>
 
@@ -483,7 +505,7 @@
         </div>
 
         <div class="chat-window__body">
-          <div v-if="view === 'home'">
+          <div ref="topDivider" v-if="view === 'home'">
             <div :class="{ opaque: loading }" style="padding-top: 20px" class="container fadein">
               <div>
                 <img :src="uploadedImageUrl" class="photo-header" />
@@ -505,7 +527,7 @@
             </div>
           </div>
 
-          <div class="fadein" v-else-if="view === 'charts'">
+          <div ref="topDivider" class="fadein" v-else-if="view === 'charts'">
             <div class="container fadein">
               <div class="space-between bottom-margin">
                 <div class="col">
@@ -518,7 +540,13 @@
 
               <div class="space-between bottom-margin">
                 <div class="col">
-                  <p class="bold-font medium-txt">Unique visitors</p>
+                  <p class="bold-font medium-txt">
+                    {{
+                      selectedSearch.meta_data.type === 'news'
+                        ? 'Unique visitors'
+                        : 'Potential Reach'
+                    }}
+                  </p>
                   <small>The potential audience reached by your media coverage</small>
                 </div>
 
@@ -535,11 +563,13 @@
 
               <div class="space-between">
                 <div class="col">
-                  <p class="bold-font medium-txt">Total shares</p>
+                  <p class="bold-font medium-txt">
+                    {{ selectedSearch.meta_data.type === 'news' ? 'Total shares' : 'Total likes' }}
+                  </p>
                   <small>Number of times content was shared on social media</small>
                 </div>
 
-                <section class="row img-mar">
+                <section v-if="selectedSearch.meta_data.type === 'news'" class="row img-mar">
                   <div style="margin-right: 12px" class="row">
                     <img src="@/assets/images/facebook.png" height="20px" alt="" />
                     <p class="bold-font">{{ socialTotals.totalFacebookLikes }}</p>
@@ -555,6 +585,21 @@
                   <div class="row">
                     <img src="@/assets/images/pinterest.png" height="20px" alt="" />
                     <p class="bold-font">{{ socialTotals.totalPinterestLikes }}</p>
+                  </div>
+                </section>
+
+                <section v-else class="row img-mar">
+                  <div style="margin-right: 12px" class="row">
+                    <img src="@/assets/images/twitter-x.svg" height="15px" alt="" />
+                    <p class="bold-font">{{ formatNumber(socialTotals.totalTwitterLikes) }}</p>
+                  </div>
+                  <div style="margin-right: 12px" class="row">
+                    <img src="@/assets/images/youtube.png" height="16px" alt="" />
+                    <p class="bold-font">{{ formatNumber(socialTotals.totalYoutubeLikes) }}</p>
+                  </div>
+                  <div style="margin-right: 12px" class="row">
+                    <img src="@/assets/images/bluesky.png" height="20px" alt="" />
+                    <p class="bold-font">{{ formatNumber(socialTotals.totalBlueskyLikes) }}</p>
                   </div>
                 </section>
               </div>
@@ -584,7 +629,10 @@
 
             <div v-else>
               <div v-for="(article, i) in starredArticles" :key="i" class="container fadein">
-                <div style="position: relative" class="container__top">
+                <div
+                  style="position: relative"
+                  :class="selectedSearch.meta_data.type === 'news' ? container__top : ''"
+                >
                   <div class="abs-top-right">
                     <img
                       @click="starArticle(article)"
@@ -597,13 +645,38 @@
                   </div>
                   <div style="margin-bottom: 12px">
                     <img
+                      v-if="selectedSearch.meta_data.type === 'news'"
                       @error="onImageError($event)"
                       :src="article.image"
                       class="photo-header-small"
                     />
+
+                    <img
+                      v-else-if="article.type === 'twitter'"
+                      @error="onImageError($event)"
+                      :src="article.user.profile_image_url.replace('_normal', '')"
+                      class="photo-header-small"
+                      loading="lazy"
+                    />
+
+                    <img
+                      v-else
+                      @error="onImageError($event)"
+                      :src="
+                        article.type === 'youtube'
+                          ? article.image_url.replace('default', 'hqdefault')
+                          : article.image_url
+                          ? article.image_url
+                          : blueskyPlaceholder
+                      "
+                      class="photo-header-small"
+                    />
                   </div>
 
-                  <div class="space-between no-letter-margin">
+                  <div
+                    v-if="selectedSearch.meta_data.type === 'news'"
+                    class="space-between no-letter-margin"
+                  >
                     <div class="col">
                       <p class="bold-font">
                         {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
@@ -621,19 +694,92 @@
                     <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
                   </div>
 
-                  <div>
-                    <!-- <h3 style="margin: 20px 0" class="bold-font elipsis-text">
-                      {{ article.description }}
-                    </h3> -->
+                  <div v-else class="space-between no-letter-margin">
+                    <div class="col">
+                      <!-- <p class="bold-font row">
+                        <img
+                          v-if="article.type === 'twitter'"
+                          src="@/assets/images/twitter-x.svg"
+                          height="12px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
+                        <img
+                          v-else-if="article.type === 'bluesky'"
+                          src="@/assets/images/bluesky.png"
+                          height="14px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
+                        <img
+                          v-else
+                          src="@/assets/images/youtube.png"
+                          height="12px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
 
-                    <div class="elipsis-text" style="margin: 20px 0">
+                        {{ article.type }}
+                      </p> -->
+
+                      <div style="margin-top: 8px" class="row">
+                        <img
+                          v-if="article.type === 'twitter'"
+                          src="@/assets/images/twitter-x.svg"
+                          height="12px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
+                        <img
+                          v-else-if="article.type === 'bluesky'"
+                          src="@/assets/images/bluesky.png"
+                          height="14px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
+                        <img
+                          v-else
+                          src="@/assets/images/youtube.png"
+                          height="12px"
+                          alt=""
+                          style="margin-right: 8px"
+                        />
+                        <p>{{ article.type === 'twitter' ? article.user.name : article.author }}</p>
+                      </div>
+                    </div>
+                    <small>{{ getTimeDifferenceInMinutes(article.created_at) }}</small>
+                  </div>
+
+                  <div>
+                    <div
+                      v-if="selectedSearch.meta_data.type === 'news'"
+                      class="elipsis-text"
+                      style="margin: 20px 0"
+                    >
                       <a :href="article.url" target="_blank" class="bold-txt">
                         {{ article.description }}</a
                       >
                     </div>
+
+                    <div v-else class="elipsis-text" style="margin: 20px 0">
+                      <p
+                        @click="openTweet(article.user.username, article.id)"
+                        v-if="article.type === 'twitter'"
+                        class="bold-txt"
+                      >
+                        {{ article.text }}
+                      </p>
+
+                      <a v-else :href="article.url" target="_blank" class="bold-txt">
+                        {{ article.text }}</a
+                      >
+                    </div>
                   </div>
 
-                  <div class="space-between bottom-margin-m">
+                  <div
+                    v-if="selectedSearch.meta_data.type === 'news'"
+                    class="space-between bottom-margin-m"
+                  >
                     <div class="row img-mar">
                       <img src="@/assets/images/users.svg" height="14px" alt="" />
                       <p class="bold-font">
@@ -711,15 +857,87 @@
                           }}
                         </p>
                       </div>
+                    </section>
+                  </div>
 
-                      <!-- <div class="row">
-                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
-                      <p class="bold-font">1,000</p>
+                  <div v-else class="space-between bottom-margin-m">
+                    <div class="row img-mar">
+                      <img src="@/assets/images/users.svg" height="14px" alt="" />
+                      <p v-if="article.type === 'twitter'" class="bold-font">
+                        {{
+                          article.user.public_metrics.followers_count
+                            ? formatNumber(article.user.public_metrics.followers_count)
+                            : 0
+                        }}
+                      </p>
+
+                      <p v-else-if="article.type === 'youtube'" class="bold-font">
+                        {{ formatNumber(article.stats.viewCount) }}
+                      </p>
+
+                      <p v-else class="bold-font">
+                        {{
+                          formatNumber(
+                            article.stats.likes +
+                              article.stats.quotes +
+                              article.stats.replies +
+                              article.stats.reposts,
+                          )
+                        }}
+                      </p>
                     </div>
-                    <div class="row">
-                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                      <p class="bold-font">10,000</p>
-                    </div> -->
+
+                    <section class="row img-mar">
+                      <div style="margin-right: 12px" class="row">
+                        <img src="@/assets/images/heart.svg" height="14px" alt="" />
+                        <p v-if="article.type === 'twitter'" class="bold-font">
+                          {{ formatNumber(article.user.public_metrics.like_count) }}
+                        </p>
+
+                        <p v-else-if="article.type === 'bluesky'" class="bold-font">
+                          {{ formatNumber(article.stats.likes) }}
+                        </p>
+
+                        <p v-else class="bold-font">
+                          {{ formatNumber(article.stats.likeCount) }}
+                        </p>
+                      </div>
+
+                      <div v-if="article.type === 'bluesky'" style="margin-right: 12px" class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/commentAlt.svg"
+                          height="14px"
+                          alt=""
+                        />
+                        <p class="bold-font">
+                          {{ formatNumber(article.stats.replies) }}
+                        </p>
+                      </div>
+
+                      <div v-if="article.type === 'bluesky'" style="margin-right: 12px" class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/arrows-retweet.svg"
+                          height="14px"
+                          alt=""
+                        />
+                        <p class="bold-font">
+                          {{ formatNumber(article.stats.reposts) }}
+                        </p>
+                      </div>
+
+                      <div v-if="article.type === 'youtube'" style="margin-right: 12px" class="row">
+                        <img
+                          style="margin-right: 4px"
+                          src="@/assets/images/commentAlt.svg"
+                          height="14px"
+                          alt=""
+                        />
+                        <p class="bold-font">
+                          {{ formatNumber(article.stats.commentCount) }}
+                        </p>
+                      </div>
                     </section>
                   </div>
                 </div>
@@ -730,7 +948,7 @@
                   </div>
                 </div>
 
-                <div v-else class="report-body">
+                <div v-else-if="selectedSearch.meta_data.type === 'news'" class="report-body">
                   <div class="space-between" style="margin-top: 12px">
                     <div></div>
                     <button
@@ -753,13 +971,46 @@
               </div>
             </div>
           </div>
-          <div class="fadein" v-else-if="view === 'articles'">
+          <div ref="topDivider" class="fadein" v-else-if="view === 'articles'">
             <div class="container fadein">
               <div v-for="(article, i) in clips" :key="i" class="article">
                 <div class="space-between">
-                  <p class="bold-font">
+                  <p v-if="selectedSearch.meta_data.type === 'news'" class="bold-font">
                     {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
                   </p>
+
+                  <p v-else class="bold-font row">
+                    <img
+                      v-if="article.type === 'twitter'"
+                      src="@/assets/images/twitter-x.svg"
+                      height="12px"
+                      alt=""
+                      style="margin-right: 8px"
+                    />
+                    <img
+                      v-else-if="article.type === 'bluesky'"
+                      src="@/assets/images/bluesky.png"
+                      height="14px"
+                      alt=""
+                      style="margin-right: 8px"
+                    />
+                    <img
+                      v-else
+                      src="@/assets/images/youtube.png"
+                      height="12px"
+                      alt=""
+                      style="margin-right: 8px"
+                    />
+
+                    {{
+                      article.author
+                        ? article.author
+                        : article.type === 'twitter'
+                        ? article.user.name
+                        : 'Unknown'
+                    }}
+                  </p>
+
                   <img
                     v-if="!starredArticles.includes(article)"
                     @click="starArticle(article)"
@@ -780,12 +1031,8 @@
                   />
                 </div>
 
-                <div class="space-between-bottom">
+                <div v-if="selectedSearch.meta_data.type === 'news'" class="space-between-bottom">
                   <div class="article-body">
-                    <!-- <h3 class="bold-font">
-                      {{ article.title }}
-                    </h3> -->
-
                     <div style="margin: 20px 0">
                       <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
                         {{ article.title }}</a
@@ -804,7 +1051,55 @@
                   />
                 </div>
 
-                <div style="margin-top: 12px" class="space-between bottom-border">
+                <div v-else class="space-between-bottom">
+                  <div class="article-body">
+                    <div v-if="article.type !== 'twitter'" style="margin: 20px 0">
+                      <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
+                        {{ article.title ? article.title : article.text }}</a
+                      >
+                    </div>
+
+                    <div
+                      @click="openTweet(article.user.username, article.id)"
+                      v-else
+                      style="margin: 20px 0"
+                    >
+                      <p class="bold-txt elipsis-text">
+                        {{ article.title ? article.title : article.text }}
+                      </p>
+                    </div>
+
+                    <p class="report-body">
+                      {{ article.text }}
+                    </p>
+                  </div>
+
+                  <img
+                    v-if="article.type === 'twitter'"
+                    @error="onImageError($event)"
+                    :src="article.user.profile_image_url.replace('_normal', '')"
+                    class="photo-header-alt"
+                  />
+
+                  <img
+                    v-else
+                    @error="onImageError($event)"
+                    :src="
+                      article.type === 'youtube'
+                        ? article.image_url.replace('default', 'hqdefault')
+                        : article.image_url
+                        ? article.image_url
+                        : blueskyPlaceholder
+                    "
+                    class="photo-header-alt"
+                  />
+                </div>
+
+                <div
+                  v-if="selectedSearch.meta_data.type === 'news'"
+                  style="margin-top: 12px"
+                  class="space-between bottom-border"
+                >
                   <div class="row report-body">
                     <div class="pill">
                       <img src="@/assets/images/profile.svg" height="12px" alt="" />
@@ -904,6 +1199,123 @@
                               : 0,
                           )
                         }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else style="margin-top: 12px" class="space-between bottom-border">
+                  <div class="row report-body">
+                    <div class="pill">
+                      <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                      <p style="margin-right: 6px">
+                        {{
+                          article.author
+                            ? article.author
+                            : article.type === 'twitter'
+                            ? article.user.name
+                            : 'Unknown'
+                        }}
+                      </p>
+                    </div>
+
+                    <small>{{ getTimeDifferenceInMinutes(article.created_at) }}</small>
+                  </div>
+
+                  <div class="row small-text">
+                    <div v-if="article.type === 'twitter'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/users.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.user.public_metrics.followers_count) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'twitter'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/heart.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.user.public_metrics.like_count) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'youtube'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/users.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.viewCount) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'youtube'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/heart.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.likeCount) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'youtube'" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/commentAlt.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.commentCount) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'bluesky'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/heart.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.likes) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'bluesky'" style="margin-right: 16px" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/commentAlt.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.replies) }}
+                      </p>
+                    </div>
+
+                    <div v-if="article.type === 'bluesky'" class="row">
+                      <img
+                        style="margin-right: 4px"
+                        src="@/assets/images/arrows-retweet.svg"
+                        height="14px"
+                        alt=""
+                      />
+                      <p class="bold-font">
+                        {{ formatNumber(article.stats.reposts) }}
                       </p>
                     </div>
                   </div>
@@ -1082,6 +1494,7 @@ export default {
       urls: [],
       clips: [],
       loadingText: 'Analyzing articles...',
+      loadingTextAlt: 'Analyzing media coverage...',
       summary: '',
       view: 'home',
       creating: true,
@@ -1117,6 +1530,7 @@ www.forbes.com/article-3
       uploadedImageUrl: '',
       dateStart: null,
       dateEnd: null,
+      blueskyPlaceholder: require('@/assets/images/bluesky.png'),
     }
   },
   watch: {
@@ -1135,9 +1549,17 @@ www.forbes.com/article-3
       return this.$store.state.allReports
     },
     savedThreads() {
-      return this.$store.state.allThreads.filter(
-        (thread) => thread.meta_data.type && thread.meta_data.type === 'news',
-      )
+      if (this.sourceType === 'both') {
+        return this.$store.state.allThreads.filter(
+          (thread) => thread.meta_data.type && thread.meta_data.type === 'news',
+        )
+      } else {
+        return this.$store.state.allThreads.filter(
+          (thread) =>
+            thread.meta_data.type &&
+            (thread.meta_data.type === 'news' || thread.meta_data.type === 'social'),
+        )
+      }
     },
     user() {
       return this.$store.state.user
@@ -1152,31 +1574,54 @@ www.forbes.com/article-3
     this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
+    openTweet(username, id) {
+      window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
+    },
     getClips() {
       this.loadingClips = true
 
       let articles = []
-      articles = this.selectedSearch.meta_data.filteredArticles
+      let clips = []
+
+      if (this.selectedSearch.meta_data.type !== 'social') {
+        articles = this.selectedSearch.meta_data.filteredArticles
+      } else {
+        articles = this.selectedSearch.meta_data.preparedTweets
+        clips = this.selectedSearch.meta_data.tweets
+      }
 
       let additionalClips = this.selectedSearch.meta_data.summaries
         ? this.selectedSearch.meta_data.summaries.map((summary) => summary.clips)
         : []
 
       articles = [articles, ...additionalClips].flat()
+      clips = [clips, ...additionalClips].flat()
 
-      console.log('artices', articles)
+      console.log('clips here', clips)
 
       if (this.sourceType !== 'both') {
-        this.urls = articles.map((art) => {
-          return art.link
-        })
-        this.urlCount = this.urls.length
-        this.useSearchUrls = true
-        this.setUrls()
+        if (this.selectedSearch.meta_data.type !== 'social') {
+          this.urls = articles.map((art) => {
+            return art.link
+          })
+          this.urlCount = this.urls.length
+          this.useSearchUrls = true
+          this.setUrls()
+        } else {
+          this.urls = articles
+          this.clips = clips
+          this.urlCount = this.urls.length
+          this.useSearchUrls = true
+          this.setUrls()
+        }
       } else {
-        this.reportUrls = articles.map((art) => {
-          return art.link
-        })
+        if (this.selectedSearch.meta_data.type !== 'social') {
+          this.reportUrls = articles.map((art) => {
+            return art.link
+          })
+        } else {
+          this.reportUrls = articles
+        }
 
         this.urlCount = this.reportUrls.length
         this.useSearchUrls = true
@@ -1317,6 +1762,13 @@ www.forbes.com/article-3
       window.open(this.reports[0].share_url, '_blank')
     },
     async createReport() {
+      let is_social
+      if (this.selectedSearch.meta_data.type === 'news') {
+        is_social = false
+      } else {
+        is_social = true
+      }
+
       this.reportLoading = true
       let formData = new FormData()
       formData.append('title', this.reportName)
@@ -1334,6 +1786,7 @@ www.forbes.com/article-3
           totalVisits: this.totalVisits,
           urlCount: this.urlCount,
           brand: this.brand,
+          is_social: is_social,
         }),
       )
       try {
@@ -1527,29 +1980,121 @@ www.forbes.com/article-3
       this.loadingText = 'Step 1/4: Analyzing articles...'
       this.loading = true
       this.scrollToChatTop()
-      // if(this.useSearchUrls){
 
-      // }
-      try {
-        const res = await Comms.api.getReportClips({
-          urls: this.urls,
-        })
-        this.clips = res
-        this.getTrafficData()
-      } catch (e) {
-        console.error(e)
-        this.loadingText = 'Analyzing articles...'
-        this.loading = false
-        this.urlsSet = false
-        this.$toast('Error uploading clips, try again', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+      if (this.selectedSearch.meta_data.type === 'news') {
+        try {
+          const res = await Comms.api.getReportClips({
+            urls: this.urls,
+          })
+          this.clips = res
+          this.getTrafficData()
+        } catch (e) {
+          console.error(e)
+          this.loadingText = 'Analyzing articles...'
+          this.loading = false
+          this.urlsSet = false
+          this.$toast('Error uploading clips, try again', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
+      } else {
+        this.loadingText = 'Step 1/3: Analyzing media coverage...'
+
+        try {
+          const res = await Comms.api.getReportSummary({
+            clips: this.urls,
+            brand: this.brand,
+            social: true,
+          })
+          this.summary = res.summary
+            .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            // Convert #### to <h4></h4>
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            // Convert ## to <h2></h2> (if needed)
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            // Convert # to <h1></h1> (if needed)
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+
+          this.analyzeVideos()
+          // this.loading = false
+          // this.creating = false
+        } catch (e) {
+          console.error(e)
+          this.loadingText = 'Analyzing articles...'
+          this.loading = false
+          this.urlsSet = false
+          this.$toast('Error uploading clips, try again', {
+            timeout: 2000,
+            position: 'top-left',
+            type: 'error',
+            toastClassName: 'custom',
+            bodyClassName: ['custom'],
+          })
+        }
       }
     },
+
+    async analyzeVideos() {
+      this.loadingText = 'Step 2/3: Gathering stats...'
+      let ytClips = this.clips.filter((clip) => clip.type === 'youtube')
+
+      for (let i = 0; i < ytClips.length; i++) {
+        try {
+          const res = await Comms.api.analyzeVideo({
+            video_id: ytClips[i].id,
+          })
+
+          ytClips[i].stats = res
+
+          const clipIndex = this.clips.findIndex((clip) => clip.id === ytClips[i].id)
+          if (clipIndex !== -1) {
+            this.clips[clipIndex] = ytClips[i]
+          }
+        } catch (e) {
+          console.error('Error analyzing video:', e)
+        }
+      }
+
+      this.combineSocialStats()
+    },
+    combineSocialStats() {
+      this.loadingText = 'Step 3/3: Summarizing data...'
+
+      this.clips.sort((a, b) => {
+        const getLikeCount = (clip) => {
+          switch (clip.type) {
+            case 'twitter':
+              return clip.user.public_metrics.like_count || 0
+            case 'bluesky':
+              return clip.stats.likes || 0
+            case 'youtube':
+              return parseInt(clip.stats.likeCount, 10) || 0
+            default:
+              return 0
+          }
+        }
+
+        const likesA = getLikeCount(a)
+        const likesB = getLikeCount(b)
+
+        return likesB - likesA
+      })
+
+      this.totalVisits = this.calculateTotalVisits()
+      this.starredArticles = this.clips.slice(0, 3)
+      this.clipChartData = this.processClips(this.clips)
+      this.socialTotals = this.getSocialTotals()
+
+      this.loading = false
+      this.creating = false
+    },
+
     async getTrafficData() {
       this.loadingText = 'Step 2/4: Gathering traffic...'
       try {
@@ -1578,7 +2123,7 @@ www.forbes.com/article-3
           urls: this.urls,
         })
         this.socialData = res
-        console.log(res)
+
         this.combineArticlesWithTraffic()
       } catch (e) {
         console.error(e)
@@ -1602,6 +2147,7 @@ www.forbes.com/article-3
         const res = await Comms.api.getReportSummary({
           clips: clips,
           brand: this.brand,
+          social: false,
         })
         this.summary = res.summary
           .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
@@ -1646,20 +2192,6 @@ www.forbes.com/article-3
           } `,
       )
     },
-    // combineArticlesWithTraffic() {
-    //   this.clips = this.clips.map((article) => {
-    //     const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
-    //     const traffic = this.traffic[domain] || null
-    //     return {
-    //       ...article,
-    //       traffic,
-    //     }
-    //   })
-    //   this.totalVisits = this.calculateTotalVisits()
-    //   this.socialTotals = this.getSocialTotals()
-    //   this.clipChartData = this.processClips(this.clips)
-    //   this.getReportSummary()
-    // },
     combineArticlesWithTraffic() {
       this.clips = this.clips.map((article) => {
         const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
@@ -1684,23 +2216,85 @@ www.forbes.com/article-3
     processClips(clips) {
       const dateMap = new Map()
 
-      clips.forEach((clip) => {
-        const date = clip.date ? new Date(clip.date).toLocaleDateString() : null
-        if (date && clip.traffic && clip.traffic.users) {
-          if (dateMap.has(date)) {
-            const existingData = dateMap.get(date)
-            dateMap.set(date, {
-              clipCount: existingData.clipCount + 1,
-              totalUsers: existingData.totalUsers + Number(clip.traffic.users),
-            })
-          } else {
-            dateMap.set(date, {
-              clipCount: 1,
-              totalUsers: Number(clip.traffic.users),
-            })
+      if (this.selectedSearch.meta_data.type === 'news') {
+        clips.forEach((clip) => {
+          const date = clip.date ? new Date(clip.date).toLocaleDateString() : null
+          if (date && clip.traffic && clip.traffic.users) {
+            if (dateMap.has(date)) {
+              const existingData = dateMap.get(date)
+              dateMap.set(date, {
+                clipCount: existingData.clipCount + 1,
+                totalUsers: existingData.totalUsers + Number(clip.traffic.users),
+              })
+            } else {
+              dateMap.set(date, {
+                clipCount: 1,
+                totalUsers: Number(clip.traffic.users),
+              })
+            }
           }
-        }
-      })
+        })
+      } else {
+        clips.forEach((clip) => {
+          const date = clip.created_at ? new Date(clip.created_at).toLocaleDateString() : null
+          if (date) {
+            if (dateMap.has(date)) {
+              const existingData = dateMap.get(date)
+              let userCount
+
+              switch (clip.type) {
+                case 'twitter':
+                  userCount = clip.user.public_metrics.followers_count || 0
+                  break
+                case 'bluesky':
+                  userCount =
+                    clip.stats.likes +=
+                    clip.stats.replies +=
+                    clip.stats.reposts +=
+                      clip.stats.quotes || 0
+                  break
+                case 'youtube':
+                  userCount = parseInt(clip.stats.viewCount, 10) || 0
+                  break
+                default:
+                  userCount = 0
+                  break
+              }
+
+              dateMap.set(date, {
+                clipCount: existingData.clipCount + 1,
+                totalUsers: existingData.totalUsers + Number(userCount),
+              })
+            } else {
+              let userCount
+
+              switch (clip.type) {
+                case 'twitter':
+                  userCount = clip.user.public_metrics.followers_count || 0
+                  break
+                case 'bluesky':
+                  userCount =
+                    clip.stats.likes +=
+                    clip.stats.replies +=
+                    clip.stats.reposts +=
+                      clip.stats.quotes || 0
+                  break
+                case 'youtube':
+                  userCount = parseInt(clip.stats.viewCount, 10) || 0
+                  break
+                default:
+                  userCount = 0
+                  break
+              }
+
+              dateMap.set(date, {
+                clipCount: 1,
+                totalUsers: Number(userCount),
+              })
+            }
+          }
+        })
+      }
 
       const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
         return new Date(a) - new Date(b)
@@ -1725,13 +2319,45 @@ www.forbes.com/article-3
     },
     calculateTotalVisits() {
       let totalVisits = 0
-      for (let key in this.traffic) {
-        if (this.traffic[key].users) {
-          totalVisits += parseInt(this.traffic[key].users)
+
+      if (this.selectedSearch.meta_data.type === 'news') {
+        for (let key in this.traffic) {
+          if (this.traffic[key].users) {
+            totalVisits += parseInt(this.traffic[key].users, 10)
+          }
+        }
+      } else {
+        for (let i = 0; i < this.clips.length; i++) {
+          let clip = this.clips[i] // Get the clip from the array
+          let userCount = 0 // Initialize userCount for each clip
+
+          switch (clip.type) {
+            case 'twitter':
+              userCount = clip.user.public_metrics.followers_count || 0
+              break
+            case 'bluesky':
+              userCount =
+                (clip.stats.likes || 0) +
+                (clip.stats.replies || 0) +
+                (clip.stats.reposts || 0) +
+                (clip.stats.quotes || 0)
+              break
+            case 'youtube':
+              userCount = parseInt(clip.stats.viewCount, 10) || 0
+              break
+            default:
+              userCount = 0
+              break
+          }
+
+          // Add userCount to totalVisits
+          totalVisits += userCount
         }
       }
+
       return totalVisits
     },
+
     // getSocialTotals() {
     //   let totalFacebookLikes = 0
     //   let totalRedditLikes = 0
@@ -1772,49 +2398,80 @@ www.forbes.com/article-3
       let totalRedditLikes = 0
       let totalPinterestLikes = 0
       let totalTwitterLikes = 0
+      let totalBlueskyLikes = 0
+      let totalYoutubeLikes = 0
 
-      // Create an array to store articles along with their total social shares
-      const articlesWithSocialTotals = this.clips.map((article) => {
-        const socialData = this.socialData[article.url] || null
-        let totalShares = 0
+      if (this.selectedSearch.meta_data.type === 'news') {
+        const articlesWithSocialTotals = this.clips.map((article) => {
+          const socialData = this.socialData[article.url] || null
+          let totalShares = 0
 
-        if (socialData && socialData[0]) {
-          const {
-            total_facebook_shares,
-            total_reddit_engagements,
-            twitter_shares,
-            pinterest_shares,
-          } = socialData[0]
-          totalShares += total_facebook_shares || 0
-          totalShares += total_reddit_engagements || 0
-          totalShares += twitter_shares || 0
-          totalShares += pinterest_shares || 0
+          if (socialData && socialData[0]) {
+            const {
+              total_facebook_shares,
+              total_reddit_engagements,
+              twitter_shares,
+              pinterest_shares,
+            } = socialData[0]
+            totalShares += total_facebook_shares || 0
+            totalShares += total_reddit_engagements || 0
+            totalShares += twitter_shares || 0
+            totalShares += pinterest_shares || 0
 
-          // Accumulate totals for each platform (existing logic)
-          totalFacebookLikes += total_facebook_shares || 0
-          totalRedditLikes += total_reddit_engagements || 0
-          totalTwitterLikes += twitter_shares || 0
-          totalPinterestLikes += pinterest_shares || 0
-        }
+            totalFacebookLikes += total_facebook_shares || 0
+            totalRedditLikes += total_reddit_engagements || 0
+            totalTwitterLikes += twitter_shares || 0
+            totalPinterestLikes += pinterest_shares || 0
+          }
 
-        // Return the article with its total social shares
+          return {
+            ...article,
+            totalShares,
+          }
+        })
+
+        this.starredArticles = articlesWithSocialTotals
+          .sort((a, b) => b.totalShares - a.totalShares)
+          .slice(0, 3)
+
         return {
-          ...article,
-          totalShares,
+          totalFacebookLikes,
+          totalRedditLikes,
+          totalPinterestLikes,
+          totalTwitterLikes,
         }
-      })
+      } else {
+        for (let i = 0; i < this.clips.length; i++) {
+          let clip = this.clips[i]
+          let twitterLikes = 0
+          let blueLikes = 0
+          let ytLikes = 0
 
-      // Sort the articles by their total social shares (from most to least)
-      this.starredArticles = articlesWithSocialTotals
-        .sort((a, b) => b.totalShares - a.totalShares)
-        .slice(0, 3)
+          switch (clip.type) {
+            case 'twitter':
+              twitterLikes = clip.user.public_metrics.like_count || 0
+              break
+            case 'bluesky':
+              blueLikes = clip.stats.likes || 0
+              // (clip.stats.replies || 0) +
+              // (clip.stats.reposts || 0) +
+              // (clip.stats.quotes || 0)
+              break
+            case 'youtube':
+              ytLikes = parseInt(clip.stats.likeCount, 10) || 0
+              break
+          }
 
-      // Return the totals for each platform
-      return {
-        totalFacebookLikes,
-        totalRedditLikes,
-        totalPinterestLikes,
-        totalTwitterLikes,
+          totalTwitterLikes += twitterLikes
+          totalYoutubeLikes += ytLikes
+          totalBlueskyLikes += blueLikes
+        }
+
+        return {
+          totalTwitterLikes,
+          totalYoutubeLikes,
+          totalBlueskyLikes,
+        }
       }
     },
 
@@ -1825,7 +2482,7 @@ www.forbes.com/article-3
           urls: this.urls,
           name: this.brand,
         })
-        console.log(res)
+
         this.loading = false
       } catch (e) {
         console.error(e)
@@ -2639,20 +3296,27 @@ a {
 }
 
 .photo-header {
-  height: 250px;
+  // height: 250px;
+  // width: 100%;
+  // margin: 0;
+  // object-fit: cover;
+  // object-position: top;
+  // border-radius: 5px;
+
   width: 100%;
+  aspect-ratio: 16/9;
   margin: 0;
   object-fit: cover;
-  object-position: top;
   border-radius: 5px;
 }
 
 .photo-header-small {
-  height: 250px;
+  // max-height: 400px;
   width: 100%;
+  aspect-ratio: 1/1;
   margin: 0;
-  object-fit: cover; /* Ensures the image covers the area while maintaining aspect ratio */
-  object-position: top; /* Crops only from the bottom if necessary */
+  // object-position: top;
+  object-fit: cover;
   border-radius: 5px;
 }
 

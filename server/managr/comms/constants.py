@@ -574,7 +574,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate response based on the tweets, youtube clips, and Bluesky posts below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets, clips, and posts as it pertains to their search term, and identify key influencers based on Twitter follower count, Blussky post interactions, and relevancy of the youtube clips. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
+    Today is {date}. Please provide a concise and accurate response based on the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets, clips, and posts as it pertains to their search term, and identify key influencers based on X follower count, Blussky post interactions, and relevancy of the youtube clips. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
@@ -603,7 +603,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets, youtube clips, and Bluesky posts below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
@@ -1298,7 +1298,7 @@ def REPORT_SUMMARY(elma, brand, clips):
 
     {elma}.
 
-    Your task is to create a concise executive overview of the earned media report based on the news clips below for following brands or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    Your task is to create a concise executive overview of media coverage based on the news clips below for the following brand or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
    
     1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
     2. Key recognizable publications and influential journalists who covered the brand.
@@ -1308,6 +1308,24 @@ def REPORT_SUMMARY(elma, brand, clips):
 
     Here are the news clips:
     {clips}
+    """
+    return prompt
+
+def SOCIAL_REPORT_SUMMARY(elma, brand, clips):
+    prompt = f"""
+
+    {elma}.
+
+    Your task is to create a concise executive overview of media coverage based on the social posts (tweets, bluesky posts, and youtube videos) below for the following brands or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+    2. Identify key recognizable publications and influencers
+    3. Key metrics, such as audience engagement and reach.
+    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+    5. Highlight recurring themes or key messages across the media coverage.
+    
+    Here are the social posts:
+    {clips}
+
     """
     return prompt
 
