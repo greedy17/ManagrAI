@@ -242,7 +242,7 @@ class User(AbstractUser, TimeStampModel):
     profile_photo = models.ImageField(
         upload_to=datetime_appended_filepath, max_length=255, null=True, blank=True
     )
-    timezone = models.CharField(default="UTC", max_length=255)
+    timezone = models.CharField(default="EST", max_length=255)
     reminders = JSONField(
         default=core_consts.REMINDERS,
         null=True,
@@ -408,7 +408,7 @@ class User(AbstractUser, TimeStampModel):
         else:
             self.meta_data[key] = {"total": 1, "timestamps": [str(datetime.now().date())]}
         return self.save()
-    
+
     def get_summary(
         self,
         user,
@@ -469,7 +469,6 @@ class User(AbstractUser, TimeStampModel):
                 headers=core_consts.OPEN_AI_HEADERS,
             )
         return open_ai_exceptions._handle_response(r)
-
 
     @property
     def has_hit_summary_limit(self):

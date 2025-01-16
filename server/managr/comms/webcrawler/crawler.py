@@ -3,7 +3,6 @@ import logging
 import datetime
 import time
 import json
-from functools import reduce
 from scrapy import signals
 from django.utils import timezone
 from django.conf import settings
@@ -199,6 +198,9 @@ class NewsSpider(scrapy.Spider):
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
         "HTTPCACHE_EXPIRATION_SECS": 43200,
         "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
+        "ITEM_PIPELINES": {
+            "managr.comms.webcrawler.pipelines.BulkInsertPipeline": 1,
+        },
     }
 
     def __init__(self, *args, **kwargs):
@@ -394,6 +396,8 @@ class NewsSpider(scrapy.Spider):
                     logger.exception(f"Failed to find source with domain: {domain}")
                     return
         meta_tag_data = {"link": url, "source": source.id}
+        if self.article_only:
+            meta_tag_data["id"] = source.id
         article_selectors = source.article_selectors()
         fields_dict = {}
         article_tags = None
@@ -470,49 +474,15 @@ class NewsSpider(scrapy.Spider):
                     fields_dict["content"] = tag
                     article_tags = tags
                     break
-        full_article = ""
-        cleaned_data = None
-        if article_tags is not None:
-            for article in article_tags:
-                article = article.replace("\n", "").strip()
-                full_article += article
-            meta_tag_data["content"] = full_article
-        try:
-            if "content" in meta_tag_data.keys():
-                cleaned_data = data_cleaner(meta_tag_data)
-                if isinstance(cleaned_data, dict):
-                    if self.article_only and instance:
-                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
-                    else:
-                        serializer = ArticleSerializer(data=cleaned_data)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                    serializer.instance.update_search_vector()
-                else:
-                    raise Exception(cleaned_data)
-            else:
-                logger.info(f"No content for article: {response.url}")
-                return
-        except IntegrityError:
-            return
-        except Exception as e:
-            print(e)
-            self.error_log.append(f"{url}|{str(e)}")
-            if source.error_log is None or len(source.error_log) <= 5:
-                source.add_error(f"{str(e)} {meta_tag_data}")
+        meta_tag_data["content"] = article_tags
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]
                 field = XPATH_TO_FIELD[key]
                 setattr(source, field, path)
             source.save()
-        if not source.is_crawling:
-            source.crawling
         self.urls_processed += 1
-        self.articles_to_process -= 1
-        if self.articles_to_process == 0:
-            source.check_if_stopped()
-        return
+        yield meta_tag_data
 
     def process_new_url(self, source, response):
         exclude_classes_list = ["menu", "-nav"]
@@ -560,9 +530,10 @@ class NewsSpider(scrapy.Spider):
         source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         source.save()
         selectors_check = common_selectors_check(source)
-        return selectors_check
+        return
 
     def start_requests(self):
+        self.logger.info(f"ITEM_PIPELINES: {self.settings.get('ITEM_PIPELINES')}")
         self.total_urls = len(self.start_urls)
         scrape_api_sources = list(
             NewsSource.objects.filter(domain__in=self.start_urls, use_scrape_api=True).values_list(
