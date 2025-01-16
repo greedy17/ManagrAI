@@ -826,6 +826,16 @@ class CommsApi extends ModelAPI {
         }
     }
 
+    async getBlueskyProfile(data) {
+        try {
+            const res = await this.client.post('bluesky-profile/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
+
+
 }
 
 class TwitterAccountAPI extends ModelAPI {

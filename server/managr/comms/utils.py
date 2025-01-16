@@ -7,7 +7,6 @@ import tempfile
 import requests
 import pytz
 import io
-import base64
 from datetime import datetime, timezone, timedelta
 from newspaper import Article, ArticleException
 from functools import reduce
@@ -411,9 +410,7 @@ def normalize_article_data(api_data, article_models, is_report, for_test=False):
     normalized_list.extend(normalized_api_list)
     normalized_model_list = [article.fields_to_dict(for_test) for article in article_models]
     normalized_list.extend(normalized_model_list)
-    print(normalized_list)
     sorted_arr = merge_sort_dates(normalized_list)
-    print(sorted_arr)
     ordered_dict = OrderedDict()
     for obj in sorted_arr:
         if obj["title"] not in ordered_dict.keys():
@@ -1142,7 +1139,7 @@ def convert_social_search(search, user_email, project):
     return query_input
 
 
-def get_tweet_data(query_input, user):
+def get_tweet_data(query_input, max=50, user=None, date_from=None):
     twitter_account = user.twitter_account
     query_input = query_input + " lang:en -is:retweet"
     if "from:" not in query_input:
@@ -1166,36 +1163,20 @@ def get_tweet_data(query_input, user):
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
                 user_data = tweet_res["includes"].get("users")
-                # media_ref = {d["media_key"]: d for d in user_data}
                 for tweet in tweets:
-                    if len(tweet_list) > 24:
+                    if len(tweet_list) > 19:
                         break
-                    for user in user_data:
-                        if user["id"] == tweet["author_id"]:
-                            if user["public_metrics"]["followers_count"] > 10000:
-                                tweet["user"] = user
-                                tweet["is_youtube"] = False
-                                # if "attachments" in tweet.keys():
-                                #     print('ATTATCHMENT', tweet["attachments"]["media_keys"][0])
-                                #     media_key = tweet["attachments"]["media_keys"][0]
-                                #     media_obj = media_ref[media_key]
-                                #     print('MEDIA OBJ', media_obj)
-                                #     media_url = (
-                                #         media_obj["variants"][0]["url"]
-                                #         if "variants" in media_obj.keys()
-                                #         else media_obj["url"]
-                                #     )
-                                #     print('MEDIA URL', media_url)
-                                #     tweet["image_url"] = media_url
+                    for u in user_data:
+                        if u["id"] == tweet["author_id"]:
+                            if u["public_metrics"]["followers_count"] > 10000:
+                                tweet["tweet_link"] = (
+                                    f"https://twitter.com/{u['username']}/status/{tweet['id']}"
+                                )
+                                tweet["user"] = u
+                                tweet["type"] = "twitter"
                                 tweet_list.append(tweet)
                             break
-                    # for user in user_data:
-                    #         if user["id"] == tweet["author_id"]:
-                    #             if user["followers"] > 10000:
-                    #                 tweet["user"] = user
-                    #                 tweet_list.append(tweet)
-                    #             break
-            if len(tweet_list) < 25 and tweets:
+            if len(tweet_list) < 20 and tweets:
                 continue
             tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
             break
@@ -1240,12 +1221,51 @@ def normalize_youtube_data(data):
         video_data["created_at"] = video["snippet"]["publishedAt"]
         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]["url"]
         video_data["author"] = video["snippet"]["channelTitle"]
-        video_data["is_youtube"] = True
+        video_data["type"] = "youtube"
         normalized_data.append(video_data)
     return normalized_data
 
 
-def get_youtube_data(query, max):
+def normalize_bluesky_data(data):
+    normalized_data = []
+    for post in data:
+        try:
+            post_data = {}
+            post_data["id"] = post["author"]["did"]
+            post_data["handle"] = post["author"]["handle"]
+
+            uri_parts = post["uri"].split("/")
+            did = uri_parts[2]
+            post_id = uri_parts[4]
+
+            post_data["url"] = f"https://bsky.app/profile/{did}/post/{post_id}"
+            post_data["text"] = post["record"]["text"]
+            post_data["created_at"] = post["record"]["createdAt"]
+            if "embed" in post.keys() and "images" in post["embed"].keys():
+                post_data["image_url"] = post["embed"]["images"][0]["thumb"]
+            post_data["author"] = post["author"]["displayName"]
+            post_data["type"] = "bluesky"
+            stats = {
+                "replies": post["replyCount"],
+                "reposts": post["repostCount"],
+                "likes": post["likeCount"],
+                "quotes": post["quoteCount"],
+            }
+            post_data["stats"] = stats
+            normalized_data.append(post_data)
+        except Exception as e:
+            continue
+    return normalized_data
+
+
+def get_published_after_value():
+    now = datetime.now(pytz.utc)
+    seven_days_ago = now - timedelta(days=7)
+    published_after = seven_days_ago.isoformat().replace("+00:00", "Z")
+    return published_after
+
+
+def get_youtube_data(query, max=50, user=None, date_from=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
     publishedAfter = get_published_after_value()
@@ -1256,26 +1276,30 @@ def get_youtube_data(query, max):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"]
-                print('VIDEOS', videos)
                 normalized_data = normalize_youtube_data(videos)
                 youtube_data["data"] = normalized_data
             else:
                 res = res.json()
                 youtube_data["error"] = res["error"]["message"]
-                print(vars(res))
     except Exception as e:
         print(e)
     return youtube_data
 
-def get_published_after_value():
-    # Get the current UTC time
-    now = datetime.now(pytz.utc)
-    
-    # Subtract 7 days
-    seven_days_ago = now - timedelta(days=7)
-    
-    # Format the date-time in RFC 3339 format
-    published_after = seven_days_ago.isoformat().replace('+00:00', 'Z')
-    
-    return published_after
 
+def get_bluesky_data(query, max=50, user=None, date_from=None):
+    bluesky_data = {}
+    params = {"q": query, "sort": "top", "since": date_from.isoformat(), "limit": max}
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
+            if res.status_code == 200:
+                res = res.json()
+                posts = res["posts"]
+                normalized_data = normalize_bluesky_data(posts)
+                bluesky_data["data"] = normalized_data
+            else:
+                res = res.json()
+                bluesky_data["error"] = res["error"]["message"]
+    except Exception as e:
+        print(e)
+    return bluesky_data

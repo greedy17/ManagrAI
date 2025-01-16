@@ -59,15 +59,15 @@ GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 YOUTUBE_SEARCH_URI = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEO_URI = "https://www.googleapis.com/youtube/v3/videos"
-YOUTUBE_SEARCH_PARAMS = lambda query, max, date: {
+YOUTUBE_SEARCH_PARAMS = lambda query, max, from_date: {
     "part": "snippet",
     "q": query,
-    "order": "viewCount",
+    "order": "relevance",
     "relevanceLanguage": "en",
     "type": "video",
     "maxResults": max,
-    "publishedAfter": date,
     "key": GOOGLE_SEARCH_KEY,
+    "publishedAfter": from_date,
 }
 
 YOUTUBE_VIDEO_PARAMS = lambda video_id: {
@@ -82,6 +82,10 @@ SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
 BUZZSUMO_SEARCH_URI = "https://api.buzzsumo.com/search/articles.json"
 BUZZSUMO_TRENDS_URI = "https://api.buzzsumo.com/search/trends.json"
+
+BLUESKY_SEARCH_URI = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+
+BLUESKY_PROFILE_URI = "https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile"
 
 
 def SEMRUSH_PARAMS(urls):
@@ -223,7 +227,7 @@ def OPEN_AI_DISCOVERY_RESULTS_PROMPT(journalist, results, content, text):
 
 def OPEN_AI_SOCIAL_BIO(person, org, results, text):
     prompt = f"""
-    Here are the top 5 search results for {person} on Twitter or YouTube (if it's twitter the @ will be included. Otherwise it's YouTube): \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
+    Here are the top 5 search results for {person} on Twitter, Bluesky, or YouTube : \n Results: {results}\n And here is additional info on the person from a website: {text}. \n 
     Combine the data from search results and the website to craft one bio for {person}. Then offer 3 short relevant pitching tips for {org} based on what you know about the person. 
     Lastly, if available, list out journalist's additional social handles and email address. If email not available, exclude email details from the output. 
     Output must be JSON:
@@ -389,31 +393,23 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(
     if not trending:
 
         body = f"""
-
-        {elma}.
-
-        Today is {date}. User is asking a question based on recent media coverage. Please provide an output per the users request (see below) based on the news coverage below (see below). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. Example: “Top storylines covering Lululemon” = List top stories covering Lululemon. Example 2: "List top journalist covering Lululemon” = return a list of journalist. Example 3: Lululemon = List top headlines about Lululemon along with any additional insights (sentiment, key messages)
-        Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-        Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
-        
-        Input Format:
-
-        User Request: {search}
-        Media Coverage: {clips}
-        Project details (campaign, media pitch, etc): {project}
-    
-        Output format:
-
-        **Heading** in `<h2>` tags,
-        Sections with `<strong>` subheadings,
-        Ordered or unordered lists using `<ol>` or `<ul>`,
-        Paragraphs with `<p>`, and
-        Line breaks `<br>` between main points for clarity.
-        Do not include ```html in your response.
-
-        Keep responses structured and consistent for easy reading in a Vue.js app.
-        """
-
+                {elma}.
+                Today is {date}. Please provide a concise and accurate response based on the trending news coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the news coverage as it pertains to their search term. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the news coverage for their project.
+                Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+                Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+                Input Format:
+                User Request: {search}
+                News Coverage: {clips}
+                Project details (campaign, media pitch, etc): {project}
+                Output format:
+                **Heading** in `<h2>` tags,
+                Sections with `<strong>` subheadings,
+                Ordered or unordered lists using `<ol>` or `<ul>`,
+                Paragraphs with `<p>`, and
+                Line breaks `<br>` between main points for clarity.
+                Do not include ```html in your response.
+                Keep responses structured and consistent for easy reading in a Vue.js app.
+                """
     else:
 
         body = f"""
@@ -570,14 +566,14 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate response based on the tweets and youtube clips below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets and clips as it pertains to their search term, and identify key influencers based on follower count and relevancy of the youtube clip. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
+    Today is {date}. Please provide a concise and accurate response based on the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets, clips, and posts as it pertains to their search term, and identify key influencers based on X follower count, Blussky post interactions, and relevancy of the youtube clips. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
     Input Format:
 
     User Request: {search}
-    Tweets and/or clips: {tweets}
+    Tweets, Posts, and clips: {tweets}
     Project details (campaign, media pitch, etc): {project}
    
     Output format:
@@ -599,7 +595,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets and/or youtube clips below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
@@ -613,7 +609,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     Input Format:
     Previous response: {previous}
     User Request: {instructions}
-    Tweets and/or clips: {tweets}
+    Tweets, Posts, and clips: {tweets}
     Project details (campaign, media pitch, etc): {project}
     
     Output format:
@@ -1220,6 +1216,8 @@ DO_NOT_TRACK_LIST = [
     "https://www.tiktok.com",
     "https://www.instagram.com",
     "https://www.facebook.com",
+    "https://www.x.com",
+    "https://www.linkedin.com",
 ]
 
 
@@ -1239,6 +1237,7 @@ DO_NOT_INCLUDE_WORDS = [
     "category",
     "podcast",
     "author",
+    ".jpeg",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]
@@ -1276,6 +1275,8 @@ EXCLUDE_DOMAINS = [
     "securityaffairs.com",
     "fuckingyoung.es",
     "pypi.org",
+    "biztoc.com",
+    "kicksonfire.com",
 ]
 
 JOURNALIST_CHOICES = [
@@ -1294,7 +1295,7 @@ def REPORT_SUMMARY(elma, brand, clips):
 
     {elma}.
 
-    Your task is to create a concise executive overview of the earned media report based on the news clips below for following brands or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    Your task is to create a concise executive overview of media coverage based on the news clips below for the following brand or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
    
     1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
     2. Key recognizable publications and influential journalists who covered the brand.
@@ -1304,6 +1305,25 @@ def REPORT_SUMMARY(elma, brand, clips):
 
     Here are the news clips:
     {clips}
+    """
+    return prompt
+
+
+def SOCIAL_REPORT_SUMMARY(elma, brand, clips):
+    prompt = f"""
+
+    {elma}.
+
+    Your task is to create a concise executive overview of media coverage based on the social posts (tweets, bluesky posts, and youtube videos) below for the following brands or topic: {brand}. The summary should focus on the following key takeaways and be broken into sections, capped at 1,000 words:
+    1. Total volume of media coverage, what stories drove coverage spikes, and trends in mentions over time.
+    2. Identify key recognizable publications and influencers
+    3. Key metrics, such as audience engagement and reach.
+    4. A brief analysis of media sentiment and its impact on [brand.name]'s brand image.
+    5. Highlight recurring themes or key messages across the media coverage.
+    
+    Here are the social posts:
+    {clips}
+
     """
     return prompt
 

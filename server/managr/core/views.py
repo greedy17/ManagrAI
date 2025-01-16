@@ -2157,6 +2157,7 @@ class ReportViewSet(
 
     def create(self, request, *args, **kwargs):
         org = self.request.user.organization
+        user = self.request.user
         try:
             if org.meta_data["report_credits"] > 0:
                 serializer = self.serializer_class(data=request.data)
@@ -2164,6 +2165,7 @@ class ReportViewSet(
                 serializer.save()
                 org.meta_data["report_credits"] -= 1
                 org.save()
+                user.add_meta_data("reports")  
             else:
                 return Response(
                     status=status.HTTP_426_UPGRADE_REQUIRED,

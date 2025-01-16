@@ -23,7 +23,7 @@ class Command(BaseCommand):
             counter += 1
             batch = news[i : i + batch_size]
             batch_url_list = ",".join(batch)
-            _run_spider_batch(batch_url_list, priority=-1)
+            _run_spider_batch(batch_url_list, priority=5)
         send_to_error_channel(
             f"Crawler started at: {d}, total tasks: {counter}",
             None,

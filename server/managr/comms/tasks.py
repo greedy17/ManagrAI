@@ -4,7 +4,6 @@ import uuid
 import httpx
 import datetime
 import re
-import html
 from dateutil import parser
 from django.conf import settings
 from background_task import background
@@ -20,6 +19,7 @@ from .models import (
     Journalist,
     JournalistContact,
     Thread,
+    TwitterAccount,
 )
 from .models import Article as InternalArticle
 from .serializers import (
@@ -45,6 +45,10 @@ from managr.comms.utils import (
     extract_base_domain,
     normalize_article_data,
     separate_weeks,
+    get_bluesky_data,
+    get_tweet_data,
+    get_youtube_data,
+    merge_sort_dates,
 )
 from managr.api.emails import send_html_email
 
@@ -96,7 +100,7 @@ def emit_process_bulk_draft(data, user_id, task_id):
     return _process_bulk_draft(data, user_id, task_id)
 
 
-def emit_send_social_summary(news_alert_id, schedule):
+def emit_send_social_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_social_summary(news_alert_id, schedule={"run_at": schedule})
 
 
@@ -257,6 +261,7 @@ def _process_slack_news_summary(payload, context):
     attempts = 1
     token_amount = 1000
     timeout = 60.0
+    articles = []
     while True:
         try:
             clips_res = get_clips(user, search, start_date, end_date)
@@ -562,16 +567,15 @@ def _send_news_summary(news_alert_id):
         }
     }
     if alert.type in ["EMAIL", "BOTH"]:
-        clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
-        if len(clips):
-            try:
-                clips = [article for article in clips if article["title"] != "[Removed]"]
-                internal_articles = InternalArticle.search_by_query(
-                    boolean, str(end_time), str(start_time)
-                )
-                normalized_clips = normalize_article_data(clips, internal_articles, False)
+        try:
+            clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
+            clips = [article for article in clips if article["title"] != "[Removed]"]
+            internal_articles = InternalArticle.search_by_query(
+                boolean, str(end_time), str(start_time)
+            )
+            normalized_clips = normalize_article_data(clips, internal_articles, False)
+            if len(normalized_clips):
                 descriptions = [clip["description"] for clip in normalized_clips]
-
                 res = Search.get_summary(
                     alert.user,
                     2000,
@@ -612,9 +616,11 @@ def _send_news_summary(news_alert_id):
                     email_list,
                     context=content,
                 )
-            except Exception as e:
-                print(str(e))
-                send_to_error_channel(str(e), alert.user.email, "send news alert")
+            else:
+                return
+        except Exception as e:
+            print(str(e))
+            send_to_error_channel(str(e), alert.user.email, "send news alert")
         if type == "BOTH":
             recipients = "|".join(alert.recipients)
             context.update(r=recipients)
@@ -634,56 +640,87 @@ def _send_news_summary(news_alert_id):
 @background()
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    boolean = alert.search.search_boolean
-    tweet_res = alert.user.twitter_account.get_tweets(boolean)
-    if len(tweet_res):
-        tweet_list = []
-        tweets = tweet_res.get("data", None)
-        includes = tweet_res.get("includes", None)
-        user_data = includes.get("users")
-        for tweet in tweets:
-            if len(tweet_list) > 5:
-                break
-            for user in user_data:
-                if user["id"] == tweet["author_id"]:
-                    if user["public_metrics"]["followers_count"] > 10000:
-                        tweet["tweet_link"] = (
-                            f"https://twitter.com/{user['username']}/status/{tweet['id']}"
-                        )
-                        tweet["user"] = user
-                        tweet_list.append(tweet)
-                    break
-        search_tweets = [
-            f"Name:{tweet['user']['username']} Tweet: {tweet['text']} Follower count: {tweet['user']['public_metrics']['followers_count']} Date: {tweet['created_at']}"
-            for tweet in tweet_list
-        ]
-        res = alert.user.twitter_account.get_summary(
-            alert.user,
-            2000,
-            60.0,
-            search_tweets,
-            alert.search.search_boolean,
-            alert.search.instructions,
-            False,
-        )
-        message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-        content = {
-            "summary": message,
-            "tweets": tweet_list,
-            "website_url": f"{settings.MANAGR_URL}/login",
-        }
-        send_html_email(
-            f"ManagrAI Digest: {alert.search.name}",
-            "core/email-templates/social-email.html",
-            settings.DEFAULT_FROM_EMAIL,
-            [alert.user.email],
-            context=content,
-        )
-        if "sent_count" in alert.meta_data.keys():
-            alert.meta_data["sent_count"] += 1
+    user = alert.user
+    thread = None
+    link = "{settings.MANAGR_URL}/login"
+    if alert.thread:
+        thread = Thread.objects.get(id=alert.thread.id)
+        link = thread.generate_url()
+    if alert.search.search_boolean == alert.search.input_text:
+        alert.search.update_boolean()
+        boolean = alert.search.search_boolean
+    else:
+        boolean = alert.search.search_boolean
+    social_switcher = {
+        "youtube": get_youtube_data,
+        "twitter": get_tweet_data,
+        "bluesky": get_bluesky_data,
+    }
+    max = 0
+    social_values = ["youtube", "bluesky"]
+    if user.has_twitter_integration:
+        max = 20
+        social_values.append("twitter")
+    else:
+        max = 25
+    date_from = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
+    email_data = {}
+    social_data_list = []
+    for value in social_values:
+        data_func = social_switcher[value]
+        social_data = data_func(boolean, max=max, user=user, date_from=date_from)
+        if "error" in social_data.keys():
+            continue
         else:
-            alert.meta_data["sent_count"] = 1
-        alert.save()
+            if value == "twitter":
+                email_data["includes"] = social_data["includes"]
+            social_data_list.extend(social_data["data"])
+        sorted_social_data = merge_sort_dates(social_data_list, "created_at")
+    email_list = []
+    for value in sorted_social_data:
+        if value["type"] == "twitter":
+            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
+            email_list.append(social_value)
+        else:
+            social_value = [
+                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
+            ]
+    res = TwitterAccount.get_summary(
+        alert.user,
+        2000,
+        60.0,
+        email_list,
+        alert.search.search_boolean,
+        alert.search.instructions,
+        False,
+    )
+    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+    message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
+    if thread:
+        thread.meta_data["articlesFiltered"] = sorted_social_data
+        thread.meta_data["filteredArticles"] = sorted_social_data
+        thread.meta_data["summary"] = message
+        thread.meta_data["summaries"] = []
+        thread.save()
+
+    content = {
+        "thread_url": link,
+        "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{alert.search.name}",
+    }
+    send_html_email(
+        f"ManagrAI Digest: {alert.search.name}",
+        "core/email-templates/social-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
+    )
+    if "sent_count" in alert.meta_data.keys():
+        alert.meta_data["sent_count"] += 1
+    else:
+        alert.meta_data["sent_count"] = 1
+    alert.save()
     return
 
 

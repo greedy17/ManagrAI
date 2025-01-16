@@ -17,7 +17,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from .pagination import PageNumberPagination
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from newspaper import Article, ArticleException
 from managr.api.models import ExpiringTokenAuthentication
 from managr.core.models import TaskResults
@@ -100,6 +100,7 @@ from managr.comms.utils import (
     get_youtube_data,
     get_tweet_data,
     convert_social_search,
+    get_bluesky_data,
 )
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
@@ -754,12 +755,24 @@ class PRSearchViewSet(
                 if follow_up:
                     if user.has_twitter_integration:
                         res = twitter_account.get_summary_follow_up(
-                            request.user, token_amount, timeout, previous, tweets, company, instructions
+                            request.user,
+                            token_amount,
+                            timeout,
+                            previous,
+                            tweets,
+                            company,
+                            instructions,
                         )
                     else:
                         res = user.get_summary_follow_up(
-                            request.user, token_amount, timeout, previous, tweets, company, instructions
-                        )  
+                            request.user,
+                            token_amount,
+                            timeout,
+                            previous,
+                            tweets,
+                            company,
+                            instructions,
+                        )
                 else:
                     if user.has_twitter_integration:
                         res = twitter_account.get_summary(
@@ -815,7 +828,6 @@ class PRSearchViewSet(
         if has_error:
             send_to_error_channel(message, user.email, "tweet summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-
         return Response(data={"summary": message})
 
     @action(
@@ -2726,10 +2738,12 @@ class ThreadViewSet(
         return Thread.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        user = request.user
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            user.add_meta_data("thread_saved")
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -3285,7 +3299,6 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
-        print(file_name)
         try:
             if file_name.endswith(".xlsx"):
                 workbook = load_workbook(file_obj, data_only=True)
@@ -3462,9 +3475,11 @@ def redirect_from_instagram(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_traffic_data(request):
+    user = request.user
     urls = request.data.get("urls")
     traffic_data = get_url_traffic_data(urls)
     emit_process_website_domain(urls, request.user.organization.name)
+    user.add_meta_data("analyzed_article")
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)
@@ -3570,13 +3585,17 @@ def get_clip_report_summary(request):
     user = request.user
     clips = request.data.get("clips")
     brand = request.data.get("brand")
+    is_social = request.data.get("social")
     token_amount = 1000
     timeout = 60.0
     has_error = False
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
+            if is_social:
+                prompt = comms_consts.SOCIAL_REPORT_SUMMARY(elma, brand, clips)
+            else:        
+                prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -3693,6 +3712,11 @@ def rewrite_report(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_social_media_data(request):
+    social_switcher = {
+        "youtube": get_youtube_data,
+        "twitter": get_tweet_data,
+        "bluesky": get_bluesky_data,
+    }
     user = request.user
     return_data = {}
     social_data_list = []
@@ -3702,26 +3726,24 @@ def get_social_media_data(request):
     project = params.get("project", None)
     converted_search = convert_social_search(query, user.email, project)
     max = 0
+    social_values = ["youtube", "bluesky"]
     if user.has_twitter_integration:
+        max = 20
+        social_values.append("twitter")
+    else:
         max = 25
-    else:
-        max = 50
-    youtube_data = get_youtube_data(converted_search, max)
-    if "error" in youtube_data.keys():
-        errors.append(youtube_data["error"])
-    else:
-        social_data_list.extend(youtube_data["data"])
-    if user.has_twitter_integration:
-        twitter_data = get_tweet_data(converted_search, user)
-        if "error" in twitter_data.keys():
-            errors.append(twitter_data["error"])
+    date_from = datetime.now(timezone.utc) - timedelta(days=7)
+    for value in social_values:
+        data_func = social_switcher[value]
+        social_data = data_func(converted_search, max=max, user=user, date_from=date_from)
+        if "error" in social_data.keys():
+            errors.append(social_data["error"])
         else:
-            return_data["string"] = twitter_data["string"]
-            return_data["includes"] = twitter_data["includes"]
-            social_data_list.extend(twitter_data["data"])
+            if value == "twitter":
+                return_data["includes"] = social_data["includes"]
+            social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
-    # return_data["data"] = social_data_list
     if errors:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
     return Response(status=status.HTTP_200_OK, data=return_data)
@@ -3731,6 +3753,7 @@ def get_social_media_data(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_youtube_stats(request):
+    user = request.user
     video_id = request.data.get("video_id")
     headers = {"Accept": "application/json"}
     params = comms_consts.YOUTUBE_VIDEO_PARAMS(video_id)
@@ -3741,6 +3764,7 @@ def get_youtube_stats(request):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"][0]["statistics"]
+                user.add_meta_data("analyzed_article")
             else:
                 res = res.json()
                 videos = {"error": res["error"]["message"]}
@@ -3749,3 +3773,27 @@ def get_youtube_stats(request):
         videos = {"error": str(e)}
         Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=videos)
     return Response(status=status.HTTP_200_OK, data=videos)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_bluesky_profile(request):
+    user = request.user
+    id = request.data.get("id")
+    data = {}
+    params = {"actor": id}
+    try:
+        with Variable_Client(30) as client:
+            res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
+            if res.status_code == 200:
+                res = res.json()   
+                data = res
+                user.add_meta_data("analyzed_article")     
+            else:
+                res = res.json()
+                data["error"] = res["message"]
+    except Exception as e:
+        print(e)
+        Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
+    return Response(status=status.HTTP_200_OK, data=data)
