@@ -1277,6 +1277,7 @@ EXCLUDE_DOMAINS = [
     "pypi.org",
     "biztoc.com",
     "kicksonfire.com",
+    "memeorandum.com",
 ]
 
 JOURNALIST_CHOICES = [
