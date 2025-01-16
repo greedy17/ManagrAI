@@ -514,7 +514,7 @@
           </div>
         </div>
 
-        <div class="card">
+        <!-- <div class="card">
           <div class="card__header" style="">
             <img class="cover-photo" src="@/assets/images/slackLogo.png" />
           </div>
@@ -557,7 +557,7 @@
               </div>
             </button>
           </div>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
