@@ -1258,10 +1258,18 @@ def normalize_bluesky_data(data):
     return normalized_data
 
 
+def get_published_after_value():
+    now = datetime.now(pytz.utc)
+    seven_days_ago = now - timedelta(days=7)
+    published_after = seven_days_ago.isoformat().replace("+00:00", "Z")
+    return published_after
+
+
 def get_youtube_data(query, max=50, user=None, date_from=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, date_from.isoformat())
+    publishedAfter = get_published_after_value()
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, publishedAfter)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)

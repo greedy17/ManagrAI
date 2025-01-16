@@ -3311,11 +3311,10 @@ a {
 }
 
 .photo-header-small {
-  // max-height: 400px;
+  max-height: 500px;
   width: 100%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 16/9;
   margin: 0;
-  // object-position: top;
   object-fit: cover;
   border-radius: 5px;
 }

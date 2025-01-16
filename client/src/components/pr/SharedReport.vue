@@ -1019,8 +1019,9 @@ a {
 }
 
 .photo-header-small {
+  max-height: 500px;
   width: 100%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 16/9;
   margin: 0;
   object-fit: cover;
   border-radius: 5px;
@@ -1183,7 +1184,7 @@ header {
 }
 
 .main {
-  padding: 32px 18vw 64px 18vw;
+  padding: 32px 20vw 64px 20vw;
 }
 
 .main-mobile {
