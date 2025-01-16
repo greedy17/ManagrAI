@@ -6,6 +6,7 @@ import hashlib
 import httpx
 import pytz
 import math
+import re
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -665,17 +666,18 @@ class NewsSource(TimeStampModel):
             except ValueError:
                 parsed_dates.append(datetime.strptime(str(date), "%Y-%m-%d %H:%M:%S"))
         unique_dates = sorted({date.date() for date in parsed_dates})
+        if len(unique_dates) <= 1:
+            return f"Not enough articles synced for {self.domain}"
         time_diffs = [
             (unique_dates[i] - unique_dates[i - 1]).days for i in range(1, len(unique_dates))
         ]
-        ema = time_diffs[0]
-        for diff in time_diffs[1:]:
-            ema = alpha * diff + (1 - alpha) * ema
-        if time_diffs:
-            avg_interval_days = sum(time_diffs) / len(time_diffs)
+        if len(time_diffs):
+            ema = time_diffs[0]
+            for diff in time_diffs[1:]:
+                ema = alpha * diff + (1 - alpha) * ema
+            self.posting_frequency = math.ceil(ema)
         else:
-            avg_interval_days = 0
-        self.posting_frequency = math.ceil(ema)
+            print(f"Unique: {unique_dates}\nTime Diffs: {time_diffs}")
         return self.save()
 
     def check_if_stopped(self):
@@ -828,6 +830,57 @@ class AssistAlert(TimeStampModel):
         self.recipients.pop(remove_index)
         return self.save()
 
+    def update_thread_data(self, for_dev=False):
+        from managr.comms.utils import normalize_article_data
+
+        project = self.thread.meta_data.get("project", "")
+        if self.search.search_boolean == self.search.input_text:
+            self.search.update_boolean()
+        boolean = self.search.search_boolean
+        end_time = datetime.now()
+        start_time = end_time - timedelta(hours=24)
+        clips = self.search.get_clips(boolean, end_time, start_time)["articles"]
+        try:
+            clips = [article for article in clips if article["title"] != "[Removed]"]
+            internal_articles = Article.search_by_query(boolean, str(end_time), str(start_time))
+            normalized_clips = normalize_article_data(clips, internal_articles, False)
+            descriptions = [clip["description"] for clip in normalized_clips]
+            if for_dev:
+                print(f"Current Boolean: {boolean}")
+                print(f"Clips ({len(clips)}): {clips}")
+                print("------------------------------")
+                print(f"Internal Clips ({len(internal_articles)}): {internal_articles}")
+                print("------------------------------")
+            res = Search.get_summary(
+                self.user,
+                2000,
+                60.0,
+                descriptions,
+                self.search.instructions,
+                False,
+                False,
+                project,
+                False,
+                self.search.instructions,
+                True,
+            )
+            if for_dev:
+                print(f"Chat response: {res}")
+            else:
+                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+                message = re.sub(
+                    r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
+                )
+                self.thread.meta_data["articlesFiltered"] = normalized_clips
+                self.thread.meta_data["filteredArticles"] = normalized_clips
+                self.thread.meta_data["summary"] = message
+                self.thread.meta_data["summaries"] = []
+                self.thread.save()
+        except Exception as e:
+            print(str(e))
+        return
+
 
 class Process(TimeStampModel):
     user = models.ForeignKey(
@@ -907,8 +960,9 @@ class TwitterAccount(TimeStampModel):
             response = client.get(url, headers=headers, params=params)
             return self._handle_response(response)
 
+    @classmethod
     def get_summary(
-        self,
+        cls,
         user,
         tokens,
         timeout,

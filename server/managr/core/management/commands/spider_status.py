@@ -26,7 +26,7 @@ class Command(BaseCommand):
                     print(f"TASK RESTARTED: {params}")
                     task.delete()
                     url_list = ",".join(params)
-                    _run_spider_batch(url_list)
+                    _run_spider_batch(url_list, priority=10)
 
         if len(spider_tasks) == 0:
             sources = NewsSource.domain_list(True)

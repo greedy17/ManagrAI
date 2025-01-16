@@ -109,6 +109,10 @@ class CustomNewsSource(admin.ModelAdmin):
             for term in search_terms:
                 query |= Q(domain__icontains=term.strip())
             queryset = self.model.objects.filter(query)
+            for param, value in request.GET.items():
+                if param.endswith("__exact") and value in ["0", "1"]:
+                    boolean_value = value == "1"
+                    queryset = queryset.filter(**{param: boolean_value})
         return queryset, use_distinct
 
 

@@ -35,8 +35,12 @@ SCRAPPY_HEADERS = {
 XPATH_STRING_OBJ = {
     "title": ["//title/text()"],
     "author": [
+        "//meta[@name='author']/@content",
         "//*[contains(@class,'gnt_ar_by')]/a/text()",
         "//*[@class='article__author']/text()",
+        "//meta[@name='twitter:data1']/@content",
+        "//meta[@property='authors']/@content",
+        "//meta[@property='article:author']/@content",
         "//meta[contains(@name,'author')]/@content",
         "//*[@rel='author']/text()",
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
@@ -178,7 +182,7 @@ def data_cleaner(data):
 
 class NewsSpider(scrapy.Spider):
     name = "news_spider"
-    handle_httpstatus_list = [403, 400]
+    handle_httpstatus_list = [403, 400, 500, 501]
     custom_settings = {
         "FEED_EXPORT_ENCODING": "utf-8",
         "DOWNLOAD_TIMEOUT": 300,
@@ -285,6 +289,10 @@ class NewsSpider(scrapy.Spider):
             url = params.get("url")[0]
         try:
             source = NewsSource.objects.get(domain=url)
+            if response.status == 500:
+                source.is_active = False
+                source.save()
+                return
             if response.status == 403:
                 source.use_scrape_api = True
                 source.save()
@@ -407,18 +415,10 @@ class NewsSpider(scrapy.Spider):
                             continue
                     try:
                         data = json.loads(selector)
-                        selector_value = None
+                        selector_value = data
                         for path in data_path:
-                            if isinstance(selector_value, list):
-                                selector_list = []
-                                for v in selector_value:
-                                    selector_list.append(v[path])
-                                selector_value = selector_list
-                            elif isinstance(selector_value, dict):
-                                selector_value = selector_value[path]
-                            else:
-                                selector_value = data[path]
-                        selector = selector_value
+                            selector_value = selector_value[path]
+                        selector = [selector_value]
                     except Exception as e:
                         print(e)
                         selector = []

@@ -828,7 +828,6 @@ class PRSearchViewSet(
         if has_error:
             send_to_error_channel(message, user.email, "tweet summary (platform)")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"summary": message})
-
         return Response(data={"summary": message})
 
     @action(
@@ -3300,7 +3299,6 @@ def read_column_names(request):
     file_obj = request.FILES.get("file")
     if file_obj:
         file_name = file_obj.name
-        print(file_name)
         try:
             if file_name.endswith(".xlsx"):
                 workbook = load_workbook(file_obj, data_only=True)
@@ -3784,7 +3782,7 @@ def get_bluesky_profile(request):
     user = request.user
     id = request.data.get("id")
     data = {}
-    params = {"actor": id }
+    params = {"actor": id}
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
