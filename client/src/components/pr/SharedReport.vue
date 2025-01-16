@@ -49,7 +49,9 @@
 
         <div class="space-between bottom-margin">
           <div class="col">
-            <p class="bold-txt medium-txt">Unique visitors</p>
+            <p class="bold-txt medium-txt">
+              {{ report.meta_data.is_social ? 'Potential reach' : 'Unique visitors' }}
+            </p>
             <small>The potential audience reached by your media coverage</small>
           </div>
 
@@ -65,7 +67,7 @@
             <small>Number of times content was shared on social media</small>
           </div>
 
-          <section class="row img-mar">
+          <section v-if="!report.meta_data.is_social" class="row img-mar">
             <div style="margin-right: 20px" class="row">
               <img src="@/assets/images/facebook.png" height="20px" alt="" />
               <p class="bold-txt">{{ report.meta_data.socialTotals.totalFacebookLikes }}</p>
@@ -81,6 +83,27 @@
             <div class="row">
               <img src="@/assets/images/pinterest.png" height="20px" alt="" />
               <p class="bold-txt">{{ report.meta_data.socialTotals.totalPinterestLikes }}</p>
+            </div>
+          </section>
+
+          <section v-else class="row img-mar">
+            <div style="margin-right: 20px" class="row">
+              <img src="@/assets/images/twitter-x.svg" height="16px" alt="" />
+              <p class="bold-txt">
+                {{ formatNumber(report.meta_data.socialTotals.totalTwitterLikes) }}
+              </p>
+            </div>
+            <div style="margin-right: 20px" class="row">
+              <img src="@/assets/images/youtube.png" height="16px" alt="" />
+              <p class="bold-txt">
+                {{ formatNumber(report.meta_data.socialTotals.totalYoutubeLikes) }}
+              </p>
+            </div>
+            <div class="row">
+              <img src="@/assets/images/bluesky.png" height="24px" alt="" />
+              <p class="bold-txt">
+                {{ formatNumber(report.meta_data.socialTotals.totalBlueskyLikes) }}
+              </p>
             </div>
           </section>
         </div>
@@ -106,12 +129,40 @@
     <div style="width: 100vw" class="main">
       <section>
         <div v-for="(article, i) in report.meta_data.starredArticles" :key="i" class="container">
-          <div style="position: relative" class="container__top">
+          <div
+            style="position: relative"
+            :class="!report.meta_data.is_social ? container__top : ''"
+          >
             <div style="margin-bottom: 12px">
-              <img @error="onImageError($event)" :src="article.image" class="photo-header-small" />
+              <img
+                v-if="!report.meta_data.is_social"
+                @error="onImageError($event)"
+                :src="article.image"
+                class="photo-header-small"
+              />
+
+              <img
+                v-else-if="article.type === 'twitter'"
+                @error="onImageError($event)"
+                :src="article.user.profile_image_url.replace('_normal', '')"
+                class="photo-header-small"
+              />
+
+              <img
+                v-else
+                @error="onImageError($event)"
+                :src="
+                  article.type === 'youtube'
+                    ? article.image_url.replace('default', 'hqdefault')
+                    : article.image_url
+                    ? article.image_url
+                    : blueskyPlaceholder
+                "
+                class="photo-header-small"
+              />
             </div>
 
-            <div class="space-between no-letter-margin">
+            <div v-if="!report.meta_data.is_social" class="space-between no-letter-margin">
               <div class="col">
                 <p class="bold-txt">
                   {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
@@ -129,13 +180,57 @@
               <small>{{ getTimeDifferenceInMinutes(article.date) }}</small>
             </div>
 
-            <div style="margin: 20px 0">
+            <div v-else class="space-between no-letter-margin">
+              <div class="col">
+                <div style="margin-top: 8px" class="row">
+                  <img
+                    v-if="article.type === 'twitter'"
+                    src="@/assets/images/twitter-x.svg"
+                    height="12px"
+                    alt=""
+                    style="margin-right: 8px"
+                  />
+                  <img
+                    v-else-if="article.type === 'bluesky'"
+                    src="@/assets/images/bluesky.png"
+                    height="14px"
+                    alt=""
+                    style="margin-right: 8px"
+                  />
+                  <img
+                    v-else
+                    src="@/assets/images/youtube.png"
+                    height="12px"
+                    alt=""
+                    style="margin-right: 8px"
+                  />
+                  <p>{{ article.type === 'twitter' ? article.user.name : article.author }}</p>
+                </div>
+              </div>
+              <small>{{ getTimeDifferenceInMinutes(article.created_at) }}</small>
+            </div>
+
+            <div v-if="!report.meta_data.is_social" style="margin: 20px 0">
               <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
                 {{ article.description }}</a
               >
             </div>
 
-            <div class="space-between bottom-margin-m">
+            <div v-else style="margin: 20px 0">
+              <p
+                @click="openTweet(article.user.username, article.id)"
+                v-if="article.type === 'twitter'"
+                class="elipsis-text"
+              >
+                {{ article.text }}
+              </p>
+
+              <a v-else :href="article.url" target="_blank" class="elipsis-text">
+                {{ article.text }}</a
+              >
+            </div>
+
+            <div v-if="!report.meta_data.is_social" class="space-between bottom-margin-m">
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="14px" alt="" />
                 <p class="bold-txt">
@@ -228,6 +323,87 @@
                     </div> -->
               </section>
             </div>
+
+            <div v-else class="space-between bottom-margin-m">
+              <div class="row img-mar">
+                <img src="@/assets/images/users.svg" height="14px" alt="" />
+                <p v-if="article.type === 'twitter'" class="bold-font">
+                  {{
+                    article.user.public_metrics.followers_count
+                      ? formatNumber(article.user.public_metrics.followers_count)
+                      : 0
+                  }}
+                </p>
+
+                <p v-else-if="article.type === 'youtube'" class="bold-font">
+                  {{ formatNumber(article.stats.viewCount) }}
+                </p>
+
+                <p v-else class="bold-font">
+                  {{
+                    formatNumber(
+                      article.stats.likes +
+                        article.stats.quotes +
+                        article.stats.replies +
+                        article.stats.reposts,
+                    )
+                  }}
+                </p>
+              </div>
+
+              <section class="row img-mar">
+                <div style="margin-right: 12px" class="row">
+                  <img src="@/assets/images/heart.svg" height="14px" alt="" />
+                  <p v-if="article.type === 'twitter'" class="bold-font">
+                    {{ formatNumber(article.user.public_metrics.like_count) }}
+                  </p>
+
+                  <p v-else-if="article.type === 'bluesky'" class="bold-font">
+                    {{ formatNumber(article.stats.likes) }}
+                  </p>
+
+                  <p v-else class="bold-font">
+                    {{ formatNumber(article.stats.likeCount) }}
+                  </p>
+                </div>
+
+                <div v-if="article.type === 'bluesky'" style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/arrows-retweet.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <p class="bold-font">
+                    {{ formatNumber(article.stats.reposts) }}
+                  </p>
+                </div>
+
+                <div v-if="article.type === 'bluesky'" style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/commentAlt.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <p class="bold-font">
+                    {{ formatNumber(article.stats.replies) }}
+                  </p>
+                </div>
+
+                <div v-if="article.type === 'youtube'" style="margin-right: 12px" class="row">
+                  <img
+                    style="margin-right: 4px"
+                    src="@/assets/images/commentAlt.svg"
+                    height="14px"
+                    alt=""
+                  />
+                  <p class="bold-font">
+                    {{ formatNumber(article.stats.commentCount) }}
+                  </p>
+                </div>
+              </section>
+            </div>
           </div>
 
           <div v-if="article.summary" class="report-body">
@@ -268,16 +444,45 @@
       <section class="container">
         <div v-for="(article, i) in report.meta_data.clips" :key="i" class="article">
           <div class="space-between">
-            <p class="bold-txt">
+            <p v-if="!report.meta_data.is_social" class="bold-txt">
               {{ article.traffic ? removeDomain(article.traffic.target) : 'unknown' }}
+            </p>
+
+            <p v-else class="bold-font row">
+              <img
+                v-if="article.type === 'twitter'"
+                src="@/assets/images/twitter-x.svg"
+                height="12px"
+                alt=""
+                style="margin-right: 8px"
+              />
+              <img
+                v-else-if="article.type === 'bluesky'"
+                src="@/assets/images/bluesky.png"
+                height="14px"
+                alt=""
+                style="margin-right: 8px"
+              />
+              <img
+                v-else
+                src="@/assets/images/youtube.png"
+                height="12px"
+                alt=""
+                style="margin-right: 8px"
+              />
+
+              {{
+                article.author
+                  ? article.author
+                  : article.type === 'twitter'
+                  ? article.user.name
+                  : 'Unknown'
+              }}
             </p>
           </div>
 
-          <div class="space-between-bottom">
+          <div v-if="!report.meta_data.is_social" class="space-between-bottom">
             <div class="article-body">
-              <!-- <h3 class="bold-txt">
-                {{ article.title }}
-              </h3> -->
               <div style="margin: 20px 0">
                 <a :href="article.url" target="_blank" class="bold-txt elipsis-text">
                   {{ article.title }}</a
@@ -292,7 +497,60 @@
             <img @error="onImageError($event)" :src="article.image" class="photo-header-alt" />
           </div>
 
-          <div style="margin-top: 12px" class="space-between bottom-border">
+          <div v-else class="space-between-bottom">
+            <div class="article-body">
+              <div v-if="article.type !== 'twitter'" style="margin: 20px 0">
+                <a
+                  :href="article.url"
+                  target="_blank"
+                  style="cursor: pointer"
+                  class="bold-txt elipsis-text"
+                >
+                  {{ article.title ? article.title : article.text }}</a
+                >
+              </div>
+
+              <div
+                @click="openTweet(article.user.username, article.id)"
+                v-else
+                style="margin: 20px 0; cursor: pointer"
+              >
+                <p class="bold-txt elipsis-text">
+                  {{ article.title ? article.title : article.text }}
+                </p>
+              </div>
+
+              <p class="report-body">
+                {{ article.text }}
+              </p>
+            </div>
+
+            <img
+              v-if="article.type === 'twitter'"
+              @error="onImageError($event)"
+              :src="article.user.profile_image_url.replace('_normal', '')"
+              class="photo-header-alt"
+            />
+
+            <img
+              v-else
+              @error="onImageError($event)"
+              :src="
+                article.type === 'youtube'
+                  ? article.image_url.replace('default', 'hqdefault')
+                  : article.image_url
+                  ? article.image_url
+                  : blueskyPlaceholder
+              "
+              class="photo-header-alt"
+            />
+          </div>
+
+          <div
+            v-if="!report.meta_data.is_social"
+            style="margin-top: 12px"
+            class="space-between bottom-border"
+          >
             <div class="row report-body">
               <div class="pill">
                 <img src="@/assets/images/profile.svg" height="12px" alt="" />
@@ -401,104 +659,123 @@
             </div>
           </div>
 
-          <!-- <div style="margin-top: 8px" class="space-between bottom-border">
-                  <div></div>
-                  <section class="row-even small-text img-mar">
-                    <div class="row">
-                      <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 2) }}</p>
-                    </div>
-                     <div class="row">
-                      <img src="@/assets/images/pinterest.png" height="14px" alt="" />
-                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 8) }}</p>
-                    </div>
-                    <div class="row">
-                      <img src="@/assets/images/twitter-x.svg" height="12px" alt="" />
-                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 2) }}</p>
-                    </div>
-                    <div class="row">
-                      <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                      <p class="bold-txt">{{ formatNumber(article.traffic.social / 4) }}</p>
-                    </div>
-                   
-                  </section>
-                </div> -->
-        </div>
+          <div v-else style="margin-top: 12px" class="space-between bottom-border">
+            <div class="row report-body">
+              <div class="pill">
+                <img src="@/assets/images/profile.svg" height="12px" alt="" />
+                <p style="margin-right: 6px">
+                  {{
+                    article.author
+                      ? article.author
+                      : article.type === 'twitter'
+                      ? article.user.name
+                      : 'Unknown'
+                  }}
+                </p>
+              </div>
 
-        <!-- <div v-for="(clip, i) in report.meta_data.clips" :key="i" class="news-card">
-          <header>
-            <div class="card-col">
-              <div class="card-top-left">
-                <span>{{ clip.source }}</span>
-              </div>
-              <div class="article-title-container">
-                <h1 class="article-title" @click="goToArticle(clip.url)">
-                  {{ clip.title }}
-                </h1>
-              </div>
-              <p class="article-preview">
-                {{ clip.description }}
-              </p>
+              <small>{{ getTimeDifferenceInMinutes(article.created_at) }}</small>
             </div>
-          </header>
 
-          <div class="card-footer">
-            <div class="author-time space-between">
-              <div>
-                <span class="author">{{ clip.author[0] }}</span>
-                <span class="divier-dot">.</span>
-                <span class="off-gray">{{ getTimeDifferenceInMinutes(clip.date) }}</span>
-              </div>
-
-              <small class="bold-txt row">
+            <div class="row small-text">
+              <div v-if="article.type === 'twitter'" style="margin-right: 16px" class="row">
                 <img
-                  style="margin-right: 8px"
+                  style="margin-right: 4px"
                   src="@/assets/images/users.svg"
-                  height="16px"
+                  height="14px"
                   alt=""
                 />
-                {{ formatNumber(clip.traffic.users) }}
-              </small>
-            </div>
-          </div>
+                <p class="bold-font">
+                  {{ formatNumber(article.user.public_metrics.followers_count) }}
+                </p>
+              </div>
 
-          <div class="space-between">
-            <div></div>
-            <div class="row">
-              <div style="margin-right: 12px" class="row">
-                <img src="@/assets/images/facebook.png" height="14px" alt="" />
-                <p class="bold-txt">
-                  {{
-                    formatNumber(
-                      report.meta_data.socialData[clip.url] &&
-                        report.meta_data.socialData[clip.url][0]
-                        ? report.meta_data.socialData[clip.url][0]['total_facebook_shares']
-                          ? report.meta_data.socialData[clip.url][0]['total_facebook_shares']
-                          : 0
-                        : 0,
-                    )
-                  }}
+              <div v-if="article.type === 'twitter'" style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/heart.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.user.public_metrics.like_count) }}
                 </p>
               </div>
-              <div class="row">
-                <img src="@/assets/images/reddit.svg" height="14px" alt="" />
-                <p class="bold-txt">
-                  {{
-                    formatNumber(
-                      report.meta_data.socialData[clip.url] &&
-                        report.meta_data.socialData[clip.url][0]
-                        ? report.meta_data.socialData[clip.url][0]['total_reddit_engagements']
-                          ? report.meta_data.socialData[clip.url][0]['total_reddit_engagements']
-                          : 0
-                        : 0,
-                    )
-                  }}
+
+              <div v-if="article.type === 'youtube'" style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/users.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.viewCount) }}
+                </p>
+              </div>
+
+              <div v-if="article.type === 'youtube'" style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/heart.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.likeCount) }}
+                </p>
+              </div>
+
+              <div v-if="article.type === 'youtube'" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/commentAlt.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.commentCount) }}
+                </p>
+              </div>
+
+              <div v-if="article.type === 'bluesky'" style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/heart.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.likes) }}
+                </p>
+              </div>
+
+              <div v-if="article.type === 'bluesky'" style="margin-right: 16px" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/commentAlt.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.replies) }}
+                </p>
+              </div>
+
+              <div v-if="article.type === 'bluesky'" class="row">
+                <img
+                  style="margin-right: 4px"
+                  src="@/assets/images/arrows-retweet.svg"
+                  height="14px"
+                  alt=""
+                />
+                <p class="bold-font">
+                  {{ formatNumber(article.stats.reposts) }}
                 </p>
               </div>
             </div>
           </div>
-      
-        </div> -->
+        </div>
       </section>
     </div>
 
@@ -507,15 +784,6 @@
         <p>{{ formatDate(reportDate) }}</p>
       </div>
     </div>
-
-    <!-- <div @click.stop="openPanel" :class="{ expanded: panelOpen }" class="floating-panel">
-      <div v-outside-click="closePanel" class="fadein panel-options" v-show="panelOpen">
-        <img src="@/assets/images/wand.svg" height="20px" alt="" />
-        <img src="@/assets/images/wand.svg" height="20px" alt="" />
-        <img src="@/assets/images/wand.svg" height="20px" alt="" />
-      </div>
-      <img src="@/assets/images/wand.svg" height="20px" alt="" />
-    </div> -->
   </div>
 </template>
 <script>
@@ -532,6 +800,7 @@ export default {
       imageUrl: null,
       reportDate: null,
       logoPlaceholder: require('@/assets/images/iconlogo.png'),
+      blueskyPlaceholder: require('@/assets/images/bluesky.png'),
     }
   },
   components: {
@@ -546,7 +815,6 @@ export default {
       this.code = code
       try {
         await User.api.getReport(code).then((response) => {
-          console.log(response.data)
           this.report = response.data
           this.reportDate = response.date
         })
@@ -556,6 +824,9 @@ export default {
     }
   },
   methods: {
+    openTweet(username, id) {
+      window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
+    },
     openPanel() {
       this.panelOpen = true
     },
@@ -600,16 +871,20 @@ export default {
       return `${monthName} ${day}, ${year}`
     },
     formatNumber(num) {
-      if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
+      if (num) {
+        if (num >= 1000000000) {
+          return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B'
+        }
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
+        }
+        if (num >= 1000) {
+          return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+        }
+        return num.toString()
+      } else {
+        return 0
       }
-      if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M'
-      }
-      if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
-      }
-      return num.toString()
     },
     getTimeDifferenceInMinutes(dateString) {
       if (dateString) {
@@ -744,12 +1019,18 @@ a {
 }
 
 .photo-header-small {
-  height: 400px;
   width: 100%;
+  aspect-ratio: 1/1;
   margin: 0;
   object-fit: cover;
-  object-position: top;
   border-radius: 5px;
+
+  // height: 550px;
+  // width: 100%;
+  // margin: 0;
+  // object-fit: cover;
+  // object-position: top;
+  // border-radius: 5px;
 }
 
 .container {
@@ -902,7 +1183,7 @@ header {
 }
 
 .main {
-  padding: 32px 15vw 64px 15vw;
+  padding: 32px 18vw 64px 18vw;
 }
 
 .main-mobile {
@@ -1192,9 +1473,13 @@ header {
   }
 
   .report-body {
-    height: 80px;
+    max-height: 80px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 }
 

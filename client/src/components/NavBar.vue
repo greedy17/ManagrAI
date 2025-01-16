@@ -309,7 +309,7 @@
                 <img
                   class="search-icon"
                   v-else-if="search.meta_data.type === 'social'"
-                  src="@/assets/images/twitter-x.svg"
+                  src="@/assets/images/thumb.svg"
                   height="12px"
                   alt=""
                   @click="selectSearch(search)"
@@ -540,7 +540,7 @@
                   <img
                     class="search-icon"
                     v-else-if="search.meta_data.type === 'social'"
-                    src="@/assets/images/twitter-x.svg"
+                    src="@/assets/images/thumb.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"

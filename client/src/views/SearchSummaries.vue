@@ -1155,7 +1155,7 @@
                               Web
                             </span>
 
-                            <p>Search web data</p>
+                            <p>Search the web</p>
                           </div>
 
                           <div
@@ -1167,7 +1167,7 @@
                               Trending
                             </span>
 
-                            <p>Discover trending headlines from around the world</p>
+                            <p>Search trending news</p>
                           </div>
 
                           <div
@@ -1179,7 +1179,7 @@
                               Write
                             </span>
 
-                            <p>Generate content without scanning the news</p>
+                            <p>AI writing assistant</p>
                           </div>
 
                           <div
@@ -3357,7 +3357,7 @@
                       Web
                     </span>
 
-                    <p>Search web data</p>
+                    <p>Search the web</p>
                   </div>
 
                   <div
@@ -3369,7 +3369,7 @@
                       Trending
                     </span>
 
-                    <p>Discover trending headlines from around the world</p>
+                    <p>Search trending news</p>
                   </div>
 
                   <div
@@ -3405,7 +3405,7 @@
                       Trending
                     </span>
 
-                    <p>Discover trending headlines from around the world</p>
+                    <p>Search trending news</p>
                   </div>
                 </section>
               </div>
@@ -5333,6 +5333,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
+        this.hideSave()
         this.searchSaved = true
         this.refreshUser()
         this.$store.dispatch('getThreads')
@@ -9385,7 +9386,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
         }
       }
-      console.log('TWEET LIST IS HERE ----- > :', tweetList)
+      // console.log('TWEET LIST IS HERE ----- > :', tweetList)
       return tweetList
     },
     prepareIgSummary(posts) {

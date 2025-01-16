@@ -2738,10 +2738,12 @@ class ThreadViewSet(
         return Thread.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
+        user = request.user
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            user.add_meta_data("thread_saved")
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -3473,9 +3475,11 @@ def redirect_from_instagram(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_traffic_data(request):
+    user = request.user
     urls = request.data.get("urls")
     traffic_data = get_url_traffic_data(urls)
     emit_process_website_domain(urls, request.user.organization.name)
+    user.add_meta_data("analyzed_article")
     if "error" in traffic_data.keys():
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=traffic_data)
     return Response(status=status.HTTP_200_OK, data=traffic_data)
@@ -3581,13 +3585,17 @@ def get_clip_report_summary(request):
     user = request.user
     clips = request.data.get("clips")
     brand = request.data.get("brand")
+    is_social = request.data.get("social")
     token_amount = 1000
     timeout = 60.0
     has_error = False
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
+            if is_social:
+                prompt = comms_consts.SOCIAL_REPORT_SUMMARY(elma, brand, clips)
+            else:        
+                prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -3745,6 +3753,7 @@ def get_social_media_data(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_youtube_stats(request):
+    user = request.user
     video_id = request.data.get("video_id")
     headers = {"Accept": "application/json"}
     params = comms_consts.YOUTUBE_VIDEO_PARAMS(video_id)
@@ -3755,6 +3764,7 @@ def get_youtube_stats(request):
             if res.status_code == 200:
                 res = res.json()
                 videos = res["items"][0]["statistics"]
+                user.add_meta_data("analyzed_article")
             else:
                 res = res.json()
                 videos = {"error": res["error"]["message"]}
@@ -3769,6 +3779,7 @@ def get_youtube_stats(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_bluesky_profile(request):
+    user = request.user
     id = request.data.get("id")
     data = {}
     params = {"actor": id}
@@ -3776,8 +3787,9 @@ def get_bluesky_profile(request):
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
             if res.status_code == 200:
-                res = res.json()
+                res = res.json()   
                 data = res
+                user.add_meta_data("analyzed_article")     
             else:
                 res = res.json()
                 data["error"] = res["message"]
