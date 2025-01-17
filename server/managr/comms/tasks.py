@@ -700,10 +700,11 @@ def _send_social_summary(news_alert_id):
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
     if thread:
-        thread.meta_data["articlesFiltered"] = sorted_social_data
-        thread.meta_data["filteredArticles"] = sorted_social_data
+        thread.meta_data["tweets"] = sorted_social_data
         thread.meta_data["summary"] = message
         thread.meta_data["summaries"] = []
+        if user.has_twitter_integration:
+            thread.meta_data["tweetMedia"] = email_data["includes"]
         thread.save()
 
     content = {
