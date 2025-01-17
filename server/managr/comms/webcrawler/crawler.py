@@ -198,9 +198,9 @@ class NewsSpider(scrapy.Spider):
         "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
         "HTTPCACHE_EXPIRATION_SECS": 43200,
         "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
-        "ITEM_PIPELINES": {
-            "managr.comms.webcrawler.pipelines.BulkInsertPipeline": 1,
-        },
+        # "ITEM_PIPELINES": {
+        #     "managr.comms.webcrawler.pipelines.BulkInsertPipeline": 1,
+        # },
     }
 
     def __init__(self, *args, **kwargs):
@@ -396,8 +396,6 @@ class NewsSpider(scrapy.Spider):
                     logger.exception(f"Failed to find source with domain: {domain}")
                     return
         meta_tag_data = {"link": url, "source": source.id}
-        if self.article_only:
-            meta_tag_data["id"] = source.id
         article_selectors = source.article_selectors()
         fields_dict = {}
         article_tags = None
@@ -474,15 +472,157 @@ class NewsSpider(scrapy.Spider):
                     fields_dict["content"] = tag
                     article_tags = tags
                     break
-        meta_tag_data["content"] = article_tags
+        full_article = ""
+        cleaned_data = None
+        if article_tags is not None:
+            for article in article_tags:
+                article = article.replace("\n", "").strip()
+                full_article += article
+            meta_tag_data["content"] = full_article
+        try:
+            if "content" in meta_tag_data.keys():
+                cleaned_data = data_cleaner(meta_tag_data)
+                if isinstance(cleaned_data, dict):
+                    if self.article_only and instance:
+                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
+                    else:
+                        serializer = ArticleSerializer(data=cleaned_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    serializer.instance.update_search_vector()
+                else:
+                    raise Exception(cleaned_data)
+            else:
+                logger.info(f"No content for article: {response.url}")
+                return
+        except IntegrityError:
+            return
+        except Exception as e:
+            print(e)
+            self.error_log.append(f"{url}|{str(e)}")
+            if source.error_log is None or len(source.error_log) <= 5:
+                source.add_error(f"{str(e)} {meta_tag_data}")
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]
                 field = XPATH_TO_FIELD[key]
                 setattr(source, field, path)
             source.save()
+        if not source.is_crawling:
+            source.crawling
         self.urls_processed += 1
-        yield meta_tag_data
+        self.articles_to_process -= 1
+        if self.articles_to_process == 0:
+            source.check_if_stopped()
+        return
+
+    # def parse_article(self, response, source=False):
+    #     xpath_copy = copy(XPATH_STRING_OBJ)
+    #     url = response.url
+    #     if "api.scraperapi.com" in response.url:
+    #         parsed_url = urlparse(response.url)
+    #         params = parse_qs(parsed_url.query)
+    #         url = params.get("url")[0]
+    #     if source is False:
+    #         try:
+    #             instance = Article.objects.get(link=url)
+    #             source = instance.source
+    #         except Article.DoesNotExist:
+    #             instance = None
+    #             try:
+    #                 domain = get_domain(url, True)
+    #                 source = NewsSource.objects.get(domain__contains=domain)
+    #             except NewsSource.DoesNotExist:
+    #                 logger.exception(f"Failed to find source with domain: {domain}")
+    #                 return
+    #     meta_tag_data = {"link": url, "source": source.id}
+    #     if self.article_only:
+    #         meta_tag_data["id"] = source.id
+    #     article_selectors = source.article_selectors()
+    #     fields_dict = {}
+    #     article_tags = None
+    #     if source.selectors_defined:
+    #         for key in article_selectors.keys():
+    #             path = article_selectors[key]
+    #             if "//script" in path:
+    #                 script_path = path.split("|")[0]
+    #                 selector = response.xpath(script_path).get()
+    #             else:
+    #                 selector = response.xpath(path).getall()
+    #             if "//script" in path:
+    #                 data_path = path.split("|")[1:]
+    #                 for i, v in enumerate(data_path):
+    #                     try:
+    #                         integer_value = int(v)
+    #                         data_path[i] = integer_value
+    #                     except ValueError:
+    #                         continue
+    #                 try:
+    #                     data = json.loads(selector)
+    #                     selector_value = data
+    #                     for path in data_path:
+    #                         selector_value = selector_value[path]
+    #                     selector = [selector_value]
+    #                 except Exception as e:
+    #                     print(e)
+    #                     selector = []
+    #             if len(selector) and key != "content" and key != "publish_date":
+    #                 selector = ",".join(selector)
+    #             if key == "publish_date":
+    #                 if isinstance(selector, list) and len(selector):
+    #                     selector = selector[0]
+    #                 selector = extract_date_from_text(selector)
+    #             if key == "content":
+    #                 article_tags = selector
+    #                 continue
+    #             if selector is not None:
+    #                 meta_tag_data[key] = selector
+    #             else:
+    #                 meta_tag_data[key] = "N/A"
+    #     else:
+    #         for key in xpath_copy.keys():
+    #             if article_selectors[key] is not None:
+    #                 xpath_copy[key] = [article_selectors[key]]
+    #             for path in xpath_copy[key]:
+    #                 selector = response.xpath(path).get()
+    #                 if key == "publish_date":
+    #                     if "text" in path and selector is not None:
+    #                         selector = extract_date_from_text(selector)
+    #                     if "text" not in path:
+    #                         try:
+    #                             parser.parse(selector)
+    #                         except Exception as e:
+    #                             print(e)
+    #                             continue
+    #                 if selector is not None:
+    #                     fields_dict[key] = path
+    #                     meta_tag_data[key] = selector
+    #                     break
+    #             if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+    #                 meta_tag_data[key] = None
+    #         article_tag_list = ["article", "story", "content"]
+    #         article_xpaths = ["//article//p//text()"]
+    #         for a in article_tag_list:
+    #             article_xpaths.append(
+    #                 f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+    #             )
+    #         if article_selectors["content"] is not None:
+    #             article_xpaths = [article_selectors["content"]]
+    #         for tag in article_xpaths:
+    #             tags = response.xpath(tag).getall()
+    #             if len(tags):
+    #                 fields_dict["content"] = tag
+    #                 article_tags = tags
+    #                 break
+    #     meta_tag_data["content"] = article_tags
+    #     if len(fields_dict):
+    #         for key in fields_dict.keys():
+    #             path = fields_dict[key]
+    #             field = XPATH_TO_FIELD[key]
+    #             setattr(source, field, path)
+    #         source.save()
+    #     self.urls_processed += 1
+    #     yield meta_tag_data
 
     def process_new_url(self, source, response):
         exclude_classes_list = ["menu", "-nav"]
