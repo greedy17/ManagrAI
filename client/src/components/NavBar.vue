@@ -464,6 +464,21 @@
                   v-for="(report, i) in reports"
                   :key="report.id"
                 >
+                  <img
+                    v-if="report.meta_data.is_social"
+                    src="@/assets/images/thumb.svg"
+                    height="12px"
+                    alt=""
+                    style="filter: invert(40%); margin-left: 16px"
+                  />
+                  <img
+                    v-else
+                    src="@/assets/images/globe.svg"
+                    height="12px"
+                    alt=""
+                    style="filter: invert(40%); margin-left: 16px"
+                  />
+
                   <p :title="report.name" @click="selectReport(report.share_url)">
                     {{ report.title }}
                   </p>
