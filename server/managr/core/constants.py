@@ -187,18 +187,19 @@ def OPEN_AI_CHAT_COMPLETIONS_BODY(
         "user": user_name,
         "n": count,
     }
-    if system_role:
+    if system_role and "4" in model:
         first_message = [{"role": "system", "content": system_role}]
         first_message.extend(body["messages"])
         body["messages"] = first_message
-    if token_amount:
+    if token_amount and "4" in model:
         body["max_tokens"] = token_amount
-    if temperature:
-        body["temperature"] = temperature
-    if top_p:
-        body["top_p"] = top_p
-    if response_format:
-        body["response_format"] = response_format
+    if "4" in model:
+        if temperature:
+            body["temperature"] = temperature
+        if top_p:
+            body["top_p"] = top_p
+        if response_format:
+            body["response_format"] = response_format
     return body
 
 

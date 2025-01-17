@@ -549,9 +549,13 @@ class NewsSource(TimeStampModel):
         return stopped_sources
 
     @classmethod
-    def domain_list(cls, scrape_ready=False, new=False, type="HTML", run_now=False):
+    def domain_list(
+        cls, scrape_ready=False, new=False, type="HTML", run_now=False, scrape_api=False
+    ):
         six_hours = datetime.now() - timedelta(hours=6)
-        active_sources = cls.objects.filter(is_active=True, scrape_type=type)
+        active_sources = cls.objects.filter(
+            is_active=True, scrape_type=type, use_scrape_api=scrape_api
+        )
         if scrape_ready and new:
             active_sources = active_sources.filter(
                 article_link_selector__isnull=False, article_link_regex__isnull=True
@@ -971,6 +975,7 @@ class TwitterAccount(TimeStampModel):
         company,
         instructions=False,
         for_client=False,
+        model="gpt-4o",
     ):
         elma = core_consts.ELMA
         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -985,6 +990,7 @@ class TwitterAccount(TimeStampModel):
             "You are a VP of Communications",
             token_amount=tokens,
             top_p=0.1,
+            model=model,
         )
         with Variable_Client(timeout) as client:
             r = client.post(

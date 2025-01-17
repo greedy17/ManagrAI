@@ -633,6 +633,7 @@ def _send_news_summary(news_alert_id):
         alert.meta_data["sent_count"] += 1
     else:
         alert.meta_data["sent_count"] = 1
+    alert.meta_data["last_sent"] = str(datetime.datetime.now())
     alert.save()
     return
 
@@ -644,7 +645,7 @@ def _send_social_summary(news_alert_id):
     thread = None
     link = "{settings.MANAGR_URL}/login"
     if alert.thread:
-        thread = Thread.objects.get(id=alert.thread.id)
+        thread = alert.thread
         link = thread.generate_url()
     if alert.search.search_boolean == alert.search.input_text:
         alert.search.update_boolean()
@@ -675,7 +676,7 @@ def _send_social_summary(news_alert_id):
             if value == "twitter":
                 email_data["includes"] = social_data["includes"]
             social_data_list.extend(social_data["data"])
-        sorted_social_data = merge_sort_dates(social_data_list, "created_at")
+    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     email_list = []
     for value in sorted_social_data:
         if value["type"] == "twitter":
@@ -685,6 +686,7 @@ def _send_social_summary(news_alert_id):
             social_value = [
                 f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
             ]
+            email_list.append(social_value)
     res = TwitterAccount.get_summary(
         alert.user,
         2000,
@@ -720,6 +722,7 @@ def _send_social_summary(news_alert_id):
         alert.meta_data["sent_count"] += 1
     else:
         alert.meta_data["sent_count"] = 1
+    alert.meta_data["last_sent"] = str(datetime.datetime.now())
     alert.save()
     return
 
