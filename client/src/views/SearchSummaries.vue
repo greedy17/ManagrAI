@@ -1800,7 +1800,7 @@
                     (mainView === 'web' && summary)) &&
                   !isViewOnly
                 "
-                :disabled="searchSaved && mainView !== 'news'"
+                :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
               >
                 <!-- <img
                   v-if="
@@ -1841,7 +1841,7 @@
 
                 <div
                   v-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
@@ -1852,7 +1852,7 @@
 
                 <div
                   v-else-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -2255,7 +2255,7 @@
 
                 <div
                   v-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
                   "
@@ -2446,7 +2446,7 @@
                 <div
                   class="dropdown-small-section"
                   v-if="
-                    mainView === 'news' &&
+                    (mainView === 'news' || mainView === 'social') &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -5333,7 +5333,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           toastClassName: 'custom',
           bodyClassName: ['custom'],
         })
-        this.hideSave()
+
+        if (this.mainView !== 'news' && this.mainView !== 'social') {
+          this.hideSave()
+        }
+
         this.searchSaved = true
         this.refreshUser()
         this.$store.dispatch('getThreads')

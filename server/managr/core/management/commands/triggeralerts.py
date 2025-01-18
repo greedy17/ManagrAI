@@ -17,12 +17,21 @@ class Command(BaseCommand):
             action="store_true",
             help="For testing in staging and dev",
         )
+        parser.add_argument(
+            "--user",
+            type=str,
+            help="Send alerts for a specific user, by email",
+            required=False,
+        )
 
     def handle(self, *args, **options):
         ids = options.get("ids", False)
+        user = options.get("user", False)
         if ids:
             ids = ids.split(",")
             alerts = AssistAlert.objects.filter(id__in=ids)
+        elif user:
+            alerts = AssistAlert.objects.filter(user__email=user)
         else:
             alerts = AssistAlert.objects.all()
         current_day = datetime.datetime.now()
@@ -36,8 +45,8 @@ class Command(BaseCommand):
                     year=current_day.year, month=current_day.month, day=current_day.day
                 )
                 run_at = str(run_at)
-                if alert.search.type == "NEWS":
-                    emit_send_news_summary(str(alert.id), run_at)
-                else:
-                    emit_send_social_summary(str(alert.id), run_at)
+            if alert.search.type == "NEWS":
+                emit_send_news_summary(str(alert.id), run_at)
+            else:
+                emit_send_social_summary(str(alert.id), run_at)
         return

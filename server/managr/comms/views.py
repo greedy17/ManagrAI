@@ -3594,7 +3594,7 @@ def get_clip_report_summary(request):
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             if is_social:
                 prompt = comms_consts.SOCIAL_REPORT_SUMMARY(elma, brand, clips)
-            else:        
+            else:
                 prompt = comms_consts.REPORT_SUMMARY(elma, brand, clips)
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
@@ -3787,9 +3787,9 @@ def get_bluesky_profile(request):
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_PROFILE_URI, params=params)
             if res.status_code == 200:
-                res = res.json()   
+                res = res.json()
                 data = res
-                user.add_meta_data("analyzed_article")     
+                user.add_meta_data("analyzed_article")
             else:
                 res = res.json()
                 data["error"] = res["message"]

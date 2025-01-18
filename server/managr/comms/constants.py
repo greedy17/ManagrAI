@@ -560,20 +560,18 @@ def OPEN_AI_NEWS_CLIPS_SLACK_SUMMARY(date, clips, search, instructions=False, fo
 
 
 def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=False):
-    # if not instructions:
-    #     instructions = DEFAULT_TWITTER_CLIENT_INSTRUCTIONS
     body = f"""
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate response based on the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the tweets, clips, and posts as it pertains to their search term, and identify key influencers based on X follower count, Blussky post interactions, and relevancy of the youtube clips. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the tweets for their project.
+    Today is {date}. Please provide a concise and accurate response based on the social media coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the the coverage as it pertains to their search term and identify top influencers from all channels - X (formally Twitter), Bluesky, and Youtube. For additional context, user may provide their project details (pitch, product launch, company boiler plate).
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
     Input Format:
 
     User Request: {search}
-    Tweets, Posts, and clips: {tweets}
+    Social media coverage: {tweets}
     Project details (campaign, media pitch, etc): {project}
    
     Output format:
@@ -595,7 +593,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     {elma}.
 
-    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the tweets (always refer to twitter as 'X'), youtube clips, and Bluesky posts below. It is most likely a follow up question. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the news coverage for their project.
+    Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the social media coverage below. It is most likely a follow up question. User provides project details for additional context.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
     
