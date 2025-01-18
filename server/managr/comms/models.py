@@ -82,7 +82,7 @@ class Search(TimeStampModel):
                 )
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
-            self.search_boolean = query_input
+            self.search_boolean = query_input.replace('"', "")
         except Exception as e:
             logger.exception(e)
         return self.save()
