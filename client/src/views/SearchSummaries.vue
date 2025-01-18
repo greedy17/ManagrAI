@@ -2461,7 +2461,7 @@
                   />
 
                   <div class="row-end-bottom" style="margin-top: 0">
-                    <button class="primary-button" @click="testEmailAlert">Send Preview</button>
+                    <!-- <button class="primary-button" @click="testEmailAlert">Send Preview</button> -->
                     <button @click="hideSave" class="secondary-button">Close</button>
                     <button
                       style="margin-left: 8px"
