@@ -1308,7 +1308,7 @@ def get_bluesky_data(query, max=50, user=None, date_from=None):
 def test_social_response(news_alert_id=False):
     from managr.comms.models import AssistAlert
 
-    print("Func Start:", datetime.now())
+    print("Func Start:", datetime.now().strftime("%H:%M:%S.%f")[:-3])
     if news_alert_id:
         alert = AssistAlert.objects.get(id=news_alert_id)
     else:
@@ -1336,19 +1336,19 @@ def test_social_response(news_alert_id=False):
     social_data_list = []
     for value in social_values:
         print("=============================")
-        print(f"{value}: ", datetime.now())
+        print(f"{value}: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
         data_func = social_switcher[value]
         social_data = data_func(boolean, max=max, user=user, date_from=date_from)
-        print("Response returned: ", datetime.now())
+        print("Response returned: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
         if "error" in social_data.keys():
             continue
         else:
             if value == "twitter":
                 email_data["includes"] = social_data["includes"]
             social_data_list.extend(social_data["data"])
-    print("Sort start: ", datetime.now())
+    print("Sort start: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    print("Sort stop: ", datetime.now())
+    print("Sort stop: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
     post_list = []
     for value in sorted_social_data:
         if value["type"] == "twitter":
@@ -1362,10 +1362,12 @@ def test_social_response(news_alert_id=False):
     return post_list
 
 
-def test_social_summary_response(post_list, alert_id=False):
+def test_social_summary_response(post_list, alert_id=False, completion_token=1000, model=False):
     from managr.comms.models import AssistAlert, TwitterAccount
 
     models = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "o1", "o1-mini", "gpt-3.5-turbo"]
+    if model:
+        models = [model]
     response_times = "RESPONSE TIMES REPORT\n=====================\n"
     if alert_id:
         alert = AssistAlert.objects.get(id=alert_id)
@@ -1375,7 +1377,7 @@ def test_social_summary_response(post_list, alert_id=False):
         d = datetime.now()
         res = TwitterAccount.get_summary(
             alert.user,
-            2000,
+            completion_token,
             60.0,
             post_list,
             alert.search.search_boolean,
