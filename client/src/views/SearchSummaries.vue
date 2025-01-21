@@ -1453,18 +1453,16 @@
                       </div>
                     </div>
 
-                    <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
+                    <div
+                      v-if="mainView === 'news' || mainView === 'social'"
+                      class="row relative top-mar-mobile"
+                    >
                       <div
                         @click.stop="toggleDate"
                         :class="{ 'soft-gray-bg': showDateSelection }"
                         class="image-container s-wrapper"
                       >
-                        <img
-                          v-if="mainView === 'news'"
-                          src="@/assets/images/calendar.svg"
-                          height="15px"
-                          alt=""
-                        />
+                        <img src="@/assets/images/calendar.svg" height="15px" alt="" />
 
                         <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
                       </div>
@@ -3667,19 +3665,16 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
+            <div
+              v-if="mainView === 'news' || mainView === 'social'"
+              class="row relative top-mar-mobile"
+            >
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
                 class="image-container s-wrapper"
               >
-                <img
-                  v-if="mainView === 'news'"
-                  class="invert"
-                  src="@/assets/images/calendar.svg"
-                  height="15px"
-                  alt=""
-                />
+                <img class="invert" src="@/assets/images/calendar.svg" height="15px" alt="" />
 
                 <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
               </div>
@@ -9232,6 +9227,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
           user_id: this.user.id,
           project: this.selectedOrg,
           query: this.newSearch,
+          date_from: this.dateStart,
+          date_to: this.dateEnd,
         })
 
         console.log('social response', res)
