@@ -1141,6 +1141,7 @@ def convert_social_search(search, user_email, project):
 
 def get_tweet_data(query_input, max=50, user=None, date_from=None):
     twitter_account = user.twitter_account
+    query_input = query_input.replace("AND", " ")
     query_input = query_input + " lang:en -is:retweet"
     if "from:" not in query_input:
         query_input = query_input + " is:verified"
@@ -1191,7 +1192,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None):
                     "string": query_input,
                 }
         except Exception as e:
-            has_error = True
             tweet_data["error"] = str(e)
             break
     return tweet_data
@@ -1282,7 +1282,8 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
                 res = res.json()
                 youtube_data["error"] = res["error"]["message"]
     except Exception as e:
-        print(e)
+        print(f"YouTube date error: {e}")
+        youtube_data["error"] = str(e)
     return youtube_data
 
 
@@ -1298,10 +1299,12 @@ def get_bluesky_data(query, max=50, user=None, date_from=None):
                 normalized_data = normalize_bluesky_data(posts)
                 bluesky_data["data"] = normalized_data
             else:
-                res = res.json()
+                if res.headers.get("Content-Type") == "application/json":
+                    res = res.json()
                 bluesky_data["error"] = res["error"]["message"]
     except Exception as e:
-        print(e)
+        print(f"Bluesky date error: {e}")
+        bluesky_data["error"] = str(e)
     return bluesky_data
 
 

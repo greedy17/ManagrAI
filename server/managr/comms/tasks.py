@@ -637,7 +637,7 @@ def _send_news_summary(news_alert_id):
         alert.meta_data["sent_count"] += 1
     else:
         alert.meta_data["sent_count"] = 1
-    alert.meta_data["last_sent"] = str(datetime.datetime.now())
+    alert.meta_data["last_sent"] = datetime.datetime.now().strftime("%m/%d/%Y %H:%M")
     alert.save()
     return
 
@@ -727,7 +727,7 @@ def _send_social_summary(news_alert_id):
         alert.meta_data["sent_count"] += 1
     else:
         alert.meta_data["sent_count"] = 1
-    alert.meta_data["last_sent"] = str(datetime.datetime.now())
+    alert.meta_data["last_sent"] = datetime.datetime.now().strftime("%m/%d/%Y %H:%M")
     alert.save()
     return
 
@@ -1281,19 +1281,25 @@ def test_pitch():
 
 
 @background()
-def archive_articles():
+def archive_articles(months=6, count_only=False):
     """
     Archives articles older than a given date and deletes them from the original table.
-    Uses bulk_create for better performance.
 
     Args:
-        archive_date (datetime): The date threshold to archive articles. Articles older than this date will be archived and then deleted.
+        months (int) - sets month_date to this many months back from current date, defaults to 6 months
+        count_only (bool) - if True prints the count of the queryset the function would be working with.
+                            Useful when there's a lot of articles within the timeframe so breaking up
+                            archiving articles into smaller groups would be better.
     """
     # Get all articles older than the specified date
     current_date = timezone.now()
-    six_month_date = current_date - relativedelta(months=6)
-    print(f"Archiving publish dates older than {six_month_date}")
-    articles_to_archive = InternalArticle.objects.filter(publish_date__lt=six_month_date)
+    month_date = current_date - relativedelta(months=months)
+    print(f"Archiving publish dates older than {month_date}")
+    if count_only:
+        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date).count()
+        print(f"{articles_to_archive} articles older than {month_date}")
+        return
+    articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
     print(f"Found {len(articles_to_archive)} articles to archive")
     # List to hold archived articles for bulk creation
     archived_articles = []

@@ -1663,6 +1663,9 @@ class Thread(TimeStampModel):
     title = models.TextField()
     meta_data = JSONField(default=dict)
 
+    def __str__(self):
+        return f"{self.user} - {self.title}"
+
     @property
     def current_index(self):
         message_idxs = list(self.messages.all().values_list("index", flat=True))

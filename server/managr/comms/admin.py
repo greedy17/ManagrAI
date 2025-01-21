@@ -132,14 +132,20 @@ class CustomArchivedArticle(admin.ModelAdmin):
 
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "search", "run_at", "times_sent")
+    list_display = ("user", "search", "run_at", "times_sent", "last_sent")
     ordering = ("run_at",)
+    list_filter = ("type", "search__type", "user")
 
     def times_sent(self, obj):
         ts = obj.meta_data["sent_count"] if "sent_count" in obj.meta_data.keys() else 0
         return ts
 
+    def last_sent(self, obj):
+        ls = obj.meta_data["last_sent"] if "last_sent" in obj.meta_data.keys() else "N/A"
+        return ls
+
     times_sent.short_description = "Times Sent"
+    last_sent.short_description = "Last Sent"
 
 
 class CustomJournalAdmin(admin.ModelAdmin):
@@ -170,7 +176,10 @@ class CustomCompanyDetail(admin.ModelAdmin):
 
 class CustomThread(admin.ModelAdmin):
     list_display = ("user", "title")
-    list_filter = ("user__organization",)
+    list_filter = (
+        "user",
+        "user__organization",
+    )
 
 
 admin.site.register(Search, CustomSearch)
