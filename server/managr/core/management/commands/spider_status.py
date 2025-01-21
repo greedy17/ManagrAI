@@ -21,7 +21,7 @@ class Command(BaseCommand):
             for task in locked_tasks:
                 task_locked = task.locked_at.replace(tzinfo=timezone.utc)
                 seconds_since_locked = dt - task_locked
-                if seconds_since_locked.seconds >= 1500 and settings.IN_PROD:
+                if seconds_since_locked.seconds >= 900 and settings.IN_PROD:
                     params = task.params()[0]
                     print(f"TASK RESTARTED: {params}")
                     task.delete()

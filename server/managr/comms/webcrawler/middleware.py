@@ -1,5 +1,7 @@
 import os
+import random
 from scrapy.utils.request import request_fingerprint
+from .constants import USER_AGENT_LIST, REFERER_LIST
 
 
 class ClearCacheMiddleware:
@@ -23,3 +25,13 @@ class ClearCacheMiddleware:
     def _generate_cache_key(self, request):
         # Use Scrapy's request_fingerprint method to generate the key
         return request_fingerprint(request)
+
+
+class RandomizeHeaderMiddleware:
+    def process_request(self, request, spider):
+        user_agent = random.choice(USER_AGENT_LIST)
+        referer = random.choice(REFERER_LIST)
+        dnt = random.choice([0, 1, 3])
+        request.headers["User-Agent"] = user_agent
+        request.headers["Referer"] = referer
+        request.headers["DNT"] = dnt

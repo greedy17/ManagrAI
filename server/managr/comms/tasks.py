@@ -4,6 +4,9 @@ import uuid
 import httpx
 import datetime
 import re
+from django.db import transaction
+from django.utils import timezone
+from dateutil.relativedelta import relativedelta
 from dateutil import parser
 from django.conf import settings
 from background_task import background
@@ -20,6 +23,7 @@ from .models import (
     JournalistContact,
     Thread,
     TwitterAccount,
+    ArchivedArticle,
 )
 from .models import Article as InternalArticle
 from .serializers import (
@@ -1274,3 +1278,53 @@ def test_pitch():
         return message
 
     return journalists
+
+
+@background()
+def archive_articles():
+    """
+    Archives articles older than a given date and deletes them from the original table.
+    Uses bulk_create for better performance.
+
+    Args:
+        archive_date (datetime): The date threshold to archive articles. Articles older than this date will be archived and then deleted.
+    """
+    # Get all articles older than the specified date
+    current_date = timezone.now()
+    six_month_date = current_date - relativedelta(months=6)
+    print(f"Archiving publish dates older than {six_month_date}")
+    articles_to_archive = InternalArticle.objects.filter(publish_date__lt=six_month_date)
+    print(f"Found {len(articles_to_archive)} articles to archive")
+    # List to hold archived articles for bulk creation
+    archived_articles = []
+
+    # Use a database transaction to ensure atomicity
+    with transaction.atomic():
+        # Prepare archived articles for bulk creation
+        for article in articles_to_archive:
+            archived_articles.append(
+                ArchivedArticle(
+                    title=article.title,
+                    description=article.description,
+                    author=article.author,
+                    publish_date=article.publish_date,
+                    link=article.link,
+                    image_url=article.image_url,
+                    source=article.source,
+                    content=article.content,
+                )
+            )
+
+        # Bulk create the archived articles
+        print(f"Attempting to archive {len(archived_articles)} articles")
+        if archived_articles:
+            successful_arts = ArchivedArticle.objects.bulk_create(
+                archived_articles, 1000, ignore_conflicts=True
+            )
+            print(
+                f"Successfully archived {len(successful_arts)}/{len(archived_articles)} articles."
+            )
+
+        # Delete the original articles after they have been archived
+        articles_to_archive.delete()
+        return

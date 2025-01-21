@@ -507,9 +507,7 @@ class NewsSource(TimeStampModel):
                 regex += selector
             regex += "]"
         if len(attribute_list) > 1:
-            regex += f"/{attribute_list[1]}[1]"
-        self.article_link_regex = regex
-        self.save()
+            regex += f"//{attribute_list[1]}[1]"
         return regex
 
     def transfer_dict(self):
@@ -594,7 +592,7 @@ class NewsSource(TimeStampModel):
             self.error_log += error
         else:
             self.error_log = error
-        return self.save()
+        return self.error_log
 
     def sync_journalists(self):
         from managr.comms.serializers import JournalistSerializer
@@ -716,10 +714,6 @@ class Article(TimeStampModel):
     content_search_vector = SearchVectorField(null=True)
 
     class Meta:
-        indexes = [
-            GinIndex(fields=["content_search_vector"]),
-            models.Index(fields=["-publish_date"]),
-        ]
         constraints = [UniqueConstraint(fields=["source", "title"], name="unique_article")]
 
     def update_search_vector(self):
@@ -765,14 +759,25 @@ class Article(TimeStampModel):
         else:
             converted_boolean = boolean_search_to_query(boolean_string)
             articles = date_range_articles.filter(converted_boolean)
-            # articles = date_range_articles.annotate(search=SearchVector("content")).filter(
-            #     search=converted_boolean
-            # )
         if for_report:
             articles = articles[:100]
         else:
             articles = articles[:20]
         return list(articles)
+
+
+class ArchivedArticle(TimeStampModel):
+    archived_on = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=150)
+    description = models.TextField(null=True)
+    author = models.CharField(max_length=150, blank=True, null=True)
+    publish_date = models.DateTimeField()
+    link = models.CharField(max_length=255)
+    image_url = models.CharField(max_length=500)
+    source = models.ForeignKey(
+        "comms.NewsSource", on_delete=models.CASCADE, related_name="archived"
+    )
+    content = models.TextField()
 
 
 class WritingStyle(models.Model):

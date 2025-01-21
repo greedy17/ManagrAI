@@ -16,6 +16,7 @@ from .models import (
     JournalistContact,
     CompanyDetails,
     Thread,
+    ArchivedArticle,
 )
 
 # Register your models here.
@@ -123,6 +124,13 @@ class CustomArticle(admin.ModelAdmin):
     search_fields = ("title",)
 
 
+class CustomArchivedArticle(admin.ModelAdmin):
+    list_display = ("title", "publish_date", "source", "archived_on")
+    list_filter = ("source",)
+    ordering = ("-publish_date",)
+    search_fields = ("title",)
+
+
 class CustomAssistAlertAdmin(admin.ModelAdmin):
     list_display = ("user", "search", "run_at", "times_sent")
     ordering = ("run_at",)
@@ -169,6 +177,7 @@ admin.site.register(Search, CustomSearch)
 admin.site.register(Pitch, CustomPitch)
 admin.site.register(NewsSource, CustomNewsSource)
 admin.site.register(Article, CustomArticle)
+admin.site.register(ArchivedArticle, CustomArchivedArticle)
 admin.site.register(AssistAlert, CustomAssistAlertAdmin)
 admin.site.register(WritingStyle)
 admin.site.register(TwitterAccount)
