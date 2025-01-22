@@ -1155,7 +1155,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
-                date_from=f"{date_from}T00:00:00Z",
+                date_from=f"{date_from}T23:59:00Z",
                 date_to=f"{date_to}T00:00:00Z",
                 next_token=next_token,
             )
@@ -1275,7 +1275,7 @@ def get_youtube_data(query, max=50, user=None, date_from=None, date_to=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
     publishedAfter = date_from + "T00:05:00Z"
-    publishedBefore = date_to + "T11:59:00Z"
+    publishedBefore = date_to + "T23:59:00Z"
     params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, publishedAfter, publishedBefore)
     try:
         with Variable_Client(30) as client:

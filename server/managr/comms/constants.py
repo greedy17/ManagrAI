@@ -1278,6 +1278,7 @@ EXCLUDE_DOMAINS = [
     "biztoc.com",
     "kicksonfire.com",
     "memeorandum.com",
+    "sostav.ru",
 ]
 
 JOURNALIST_CHOICES = [
