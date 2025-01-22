@@ -37,3 +37,19 @@ def run_custom_sql(query):
             affected_rows = cursor.rowcount
             print(f"{affected_rows} rows affected.")
             return affected_rows
+
+
+def articles_per_month():
+    from django.utils import timezone
+    from dateutil.relativedelta import relativedelta
+    from managr.comms.models import Article
+
+    current = timezone.now().replace(day=1)
+    print("   DATE    |    COUNT   ")
+    print("------------------------")
+    while True:
+        article_count = Article.objects.filter(publish_date__lte=current).count()
+        if article_count <= 0:
+            break
+        print(f" {current.strftime('%m/%d/%Y')}  |  {'{:,}'.format(article_count)}")
+        current = current - relativedelta(months=1)

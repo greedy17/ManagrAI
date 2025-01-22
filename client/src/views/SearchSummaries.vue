@@ -1453,18 +1453,16 @@
                       </div>
                     </div>
 
-                    <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
+                    <div
+                      v-if="mainView === 'news' || mainView === 'social'"
+                      class="row relative top-mar-mobile"
+                    >
                       <div
                         @click.stop="toggleDate"
                         :class="{ 'soft-gray-bg': showDateSelection }"
                         class="image-container s-wrapper"
                       >
-                        <img
-                          v-if="mainView === 'news'"
-                          src="@/assets/images/calendar.svg"
-                          height="15px"
-                          alt=""
-                        />
+                        <img src="@/assets/images/calendar.svg" height="15px" alt="" />
 
                         <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
                       </div>
@@ -1483,7 +1481,7 @@
                           <input
                             class="area-input-smallest"
                             type="date"
-                            :min="minDate"
+                            :min="mainView === 'news' ? minDate : minDateSocial"
                             @input="validateDate"
                             v-model="dateStart"
                           />
@@ -1492,7 +1490,7 @@
                           <input
                             class="area-input-smallest"
                             type="date"
-                            :min="minDate"
+                            :min="mainView === 'news' ? minDate : minDateSocial"
                             v-model="dateEnd"
                           />
                         </div>
@@ -3667,19 +3665,16 @@
               </div>
             </div>
 
-            <div v-if="mainView === 'news'" class="row relative top-mar-mobile">
+            <div
+              v-if="mainView === 'news' || mainView === 'social'"
+              class="row relative top-mar-mobile"
+            >
               <div
                 @click.stop="toggleDate"
                 :class="{ 'soft-gray-bg': showDateSelection }"
                 class="image-container s-wrapper"
               >
-                <img
-                  v-if="mainView === 'news'"
-                  class="invert"
-                  src="@/assets/images/calendar.svg"
-                  height="15px"
-                  alt=""
-                />
+                <img class="invert" src="@/assets/images/calendar.svg" height="15px" alt="" />
 
                 <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Date' }}</div>
               </div>
@@ -3697,13 +3692,18 @@
                   <input
                     class="area-input-smallest"
                     type="date"
-                    :min="minDate"
+                    :min="mainView === 'news' ? minDate : minDateSocial"
                     @input="validateDate"
                     v-model="dateStart"
                   />
                   <span style="margin: 0 12px"> - </span>
 
-                  <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
+                  <input
+                    class="area-input-smallest"
+                    type="date"
+                    :min="mainView === 'news' ? minDate : minDateSocial"
+                    v-model="dateEnd"
+                  />
                 </div>
               </div>
             </div>
@@ -4010,7 +4010,7 @@
       </div>
 
       <div
-        v-if="summary && showingArticles"
+        v-if="summary && showingArticles && mainView !== 'write'"
         :class="['sidebar-aside fadein', { open: showingArticles }]"
       >
         <div
@@ -4361,7 +4361,7 @@ export default {
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
-      showingArticles: false,
+      showingArticles: true,
       citationsMounted: true,
       altCitationsMounted: true,
       reportInstructions: '',
@@ -6323,14 +6323,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-blue c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
               </span>
                <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small pointer select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.user.username}
               </span>
              
@@ -6372,7 +6372,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${
+              <a class="inline-link c-blue c-elip" href="${citation.url}" target="_blank" >${
               citation.text ? citation.text : citation.title
             }</a>
               
@@ -6408,13 +6408,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
               
                 </span>
                <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>      
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small cursor select-journalist" data-citation='${citationIndex}'>
               By ${citation.user.username}
               </span>
              
@@ -6452,10 +6452,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
               <span class="row">
                 <span class="col">   
-                  <a class="inline-link c-elip" href="${
+                  <a class="inline-link c-elip c-blue" href="${
                     citation.link ? citation.link : citation.url
                   }" target="_blank">${citation.title}</a>
-                  <span class="c-elip" >${citation.description}</span>
+                  
                 </span>
 
                <img src="${
@@ -6464,7 +6464,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               </span>
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6502,9 +6502,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-                 <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                 <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
 
-                <span class="c-elip" >${citation.title}</span>
+              
 
 
                 </span>
@@ -6513,7 +6513,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6547,11 +6547,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                 
-                <a class="inline-link c-elip " href="${
+                <a class="inline-link c-elip c-blue" href="${
                   citation.url ? citation.url : citation.link
                 }" target="_blank" >${citation.title}</a>
 
-                <span class="c-elip" >${citation.description}</span>
+              
 
                 </span>
 
@@ -6564,7 +6564,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist" data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6596,9 +6596,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+               <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
 
-               <span class="c-elip" >${citation.title}</span>
+            
 
 
                 </span>
@@ -6607,7 +6607,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small  select-journalist" data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6623,7 +6623,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     validateDate(event) {
       const userInput = event.target.value
-      const minDate = this.minDate
+
+      const minDate = this.mainView === 'news' ? this.minDate : this.minDateSocial
+
       if (userInput < minDate) {
         this.dateStart = minDate
       }
@@ -8015,6 +8017,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.googleResults = []
         this.summary = ''
         console.log(e)
+        this.showingArticles = false
       } finally {
         if (!this.summary) {
           this.scrollToTop()
@@ -9124,11 +9127,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
         if (this.summary.length) {
           if (!response.articles.articles.length) {
             this.noResultsString = 'No Articles found'
+            this.showingArticles = false
           }
           this.getReportClips(urls)
         } else {
           if (!response.articles.articles.length) {
             this.noResultsString = 'No Articles found'
+            this.showingArticles = false
           }
           this.latestArticles = []
           this.booleanString = response.string.string
@@ -9180,11 +9185,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
             if (this.summary.length) {
               if (!response.articles.length) {
                 this.noResultsString = response.string
+                this.showingArticles = false
               }
               this.latestArticles = response.articles
             } else {
               if (!response.articles.length) {
                 this.noResultsString = response.string
+                this.showingArticles = false
               }
               this.latestArticles = []
               this.filteredArticles = response.articles
@@ -9206,6 +9213,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.clearNewSearch()
         this.filteredArticles = []
         console.log(e)
+        this.showingArticles = false
       } finally {
         const newAbortControllers = { ...this.$store.state.abortControllers }
         delete newAbortControllers.getClips
@@ -9232,14 +9240,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
           user_id: this.user.id,
           project: this.selectedOrg,
           query: this.newSearch,
+          date_from: this.dateStart,
+          date_to: this.dateEnd,
         })
-
-        console.log('social response', res)
 
         if (this.summary.length) {
           if (!res.data.length) {
             this.noResultsString = res.string
             this.tweetMedia = []
+            this.showingArticles = false
           }
           this.booleanString = res.string
           this.latestArticles = res.data
@@ -9251,6 +9260,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         } else {
           if (!res.data.length) {
             this.noResultsString = res.string
+            this.showingArticles = false
           }
 
           this.latestArticles = []
@@ -9290,6 +9300,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
         this.summaryLoading = false
         console.log('ERROR IS HERE', e)
+        this.showingArticles = false
       } finally {
         this.refreshUser()
         this.loading = false
@@ -10074,6 +10085,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
       const priorDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000)
       return priorDate.toISOString().slice(0, 10)
     },
+    minDateSocial() {
+      const currentDate = new Date()
+      const priorDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
+      return priorDate.toISOString().slice(0, 10)
+    },
     articlesFiltered: {
       get() {
         let articles = this.filteredArticles.filter((article) => {
@@ -10623,6 +10639,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    cursor: pointer !important;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .citation-tooltip.show {
@@ -14316,7 +14337,7 @@ textarea::placeholder {
   margin-left: 0.5rem;
 }
 .pointer {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .regen-modal {

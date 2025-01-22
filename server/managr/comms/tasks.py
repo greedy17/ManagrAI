@@ -668,12 +668,14 @@ def _send_social_summary(news_alert_id):
         social_values.append("twitter")
     else:
         max = 25
-    date_from = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
+    date_now = datetime.datetime.now(datetime.timezone.utc)
+    date_to = str(date_now.date())
+    date_from = str((date_now - datetime.timedelta(hours=24)).date())
     email_data = {}
     social_data_list = []
     for value in social_values:
         data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from)
+        social_data = data_func(boolean, max=max, user=user, date_from=date_from, date_to=date_to)
         if "error" in social_data.keys():
             continue
         else:
