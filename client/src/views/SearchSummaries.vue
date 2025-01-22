@@ -6318,14 +6318,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-blue c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
               </span>
                <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small pointer select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.user.username}
               </span>
              
@@ -6367,7 +6367,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip" href="${citation.url}" target="_blank" >${
+              <a class="inline-link c-blue c-elip" href="${citation.url}" target="_blank" >${
               citation.text ? citation.text : citation.title
             }</a>
               
@@ -6403,13 +6403,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
               
                 </span>
                <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
               </span>      
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small cursor select-journalist" data-citation='${citationIndex}'>
               By ${citation.user.username}
               </span>
              
@@ -6447,10 +6447,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
               <span class="row">
                 <span class="col">   
-                  <a class="inline-link c-elip" href="${
+                  <a class="inline-link c-elip c-blue" href="${
                     citation.link ? citation.link : citation.url
                   }" target="_blank">${citation.title}</a>
-                  <span class="c-elip" >${citation.description}</span>
+                  
                 </span>
 
                <img src="${
@@ -6459,7 +6459,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               </span>
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6497,9 +6497,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-                 <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+                 <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
 
-                <span class="c-elip" >${citation.title}</span>
+              
 
 
                 </span>
@@ -6508,7 +6508,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6542,11 +6542,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                 
-                <a class="inline-link c-elip " href="${
+                <a class="inline-link c-elip c-blue" href="${
                   citation.url ? citation.url : citation.link
                 }" target="_blank" >${citation.title}</a>
 
-                <span class="c-elip" >${citation.description}</span>
+              
 
                 </span>
 
@@ -6559,7 +6559,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small select-journalist" data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -6591,9 +6591,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-               <a class="inline-link c-elip " href="${citation.link}" target="_blank" >${citation.title}</a>
+               <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
 
-               <span class="c-elip" >${citation.title}</span>
+            
 
 
                 </span>
@@ -6602,7 +6602,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
               
               
             
-              <span class="c-elip-small c-blue select-journalist" data-citation='${citationIndex}'>
+              <span class="c-elip-small  select-journalist" data-citation='${citationIndex}'>
               By ${citation.author}
               </span>
              
@@ -10620,6 +10620,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    cursor: pointer !important;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .citation-tooltip.show {
@@ -14313,7 +14318,7 @@ textarea::placeholder {
   margin-left: 0.5rem;
 }
 .pointer {
-  cursor: pointer;
+  cursor: pointer !important;
 }
 
 .regen-modal {
