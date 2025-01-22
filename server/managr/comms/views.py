@@ -3732,10 +3732,13 @@ def get_social_media_data(request):
         social_values.append("twitter")
     else:
         max = 25
-    date_from = datetime.now(timezone.utc) - timedelta(days=7)
+    date_from = params.get("date_from")
+    date_to = params.get("date_to")
     for value in social_values:
         data_func = social_switcher[value]
-        social_data = data_func(converted_search, max=max, user=user, date_from=date_from)
+        social_data = data_func(
+            converted_search, max=max, user=user, date_from=date_from, date_to=date_to
+        )
         if "error" in social_data.keys():
             errors.append(social_data["error"])
         else:

@@ -4010,7 +4010,7 @@
       </div>
 
       <div
-        v-if="summary && showingArticles && maiknView !== 'write'"
+        v-if="summary && showingArticles && mainView !== 'write'"
         :class="['sidebar-aside fadein', { open: showingArticles }]"
       >
         <div

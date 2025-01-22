@@ -26,6 +26,7 @@ elif settings.IN_STAGING:
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
+TWITTER_USER_HEADERS = lambda user_token: {"Authorization": f"Bearer {user_token}"}
 
 USE_INSTAGRAM_API = settings.USE_INSTAGRAM_API
 if USE_INSTAGRAM_API:
@@ -59,7 +60,7 @@ GOOGLE_SEARCH_KEY = settings.GOOGLE_SEARCH_API_KEY
 GOOGLE_SEARCH_ID = settings.GOOGLE_SEARCH_ID
 YOUTUBE_SEARCH_URI = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEO_URI = "https://www.googleapis.com/youtube/v3/videos"
-YOUTUBE_SEARCH_PARAMS = lambda query, max, from_date: {
+YOUTUBE_SEARCH_PARAMS = lambda query, max, from_date, to_date: {
     "part": "snippet",
     "q": query,
     "order": "relevance",
@@ -68,6 +69,7 @@ YOUTUBE_SEARCH_PARAMS = lambda query, max, from_date: {
     "maxResults": max,
     "key": GOOGLE_SEARCH_KEY,
     "publishedAfter": from_date,
+    "publishedBefore": to_date,
 }
 
 YOUTUBE_VIDEO_PARAMS = lambda video_id: {

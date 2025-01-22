@@ -951,7 +951,7 @@ class TwitterAccount(TimeStampModel):
             return TwitterApiException(kwargs)
         return data
 
-    def get_tweets(self, query, next_token=False):
+    def get_tweets(self, query, date_from, date_to, next_token=False):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
@@ -961,6 +961,8 @@ class TwitterAccount(TimeStampModel):
             "tweet.fields": "created_at",
             "media.fields": "url,variants",
             "sort_order": "relevancy",
+            "start_time": date_from,
+            "end_time": date_to,
         }
         if next_token:
             params["next_token"] = next_token
