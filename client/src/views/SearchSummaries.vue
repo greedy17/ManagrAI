@@ -1481,7 +1481,7 @@
                           <input
                             class="area-input-smallest"
                             type="date"
-                            :min="minDate"
+                            :min="mainView === 'news' ? minDate : minDateSocial"
                             @input="validateDate"
                             v-model="dateStart"
                           />
@@ -1490,7 +1490,7 @@
                           <input
                             class="area-input-smallest"
                             type="date"
-                            :min="minDate"
+                            :min="mainView === 'news' ? minDate : minDateSocial"
                             v-model="dateEnd"
                           />
                         </div>
@@ -3692,13 +3692,18 @@
                   <input
                     class="area-input-smallest"
                     type="date"
-                    :min="minDate"
+                    :min="mainView === 'news' ? minDate : minDateSocial"
                     @input="validateDate"
                     v-model="dateStart"
                   />
                   <span style="margin: 0 12px"> - </span>
 
-                  <input class="area-input-smallest" type="date" :min="minDate" v-model="dateEnd" />
+                  <input
+                    class="area-input-smallest"
+                    type="date"
+                    :min="mainView === 'news' ? minDate : minDateSocial"
+                    v-model="dateEnd"
+                  />
                 </div>
               </div>
             </div>
@@ -4005,7 +4010,7 @@
       </div>
 
       <div
-        v-if="summary && showingArticles"
+        v-if="summary && showingArticles && maiknView !== 'write'"
         :class="['sidebar-aside fadein', { open: showingArticles }]"
       >
         <div
@@ -4356,7 +4361,7 @@ export default {
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
-      showingArticles: false,
+      showingArticles: true,
       citationsMounted: true,
       altCitationsMounted: true,
       reportInstructions: '',
@@ -6618,7 +6623,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     validateDate(event) {
       const userInput = event.target.value
-      const minDate = this.minDate
+
+      const minDate = this.mainView === 'news' ? this.minDate : this.minDateSocial
+
       if (userInput < minDate) {
         this.dateStart = minDate
       }
@@ -8010,6 +8017,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.googleResults = []
         this.summary = ''
         console.log(e)
+        this.showingArticles = false
       } finally {
         if (!this.summary) {
           this.scrollToTop()
@@ -9119,11 +9127,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
         if (this.summary.length) {
           if (!response.articles.articles.length) {
             this.noResultsString = 'No Articles found'
+            this.showingArticles = false
           }
           this.getReportClips(urls)
         } else {
           if (!response.articles.articles.length) {
             this.noResultsString = 'No Articles found'
+            this.showingArticles = false
           }
           this.latestArticles = []
           this.booleanString = response.string.string
@@ -9175,11 +9185,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
             if (this.summary.length) {
               if (!response.articles.length) {
                 this.noResultsString = response.string
+                this.showingArticles = false
               }
               this.latestArticles = response.articles
             } else {
               if (!response.articles.length) {
                 this.noResultsString = response.string
+                this.showingArticles = false
               }
               this.latestArticles = []
               this.filteredArticles = response.articles
@@ -9201,6 +9213,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.clearNewSearch()
         this.filteredArticles = []
         console.log(e)
+        this.showingArticles = false
       } finally {
         const newAbortControllers = { ...this.$store.state.abortControllers }
         delete newAbortControllers.getClips
@@ -9231,12 +9244,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
           date_to: this.dateEnd,
         })
 
-        console.log('social response', res)
-
         if (this.summary.length) {
           if (!res.data.length) {
             this.noResultsString = res.string
             this.tweetMedia = []
+            this.showingArticles = false
           }
           this.booleanString = res.string
           this.latestArticles = res.data
@@ -9248,6 +9260,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         } else {
           if (!res.data.length) {
             this.noResultsString = res.string
+            this.showingArticles = false
           }
 
           this.latestArticles = []
@@ -9287,6 +9300,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
         this.summaryLoading = false
         console.log('ERROR IS HERE', e)
+        this.showingArticles = false
       } finally {
         this.refreshUser()
         this.loading = false
@@ -10069,6 +10083,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
     minDate() {
       const currentDate = new Date()
       const priorDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+      return priorDate.toISOString().slice(0, 10)
+    },
+    minDateSocial() {
+      const currentDate = new Date()
+      const priorDate = new Date(currentDate.getTime() - 7 * 24 * 60 * 60 * 1000)
       return priorDate.toISOString().slice(0, 10)
     },
     articlesFiltered: {
