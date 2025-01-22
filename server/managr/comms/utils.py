@@ -1139,10 +1139,10 @@ def convert_social_search(search, user_email, project):
     return query_input
 
 
-def get_tweet_data(query_input, max=50, user=None, date_from=None):
+def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None):
     twitter_account = user.twitter_account
     query_input = query_input.replace("AND", " ")
-    query_input = query_input + " lang:en -is:retweet"
+    query_input = query_input + f" lang:en -is:retweet"
     if "from:" not in query_input:
         query_input = query_input + " is:verified"
     next_token = False
@@ -1153,7 +1153,12 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None):
         try:
             if attempts >= 10:
                 break
-            tweet_res = twitter_account.get_tweets(query_input, next_token)
+            tweet_res = twitter_account.get_tweets(
+                query_input,
+                date_from=f"{date_from}T00:00:00Z",
+                date_to=f"{date_to}T00:00:00Z",
+                next_token=next_token,
+            )
             tweets = tweet_res.get("data", None)
             includes = tweet_res.get("includes", None)
             attempts += 1
@@ -1258,18 +1263,20 @@ def normalize_bluesky_data(data):
     return normalized_data
 
 
-def get_published_after_value():
-    now = datetime.now(pytz.utc)
-    seven_days_ago = now - timedelta(days=7)
-    published_after = seven_days_ago.isoformat().replace("+00:00", "Z")
-    return published_after
+def get_published_after_value(date_from, date_to):
+    date_to_obj = datetime.strptime(f"{date_to}", "%Y-%m-%d")
+    date_from_obj = datetime.strptime(f"{date_from}", "%Y-%m-%d")
+    published_after = date_from_obj.isoformat().replace("+00:00", "Z")
+    published_before = date_to_obj.isoformat().replace("+00:00", "Z")
+    return published_after, published_before
 
 
-def get_youtube_data(query, max=50, user=None, date_from=None):
+def get_youtube_data(query, max=50, user=None, date_from=None, date_to=None):
     headers = {"Accept": "application/json"}
     youtube_data = {}
-    publishedAfter = get_published_after_value()
-    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, publishedAfter)
+    publishedAfter = date_from + "T00:05:00Z"
+    publishedBefore = date_to + "T11:59:00Z"
+    params = comms_consts.YOUTUBE_SEARCH_PARAMS(query, max, publishedAfter, publishedBefore)
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.YOUTUBE_SEARCH_URI, params=params, headers=headers)
@@ -1287,9 +1294,15 @@ def get_youtube_data(query, max=50, user=None, date_from=None):
     return youtube_data
 
 
-def get_bluesky_data(query, max=50, user=None, date_from=None):
+def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
     bluesky_data = {}
-    params = {"q": query, "sort": "top", "since": date_from.isoformat(), "limit": max}
+    params = {
+        "q": query,
+        "sort": "top",
+        "since": f"{date_from}T00:05:00Z",
+        "until": f"{date_to}T11:59:00Z",
+        "limit": max,
+    }
     try:
         with Variable_Client(30) as client:
             res = client.get(comms_consts.BLUESKY_SEARCH_URI, params=params)
@@ -1303,7 +1316,7 @@ def get_bluesky_data(query, max=50, user=None, date_from=None):
                     res = res.json()
                 bluesky_data["error"] = res["error"]["message"]
     except Exception as e:
-        print(f"Bluesky date error: {e}")
+        print(f"Bluesky date error: {e}: {vars(res)}")
         bluesky_data["error"] = str(e)
     return bluesky_data
 
