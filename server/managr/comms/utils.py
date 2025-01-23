@@ -1155,18 +1155,23 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     tweet_data = {}
     tweet_list = []
     attempts = 1
+    now = datetime.now(timezone.utc)
+    hour = now.hour if now.hour >= 10 else f"0{now.hour}"
+    from_minute = (now.minute + 5) if (now.minute + 5) >= 10 else f"0{now.minute + 5}"
+    to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
     while True:
         try:
             if attempts >= 10:
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
-                date_from=f"{date_from}T23:59:00Z",
-                date_to=f"{date_to}T00:00:00Z",
+                date_from=f"{date_from}T{hour}:{from_minute}:00Z",
+                date_to=f"{date_to}T{hour}:{to_minute}:00Z",
                 next_token=next_token,
             )
             tweets = tweet_res.get("data", None)
-            includes = tweet_res.get("includes", None)
+            includes = tweet_res.get("includes", [])
+            media = includes.get("media", [])
             attempts += 1
             if not tweets:
                 suggestions = twitter_account.no_results(user.email, query_input)
@@ -1190,7 +1195,17 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                             break
             if len(tweet_list) < 20 and tweets:
                 continue
-            tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
+            ordered_dict = OrderedDict()
+            for obj in tweet_list:
+                if obj["text"] not in ordered_dict.keys():
+                    ordered_dict[obj["text"]] = obj
+            duplicated_removed = list(ordered_dict.values())
+            tweet_data = {
+                "data": duplicated_removed,
+                "string": query_input,
+                "includes": includes,
+                "tweetMedia": media,
+            }
             break
         except KeyError as e:
             tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
