@@ -159,7 +159,9 @@ def _process_gen_next_hubspot_sync(user_id, operations_list):
     if not user:
         return logger.exception(f"User not found sync operation not created {user_id}")
     return HSResourceSync.objects.create(
-        user=user, operations_list=operations_list, operation_type=hs_consts.HUBSPOT_RESOURCE_SYNC,
+        user=user,
+        operations_list=operations_list,
+        operation_type=hs_consts.HUBSPOT_RESOURCE_SYNC,
     ).begin_tasks()
 
 
@@ -181,7 +183,7 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
                     f"Failed to sync {resource} data for user {hs.user.id}-{hs.user.email} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 hs.regenerate_token()
                 attempts += 1
@@ -190,7 +192,9 @@ def _process_hobject_fields_sync(user_id, sync_id, resource):
     errors = []
     for field in fields:
         existing = ObjectField.objects.filter(
-            api_name=field.api_name, user=user, crm_object=resource,
+            api_name=field.api_name,
+            user=user,
+            crm_object=resource,
         ).first()
         if field.api_name == "dealstage":
             values = hs.get_deal_stages("deals")
@@ -318,7 +322,7 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
                     f"Failed to sync {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 hs.regenerate_token()
                 attempts += 1
@@ -351,7 +355,8 @@ def _process_resource_sync(user_id, sync_id, resource, attempts=1):
 
 
 @background(
-    schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @hs_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -387,7 +392,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 hs.regenerate_token()
                 attempts += 1
@@ -403,7 +408,8 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 def _process_create_resource_from_meeting(workflow_id, *args):
     # get workflow
@@ -441,7 +447,7 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 hs.regenerate_token()
                 attempts += 1
@@ -452,7 +458,9 @@ def _process_create_resource_from_meeting(workflow_id, *args):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         create_forms.update(
-            is_submitted=True, submission_date=timezone.now(), resource_id=serializer.instance.id,
+            is_submitted=True,
+            submission_date=timezone.now(),
+            resource_id=serializer.instance.id,
         )
         workflow.resource_id = serializer.instance.id
         workflow.save()
@@ -466,7 +474,8 @@ def _process_create_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=hs_consts.HUBSPOT_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
     if non_meeting:
@@ -519,7 +528,7 @@ def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -530,7 +539,7 @@ def _process_add_products_to_hs(workflow_id, non_meeting=False, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
@@ -595,7 +604,7 @@ def _process_add_call_to_hs(workflow_id, *args):
                         f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
                     )
                 else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 2**attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     hs.regenerate_token()
                     attempts += 1
@@ -660,7 +669,7 @@ def _process_add_update_to_hs(form_id, *args):
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 hs.regenerate_token()
                 attempts += 1
@@ -669,7 +678,7 @@ def _process_add_update_to_hs(form_id, *args):
                 logger.info(f"Add update to SF exception: {e}")
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
 
@@ -697,7 +706,10 @@ def _process_create_new_hs_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
+                *filter(
+                    lambda contact: contact.get("_form") == str(form.id),
+                    meeting.participants,
+                )
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -710,7 +722,10 @@ def _process_create_new_hs_contacts(workflow_id, *args):
             logger.info(f"Data from form {data}")
             try:
                 res = HubspotContactAdapter.create(
-                    data, hs.access_token, object_fields, str(user.id),
+                    data,
+                    hs.access_token,
+                    object_fields,
+                    str(user.id),
                 )
                 form.is_submitted = True
                 form.submission_date = timezone.now()
@@ -723,7 +738,7 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                     )
 
                 else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 2**attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     hs.regenerate_token()
                     attempts += 1
@@ -735,7 +750,7 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                     )
                     raise e
                 else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 2**attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     attempts += 1
         if workflow.resource_type == slack_consts.FORM_RESOURCE_DEAL and res and res.integration_id:
@@ -761,7 +776,7 @@ def _process_create_new_hs_contacts(workflow_id, *args):
                         )
 
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         hs.regenerate_token()
                         attempts += 1
@@ -807,7 +822,9 @@ def _process_update_hs_contacts(workflow_id, *args):
             while True:
                 crm = user.crm_account
                 try:
-                    form.resource_object.update(data,)
+                    form.resource_object.update(
+                        data,
+                    )
                     attempts = 1
                     form.is_submitted = True
                     form.submission_date = timezone.now()
@@ -828,7 +845,7 @@ def _process_update_hs_contacts(workflow_id, *args):
                         )
 
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         crm.regenerate_token()
                         attempts += 1

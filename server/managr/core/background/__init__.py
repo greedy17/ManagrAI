@@ -1983,7 +1983,7 @@ def _send_activation_email(user_id):
     return
 
 
-@background(schedule=10)
+@background(schedule=10, queue="DEFAULT")
 def _process_check_subscription_status(session_id, user_id):
     user = User.objects.get(id=user_id)
     url = core_consts.STRIPE_API_BASE_URL + core_consts.STRIPE_CHECKOUT_SESSION + f"/{session_id}"

@@ -27,10 +27,11 @@ class Command(BaseCommand):
             batch_url_list = ",".join(batch)
             _run_spider_batch(batch_url_list, priority=5)
         _run_spider_batch(scrape_api_news, priority=5)
-        send_to_error_channel(
-            f"Crawler started at: {d}, total tasks: {counter}",
-            None,
-            "crawler",
-            f"Crawler Update {settings.ENVIRONMENT}",
-            str(report.id),
-        )
+        if not settings.IN_DEV:
+            send_to_error_channel(
+                f"Crawler started at: {d}, total tasks: {counter}",
+                None,
+                "crawler",
+                f"Crawler Update {settings.ENVIRONMENT}",
+                str(report.id),
+            )

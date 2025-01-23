@@ -7,6 +7,11 @@ import tempfile
 import requests
 import pytz
 import io
+import math
+from django.db import transaction
+from django.utils import timezone as util_timezone
+from dateutil.relativedelta import relativedelta
+from .models import Article as InternalArticle
 from datetime import datetime, timezone, timedelta
 from newspaper import Article, ArticleException
 from functools import reduce
@@ -19,12 +24,13 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from . import exceptions as comms_exceptions
-from .models import NewsSource, Journalist, JournalistContact
+from .models import NewsSource, Journalist, JournalistContact, ArchivedArticle
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
+
 
 s3 = boto3.client("s3")
 
@@ -1408,3 +1414,86 @@ def test_social_summary_response(post_list, alert_id=False, completion_token=100
         )
         print(f"Response: {res}")
     print(response_times)
+
+
+def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=False, auto=False):
+    import sys
+
+    """
+    Archives articles older than a given date and deletes them from the original table.
+    Args:
+        months (int) - sets month_date to this many months back from current date, defaults to 6 months
+        count_only (bool) - if True prints the count of the queryset the function would be working with.
+                            Useful when there's a lot of articles within the timeframe so breaking up
+                            archiving articles into smaller groups would be better.
+    """
+    # Get all articles older than the specified date
+    if as_background:
+        from .tasks import bg_archive_articles
+
+        bg_archive_articles(months, count_only)
+        return
+    current_date = timezone.now()
+    if auto:
+        counter = 1
+        target = 50000
+        while True:
+            if counter >= 25:
+                print(f"No date with a close article count")
+                break
+            month_date = current_date - relativedelta(
+                months=counter,
+            )
+            test_count = InternalArticle.objects.filter(publish_date__lt=month_date)
+            if math.isclose(target, test_count, abs_tol=20000):
+                print(f"Closest date: {month_date} || Count: {test_count}")
+                break
+            print(f"Date ({month_date}) does not meet criteria ({test_count})")
+            counter += 1
+        return
+    else:
+        month_date = current_date - relativedelta(months=months, weeks=weeks, days=days)
+        print(f"Archiving publish dates older than {month_date}")
+        if count_only:
+            articles_to_archive = InternalArticle.objects.filter(
+                publish_date__lt=month_date
+            ).count()
+            print(f"{articles_to_archive} articles older than {month_date}")
+            return
+        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
+        count = articles_to_archive.count()
+        print(f"Found {count} articles to archive")
+        archived_articles = []
+        counter = 1
+        batch_size = 1000
+        for article in articles_to_archive.iterator(chunk_size=500):
+            archived_articles.append(
+                ArchivedArticle(
+                    title=article.title,
+                    description=article.description,
+                    author=article.author,
+                    publish_date=article.publish_date,
+                    link=article.link,
+                    image_url=article.image_url,
+                    source=article.source,
+                    content=article.content,
+                )
+            )
+            if len(archived_articles) >= batch_size:
+                with transaction.atomic():
+                    successful_arts = ArchivedArticle.objects.bulk_create(
+                        archived_articles, 1000, ignore_conflicts=True
+                    )
+                    sys.stdout.write(
+                        f"\rSuccessfully archived {batch_size*counter}/{count} articles."
+                    )
+                    sys.stdout.flush()
+                    archived_articles.clear()
+                    counter += 1
+        if archived_articles:
+            with transaction.atomic():
+                ArchivedArticle.objects.bulk_create(archived_articles)
+        sys.stdout.write(f"\rSuccessfully archived {count}/{count} articles.\n")
+        print("Deleting articles")
+        articles_to_archive.delete()
+        return

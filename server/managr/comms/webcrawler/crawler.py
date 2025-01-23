@@ -5,8 +5,10 @@ import time
 import json
 from scrapy import signals
 from scrapy.exceptions import CloseSpider, IgnoreRequest
-from twisted.web.client import ResponseNeverReceived
-from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError
+import scrapy.spiders
+import twisted
+from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError, ConnectionDone
+from scrapy.spidermiddlewares.httperror import HttpError
 from django.utils import timezone
 from django.conf import settings
 from managr.core.models import CrawlerReport
@@ -262,13 +264,9 @@ class NewsSpider(scrapy.Spider):
                 sources = self.sources.filter(domain=original_url)
                 if len(sources):
                     source = sources.first()
-                    current_datetime = datetime.datetime.now()
                     source = self.update_source(
                         source.id,
                         is_crawling=False,
-                        last_scraped=timezone.make_aware(
-                            current_datetime, timezone.get_current_timezone()
-                        ),
                     )
             return
         if source.article_link_attribute is not None:
@@ -279,13 +277,9 @@ class NewsSpider(scrapy.Spider):
                 regex = source.article_link_regex
             article_links = response.xpath(regex)
             if len(article_links) < 1:
-                current_datetime = datetime.datetime.now()
                 self.update_source(
                     source.id,
                     is_crawling=False,
-                    last_scraped=timezone.make_aware(
-                        current_datetime, timezone.get_current_timezone()
-                    ),
                 )
                 return
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
@@ -321,6 +315,7 @@ class NewsSpider(scrapy.Spider):
                             article_url,
                             callback=self.parse_article,
                             headers=crawler_consts.SCRAPPY_HEADERS,
+                            errback=self.handle_error,
                             cb_kwargs={"source": source},
                         )
                 if source.site_name is None and response.status != 403:
@@ -329,13 +324,6 @@ class NewsSpider(scrapy.Spider):
                 if source.icon is None and response.status < 300:
                     icon_href = self.get_site_icon(response)
                     source.icon = icon_href
-                current_datetime = datetime.datetime.now()
-                self.update_source(
-                    source.id,
-                    last_scraped=timezone.make_aware(
-                        current_datetime, timezone.get_current_timezone()
-                    ),
-                )
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
@@ -639,31 +627,31 @@ class NewsSpider(scrapy.Spider):
                     "parent_classes": parent,
                 }
         site_name = self.get_site_name(response)
-        current_datetime = datetime.datetime.now()
-        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
-        source = self.update_source(
-            source.id, scrape_data=scrape_dict, site_name=site_name, last_scraped=last_scraped
-        )
+        source = self.update_source(source.id, scrape_data=scrape_dict, site_name=site_name)
         selectors_check = common_selectors_check(source)
         return
 
     def get_sources(self):
+        current_datetime = datetime.datetime.now()
+        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+        sources = NewsSource.objects.filter(domain__in=self.start_urls)
+        sources.update(last_scraped=last_scraped)
         return NewsSource.objects.filter(domain__in=self.start_urls)
 
     def handle_error(self, failure):
         deactivate = False
         error = ""
-        if failure.check(TimeoutError):
+        if failure.check(TimeoutError, HttpError):
             deactivate = True
             error = "Request Timeout"
             self.logger.error(f"Timeout error occurred: {failure.request.url}")
-        elif failure.check(ResponseNeverReceived):
+        elif failure.check(twisted.web._newclient.ResponseNeverReceived):
             deactivate = True
             error = "Response never received"
             self.logger.error(
                 f"SSL Handshake Error occurred: {failure.request.url} - {failure.value}"
             )
-        elif failure.check(ConnectionLost):
+        elif failure.check(ConnectionLost, ConnectionDone):
             deactivate = True
             error = "Connection lost"
             self.logger.error(f"Connection lost: {failure.request.url}")
@@ -714,7 +702,7 @@ class NewsSpider(scrapy.Spider):
                 self.error_log.append(f"Failed on {url} ({str(e)})")
 
 
-class SitemapSpider(scrapy.Spider):
+class SitemapSpider(scrapy.spiders.SitemapSpider):
     name = "sitemap_spider"
 
     handle_httpstatus_list = [403]
@@ -791,6 +779,7 @@ class SitemapSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
+        print(response)
         if response.status == 403:
             print(response.body)
         url = response.request.url

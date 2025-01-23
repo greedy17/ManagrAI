@@ -4,6 +4,7 @@ import uuid
 import httpx
 import datetime
 import re
+import math
 from django.db import transaction
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -793,7 +794,7 @@ def _process_user_hashtag_list(user_id):
     return
 
 
-@background()
+@background(queue="CRAWLER")
 def _run_spider_batch(urls):
     from subprocess import Popen
 
@@ -860,7 +861,7 @@ def news_source_report(report_type):
             )
 
 
-@background(schedule=2)
+@background(schedule=2, queue="DEFAULT")
 def get_article_by_week(result_id, search, date_from, date_to):
 
     articles = InternalArticle.search_by_query(search, date_to, date_from)
@@ -1283,7 +1284,7 @@ def test_pitch():
 
 
 @background()
-def archive_articles(months=6, count_only=False):
+def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
     """
     Archives articles older than a given date and deletes them from the original table.
 
@@ -1295,44 +1296,58 @@ def archive_articles(months=6, count_only=False):
     """
     # Get all articles older than the specified date
     current_date = timezone.now()
-    month_date = current_date - relativedelta(months=months)
-    print(f"Archiving publish dates older than {month_date}")
-    if count_only:
-        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date).count()
-        print(f"{articles_to_archive} articles older than {month_date}")
+    if auto:
+        counter = 1
+        target = 50000
+        while True:
+            if counter >= 25:
+                print(f"No date with a close article count")
+                break
+            month_date = current_date - relativedelta(
+                months=counter,
+            )
+            test_count = InternalArticle.objects.filter(publish_date__lt=month_date).count()
+            if math.isclose(target, test_count, abs_tol=20000):
+                print(f"Closest date: {month_date} || Count: {test_count}")
+                break
+            print(f"Date ({month_date}) does not meet criteria ({test_count})")
+            counter += 1
         return
-    articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
-    print(f"Found {len(articles_to_archive)} articles to archive")
-    # List to hold archived articles for bulk creation
-    archived_articles = []
-
-    # Use a database transaction to ensure atomicity
-    with transaction.atomic():
-        # Prepare archived articles for bulk creation
-        for article in articles_to_archive:
-            archived_articles.append(
-                ArchivedArticle(
-                    title=article.title,
-                    description=article.description,
-                    author=article.author,
-                    publish_date=article.publish_date,
-                    link=article.link,
-                    image_url=article.image_url,
-                    source=article.source,
-                    content=article.content,
-                )
-            )
-
-        # Bulk create the archived articles
-        print(f"Attempting to archive {len(archived_articles)} articles")
-        if archived_articles:
-            successful_arts = ArchivedArticle.objects.bulk_create(
-                archived_articles, 1000, ignore_conflicts=True
-            )
-            print(
-                f"Successfully archived {len(successful_arts)}/{len(archived_articles)} articles."
-            )
-
-        # Delete the original articles after they have been archived
+    else:
+        month_date = current_date - relativedelta(months=months, weeks=weeks)
+        print(f"Archiving publish dates older than {month_date}")
+        if count_only:
+            articles_to_archive = InternalArticle.objects.filter(
+                publish_date__lt=month_date
+            ).count()
+            print(f"{articles_to_archive} articles older than {month_date}")
+            return
+        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
+        print(f"Found {len(articles_to_archive)} articles to archive")
+        print(f"Attempting to archive {len(articles_to_archive)} articles")
+        if articles_to_archive:
+            for i in range(0, len(archived_articles), int(10000)):
+                archived_articles = []
+                # Prepare archived articles for bulk creation
+                batch = articles_to_archive[i : i + 10000]
+                for article in batch:
+                    archived_articles.append(
+                        ArchivedArticle(
+                            title=article.title,
+                            description=article.description,
+                            author=article.author,
+                            publish_date=article.publish_date,
+                            link=article.link,
+                            image_url=article.image_url,
+                            source=article.source,
+                            content=article.content,
+                        )
+                    )
+                with transaction.atomic():
+                    batch = archived_articles[i : i + 10000]
+                    successful_arts = ArchivedArticle.objects.bulk_create(
+                        batch, 1000, ignore_conflicts=True
+                    )
+                    print(f"Successfully archived {len(successful_arts)}/{len(batch)} articles.")
         articles_to_archive.delete()
         return

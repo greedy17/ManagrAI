@@ -398,7 +398,7 @@ def _process_resource_sync(user_id, sync_id, resource, limit, offset, attempts=1
                     f"Failed to sync {resource} data for user {user_id} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -458,7 +458,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                     f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -475,7 +475,9 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                 f"--------------------------------------------------------------------------\nFIELD <{field.label} - {field.api_name}>"
             )
         existing = ObjectField.objects.filter(
-            api_name=field.api_name, user=user, crm_object=resource,
+            api_name=field.api_name,
+            user=user,
+            crm_object=resource,
         ).first()
         if existing:
             serializer = ObjectFieldSerializer(data=field.as_dict, instance=existing)
@@ -501,7 +503,7 @@ def _process_sobject_fields_sync(user_id, sync_id, resource, for_dev):
                             f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                         )
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
@@ -549,7 +551,7 @@ def _process_picklist_values_sync(user_id, sync_id, resource, for_dev):
                     f"Failed to sync picklist values for {resource} for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -593,7 +595,7 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
                     f"Failed to sync {resource} data for user {sf.user.id}-{sf.user.email} after {attempts} tries"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -615,7 +617,8 @@ def _process_sobject_validations_sync(user_id, sync_id, resource, for_dev):
 
 ## Meeting Review Workflow tasks
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("update_object_from_review")
 def _process_update_resource_from_meeting(workflow_id, *args):
@@ -672,7 +675,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -683,7 +686,7 @@ def _process_update_resource_from_meeting(workflow_id, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
         except FieldValidationError as e:
@@ -694,7 +697,8 @@ def _process_update_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("create_object_from_review")
 def _process_create_resource_from_meeting(workflow_id, *args):
@@ -765,7 +769,7 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -776,7 +780,7 @@ def _process_create_resource_from_meeting(workflow_id, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
@@ -790,7 +794,8 @@ def _process_create_resource_from_meeting(workflow_id, *args):
 
 
 @background(
-    schedule=0, queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
+    schedule=0,
+    queue=sf_consts.SALESFORCE_MEETING_REVIEW_WORKFLOW_QUEUE,
 )
 @sf_api_exceptions_wf("add_call_log")
 def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
@@ -844,7 +849,7 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
                     f"Failed to update resource from meeting for user {str(user.id)} for workflow {str(workflow.id)} with email {user.email} after {attempts} tries, {e}"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -855,7 +860,7 @@ def _process_add_products_to_sf(workflow_id, non_meeting=False, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
@@ -915,7 +920,7 @@ def _process_add_call_to_sf(workflow_id, *args):
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -926,7 +931,7 @@ def _process_add_call_to_sf(workflow_id, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
     return
@@ -977,7 +982,7 @@ def _process_add_update_to_sf(form_id, *args):
                     f"Failed to refresh user token for Salesforce operation add contact as contact role to opportunity"
                 )
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 sf.regenerate_token()
                 attempts += 1
@@ -988,7 +993,7 @@ def _process_add_update_to_sf(form_id, *args):
                 )
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
         except Exception as e:
@@ -996,7 +1001,7 @@ def _process_add_update_to_sf(form_id, *args):
                 logger.info(f"Add update to SF exception: {e}")
                 raise e
             else:
-                sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                sleep = 1 * 2**attempts + random.uniform(0, 1)
                 time.sleep(sleep)
                 attempts += 1
 
@@ -1256,7 +1261,10 @@ def _process_create_new_contacts(workflow_id, *args):
         if not data:
             # try and collect whatever data we have
             contact = dict(
-                *filter(lambda contact: contact.get("_form") == str(form.id), meeting.participants,)
+                *filter(
+                    lambda contact: contact.get("_form") == str(form.id),
+                    meeting.participants,
+                )
             )
             if contact:
                 form.save_form(contact.get("secondary_data", {}), from_slack_object=False)
@@ -1287,7 +1295,7 @@ def _process_create_new_contacts(workflow_id, *args):
                     )
 
                 else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 2**attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     sf.regenerate_token()
                     attempts += 1
@@ -1298,7 +1306,7 @@ def _process_create_new_contacts(workflow_id, *args):
                     )
                     raise e
                 else:
-                    sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                    sleep = 1 * 2**attempts + random.uniform(0, 1)
                     time.sleep(sleep)
                     attempts += 1
 
@@ -1325,7 +1333,7 @@ def _process_create_new_contacts(workflow_id, *args):
                         )
 
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
@@ -1336,7 +1344,7 @@ def _process_create_new_contacts(workflow_id, *args):
                         )
                         raise e
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
         try:
@@ -1398,7 +1406,7 @@ def _process_update_contacts(workflow_id, *args):
                         )
 
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
@@ -1409,7 +1417,7 @@ def _process_update_contacts(workflow_id, *args):
                         )
                         raise e
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
 
@@ -1438,7 +1446,7 @@ def _process_update_contacts(workflow_id, *args):
                         )
 
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         sf.regenerate_token()
                         attempts += 1
@@ -1450,7 +1458,7 @@ def _process_update_contacts(workflow_id, *args):
                         )
                         raise e
                     else:
-                        sleep = 1 * 2 ** attempts + random.uniform(0, 1)
+                        sleep = 1 * 2**attempts + random.uniform(0, 1)
                         time.sleep(sleep)
                         attempts += 1
     return
@@ -2087,7 +2095,10 @@ def _send_convert_recap(
         for channel in send_summ_to_channels:
             try:
                 r = slack_requests.send_channel_message(
-                    channel, slack_access_token, text=f"Recap Lead", block_set=blocks,
+                    channel,
+                    slack_access_token,
+                    text=f"Recap Lead",
+                    block_set=blocks,
                 )
                 # logger.info(f"SEND RECAP CHANNEL RESPONSE: {r}")
             except CannotSendToChannel:
@@ -2612,7 +2623,8 @@ def _process_convert_lead(payload, context):
                 logger.exception(f"CONVERT LEAD EXCEPTION: {e}")
                 blocks = [
                     block_builders.simple_section(
-                        f":exclamation: There was an error converting your lead", "mrkdwn",
+                        f":exclamation: There was an error converting your lead",
+                        "mrkdwn",
                     )
                 ]
                 break
@@ -2636,7 +2648,10 @@ def _process_convert_lead(payload, context):
                 "Send Recap",
                 "SEND_RECAP",
                 f":white_check_mark: Successfully converted your Lead {lead.name}",
-                action_id=action_with_params(slack_consts.PROCESS_SEND_RECAP_MODAL, params=params,),
+                action_id=action_with_params(
+                    slack_consts.PROCESS_SEND_RECAP_MODAL,
+                    params=params,
+                ),
             )
         ]
 
@@ -2645,7 +2660,8 @@ def _process_convert_lead(payload, context):
         update_blocks = (
             [
                 block_builders.simple_section(
-                    f":exclamation: There was an error converting your lead:\n{error}", "mrkdwn",
+                    f":exclamation: There was an error converting your lead:\n{error}",
+                    "mrkdwn",
                 )
             ],
         )
