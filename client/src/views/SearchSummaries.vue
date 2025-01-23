@@ -4234,11 +4234,21 @@
                       v-if="tweet.type === 'twitter'"
                       @click="openTweet(tweet.user.username, tweet.id)"
                       style="cursor: pointer"
+                      class="thin-span"
                     >
+                      <span>{{ getTimeDifferenceInMinutes(tweet.created_at) }} </span>
+                      -
                       {{ tweet.text }}
                     </p>
 
-                    <p v-else @click="openTweetAlt(tweet.url)" style="cursor: pointer">
+                    <p
+                      class="thin-span"
+                      v-else
+                      @click="openTweetAlt(tweet.url)"
+                      style="cursor: pointer"
+                    >
+                      <span>{{ getTimeDifferenceInMinutes(tweet.created_at) }} </span>
+                      -
                       {{ tweet.title ? tweet.title : tweet.text }}
                     </p>
                     <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
@@ -15949,6 +15959,12 @@ select {
 .thin-text {
   font-family: $thin-font-family !important;
   margin: 0 !important;
+}
+
+.thin-span {
+  span {
+    font-family: $thin-font-family !important;
+  }
 }
 
 .circle-img {
