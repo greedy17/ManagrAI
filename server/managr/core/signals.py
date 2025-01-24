@@ -19,7 +19,6 @@ def create_auth_token(sender, instance, created, **kwargs):
 
 @receiver(pre_save, sender=Task)
 def add_default_queue(sender, instance, **kwargs):
-    print(instance)
     if not instance.queue:
         instance.queue = "DEFAULT"
         instance.save()

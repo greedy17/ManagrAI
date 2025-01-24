@@ -873,115 +873,6 @@ def separate_weeks(start_date, end_date, delta=7):
     return dates
 
 
-# def submit_job(url, id):
-#     response = batch_client.submit_job(
-#         jobName=f"crawler-{id}",
-#         jobQueue="crawler-queue",
-#         jobDefinition="web-scraper-prod",
-#         containerOverrides={"command": ["server/manage.py", "crawl_spider.py", url]},
-#     )
-#     return response
-
-
-def test_get_clips(search, boolean=False):
-    from managr.comms.models import Article, Search
-    from managr.core.constants import (
-        OPEN_AI_CHAT_COMPLETIONS_URI,
-        OPEN_AI_CHAT_COMPLETIONS_BODY,
-        OPEN_AI_HEADERS,
-    )
-    from managr.core.exceptions import _handle_response
-
-    try:
-        today = datetime.now()
-        date_to = str(datetime.now().date())
-        date_from = str((today - timedelta(days=7)).date())
-        if "journalist:" in search:
-            internal_articles = Article.search_by_query(search, date_to, date_from, True)
-            articles = normalize_article_data([], internal_articles)
-            return {"articles": articles, "string": search}
-        if not boolean:
-            url = OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "support@mymanagr.com",
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
-            r = _handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            print("BOOLEAN:", query_input)
-            print("---------------------------------------")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-            print("NEWSAPI CLIPS:", len(articles), articles)
-            print("---------------------------------------")
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = Article.search_by_query(query_input, date_to, date_from)
-        dict_articles = [article.fields_to_dict() for article in internal_articles]
-        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
-        print("---------------------------------------")
-        articles = normalize_article_data(articles, internal_articles, True)
-        return {"articles": articles, "string": query_input}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def test_prompt(pitch, user_id):
-    user = User.objects.get(email="zach@mymanagr.com")
-    token_amount = 4000
-    timeout = 60.0
-    while True:
-        try:
-            journalists_query = JournalistContact.objects.filter(user=user)
-            journalists = [
-                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
-                for journalist in journalists_query
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "zach@mymanagr.com",
-                prompt,
-                token_amount=token_amount,
-                temperature=0,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
-            message = json.loads(message)
-            journalist_data = message["journalists"]
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount >= 6000:
-                journalist_data = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-        except Exception as e:
-            journalist_data = f"Unknown exception: {e}"
-            break
-    return journalist_data
-
-
 def generate_test_journalists(start, stop, email="zach@mymanagr.com"):
     from managr.comms.serializers import JournalistSerializer, JournalistContactSerializer
 
@@ -1223,19 +1114,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     return tweet_data
 
 
-# def normalize_youtube_data(data):
-#     normalized_data = []
-#     for video in data:
-#         video_data = {}
-#         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-#         video_data["text"] = video["title"]
-#         video_data["created_at"] = video["publishedAt"]
-#         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
-#         video_data["author"] = video["snippet"]["channelTitle"]
-#         normalized_data.append(video_data)
-#     return normalized_data
-
-
 def normalize_youtube_data(data):
     normalized_data = []
     for video in data:
@@ -1342,6 +1220,68 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
     return bluesky_data
 
 
+def send_url_batch(urls, is_article=False):
+    url = comms_consts.SCRAPER_BATCH_URI
+    body = comms_consts.SCRAPER_BATCH_BODY(urls, is_article)
+    with Variable_Client() as client:
+        res = client.post(url, json=body, headers={"Content-Type": "application/json"})
+        if res.status_code == 200:
+            return True
+        else:
+            print(vars(res))
+            return False
+
+
+def get_site_name(response, url):
+    xpaths = [
+        "//meta[@property='og:site_name']/@content",
+        "//meta[@property='og:url']/@content",
+    ]
+    site_name = url
+    for xpath in xpaths:
+        site_name = response.xpath(xpath).get()
+        if site_name:
+            break
+    return site_name
+
+
+def get_site_icon(response, url):
+    xpath = "//link[@rel='icon']/@href"
+    icon_href = response.xpath(xpath).get()
+    if icon_href:
+        if icon_href[0] == "/":
+            icon_href = url + icon_href
+    return icon_href
+
+
+def data_cleaner(data):
+    try:
+        content = data.pop("content")
+        date = data.pop("publish_date")
+        parsed_date = parser.parse(date)
+        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
+        data["author"] = (
+            data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
+        )
+        authors = data["author"].split(",")
+        author = authors[0]
+        data["author"] = author
+        data["content"] = content
+        data["publish_date"] = parsed_date
+        if len(data["title"]) > 150:
+            data["title"] = data["title"][:145] + "..."
+    except TypeError as e:
+        return f"Error cleaning data: {data}"
+    except KeyError as e:
+        return f"Error cleaning data: {data}"
+    except parser.ParserError as e:
+        return f"Error cleaning data: {data}"
+    return data
+
+
+#################################
+# DEV FUNCTIONS
+#################################
 def test_social_response(news_alert_id=False):
     from managr.comms.models import AssistAlert
 
@@ -1512,3 +1452,102 @@ def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=
         print("Deleting articles")
         articles_to_archive.delete()
         return
+
+
+def test_get_clips(search, boolean=False):
+    from managr.comms.models import Article, Search
+    from managr.core.constants import (
+        OPEN_AI_CHAT_COMPLETIONS_URI,
+        OPEN_AI_CHAT_COMPLETIONS_BODY,
+        OPEN_AI_HEADERS,
+    )
+    from managr.core.exceptions import _handle_response
+
+    try:
+        today = datetime.now()
+        date_to = str(datetime.now().date())
+        date_from = str((today - timedelta(days=7)).date())
+        if "journalist:" in search:
+            internal_articles = Article.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
+        if not boolean:
+            url = OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "support@mymanagr.com",
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=OPEN_AI_HEADERS,
+                )
+            r = _handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            print("BOOLEAN:", query_input)
+            print("---------------------------------------")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+            print("NEWSAPI CLIPS:", len(articles), articles)
+            print("---------------------------------------")
+        else:
+            news_res = Search.get_clips(boolean, date_to, date_from)
+            articles = news_res["articles"]
+            query_input = boolean
+        articles = [article for article in articles if article["title"] != "[Removed]"]
+        internal_articles = Article.search_by_query(query_input, date_to, date_from)
+        dict_articles = [article.fields_to_dict() for article in internal_articles]
+        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
+        print("---------------------------------------")
+        articles = normalize_article_data(articles, internal_articles, True)
+        return {"articles": articles, "string": query_input}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def test_prompt(pitch, user_id):
+    user = User.objects.get(email="zach@mymanagr.com")
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            journalists_query = JournalistContact.objects.filter(user=user)
+            journalists = [
+                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
+                for journalist in journalists_query
+            ]
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            message = r.get("choices")[0].get("message").get("content")
+            message = json.loads(message)
+            journalist_data = message["journalists"]
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount >= 6000:
+                journalist_data = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except Exception as e:
+            journalist_data = f"Unknown exception: {e}"
+            break
+    return journalist_data

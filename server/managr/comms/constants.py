@@ -21,10 +21,13 @@ HUNTER_FINDER_URI = "https://api.hunter.io/v2/email-finder"
 HUNTER_API_KEY = settings.HUNTER_API_KEY
 if settings.IN_DEV:
     TWITTER_FRONTEND_REDIRECT = "http://localhost:8080/pr-integrations"
+    SCRAPER_API_WEBHOOK = "https://managr-zach.ngrok.io/api/scraper-webhook"
 elif settings.IN_STAGING:
     TWITTER_FRONTEND_REDIRECT = "https://staging.managr.ai/pr-integrations"
+    SCRAPER_API_WEBHOOK = "https://staging.managr.ai/api/scraper-webhook"
 else:
     TWITTER_FRONTEND_REDIRECT = "https://app.managr.ai/pr-integrations"
+    SCRAPER_API_WEBHOOK = "https://app.managr.ai/api/scraper-webhook"
 TWITTER_API_HEADERS = {"Authorization": f"Bearer {TWITTER_ACCESS_TOKEN}"}
 TWITTER_USER_HEADERS = lambda user_token: {"Authorization": f"Bearer {user_token}"}
 
@@ -79,6 +82,14 @@ YOUTUBE_VIDEO_PARAMS = lambda video_id: {
 }
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
+SCRAPER_BATCH_URI = "https://async.scraperapi.com/batchjobs"
+SCRAPER_BATCH_BODY = lambda urls, is_article: {
+    "urls": urls,
+    "render": "true",
+    "apiKey": SCRAPER_API_KEY,
+    "callback": {"type": "webhook", "url": f"{SCRAPER_API_WEBHOOK}?isArticle={is_article}"},
+}
+
 SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 
 BUZZSUMO_API_KEY = settings.BUZZSUMO_API_KEY
