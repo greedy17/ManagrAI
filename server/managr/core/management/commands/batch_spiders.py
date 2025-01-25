@@ -12,21 +12,29 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("batch_size", nargs="?", type=int, help="The URL to scrape (optional)")
+        parser.add_argument(
+            "--stopped",
+            action="store_true",
+            help="Runs batch spider with stopped sources",
+        )
 
     def handle(self, *args, **options):
         batch_size = options["batch_size"] if options["batch_size"] is not None else 10
-        news = NewsSource.domain_list(True, False)
-        scrape_api_news = NewsSource.domain_list(True, False, scrape_api=True)
-        scrape_api_news = ",".join(scrape_api_news)
-        report = CrawlerReport.objects.create()
-        d = datetime.now().strftime("%I:%M %p")
+        if options["stopped"]:
+            news = NewsSource.get_stopped_sources()
+        else:
+            news = NewsSource.domain_list(True, False)
+            scrape_api_news = NewsSource.domain_list(True, False, scrape_api=True)
+            scrape_api_news = ",".join(scrape_api_news)
+            report = CrawlerReport.objects.create()
+            d = datetime.now().strftime("%I:%M %p")
+            _run_spider_batch(scrape_api_news, priority=5)
         counter = 0
         for i in range(0, len(news), int(batch_size)):
             counter += 1
             batch = news[i : i + batch_size]
             batch_url_list = ",".join(batch)
             _run_spider_batch(batch_url_list, priority=5)
-        _run_spider_batch(scrape_api_news, priority=5)
         if not settings.IN_DEV:
             send_to_error_channel(
                 f"Crawler started at: {d}, total tasks: {counter}",

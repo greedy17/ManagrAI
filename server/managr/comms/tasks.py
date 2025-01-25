@@ -1215,7 +1215,11 @@ def parse_homepage(domain, body):
                     continue
                 article_url = complete_url(article_url, domain)
                 article_batch.append(article_url)
-            send_url_batch(article_batch, True)
+            article_check = list(
+                Article.objects.filter(link__in=article_url).values_list("link", flat=True)
+            )
+            new_articles = list(set(article_check).difference(set(article_check)))
+            send_url_batch(new_articles, True)
             if source.site_name is None:
                 site_name = get_site_name(selector, domain)
                 source.site_name = site_name
@@ -1224,7 +1228,7 @@ def parse_homepage(domain, body):
                 source.icon = icon_href
     current_datetime = datetime.datetime.now()
     source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
-    print(f"Finished scrapping {domain} and found {len(article_batch)} articles to scrape.")
+    print(f"Finished scrapping {domain} and found {len(new_articles)} articles to scrape.")
     return source.save()
 
 
