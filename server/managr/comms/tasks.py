@@ -1216,10 +1216,10 @@ def parse_homepage(domain, body):
                 article_batch.append(article_url)
             send_url_batch(article_batch, True)
             if source.site_name is None:
-                site_name = get_site_name(selector)
+                site_name = get_site_name(selector, domain)
                 source.site_name = site_name
             if source.icon is None:
-                icon_href = get_site_icon(selector)
+                icon_href = get_site_icon(selector, domain)
                 source.icon = icon_href
     current_datetime = datetime.datetime.now()
     source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
