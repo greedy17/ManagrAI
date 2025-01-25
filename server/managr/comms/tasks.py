@@ -8,6 +8,7 @@ import math
 from copy import copy
 from scrapy.selector import Selector
 from django.db import transaction, IntegrityError
+from urllib.parse import urlparse
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
@@ -1230,8 +1231,9 @@ def parse_homepage(domain, body):
 @background(queue="CRAWLER")
 def parse_article(body, url, domain):
     xpath_copy = copy(XPATH_STRING_OBJ)
+    parsed_url = urlparse(url).netloc
     try:
-        source = NewsSource.objects.get(domain__contains=domain)
+        source = NewsSource.objects.get(domain__contains=parsed_url)
     except NewsSource.DoesNotExist:
         print(f"Could not find instance matching {url} ({domain})")
         return
