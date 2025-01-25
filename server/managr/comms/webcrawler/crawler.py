@@ -5,8 +5,12 @@ import time
 import json
 from scrapy import signals
 from scrapy.exceptions import CloseSpider, IgnoreRequest
-from twisted.web.client import ResponseNeverReceived
-from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError
+from scrapy.selector import Selector
+import scrapy.spiders
+import twisted
+from managr.utils.client import Variable_Client
+from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError, ConnectionDone
+from scrapy.spidermiddlewares.httperror import HttpError
 from django.utils import timezone
 from django.conf import settings
 from managr.core.models import CrawlerReport
@@ -18,7 +22,7 @@ from urllib.parse import urlparse, parse_qs
 from dateutil import parser
 from managr.api.emails import send_html_email
 from copy import copy
-
+from parsel import Selector
 from ..utils import (
     get_domain,
     extract_date_from_text,
@@ -262,13 +266,9 @@ class NewsSpider(scrapy.Spider):
                 sources = self.sources.filter(domain=original_url)
                 if len(sources):
                     source = sources.first()
-                    current_datetime = datetime.datetime.now()
                     source = self.update_source(
                         source.id,
                         is_crawling=False,
-                        last_scraped=timezone.make_aware(
-                            current_datetime, timezone.get_current_timezone()
-                        ),
                     )
             return
         if source.article_link_attribute is not None:
@@ -279,13 +279,9 @@ class NewsSpider(scrapy.Spider):
                 regex = source.article_link_regex
             article_links = response.xpath(regex)
             if len(article_links) < 1:
-                current_datetime = datetime.datetime.now()
                 self.update_source(
                     source.id,
                     is_crawling=False,
-                    last_scraped=timezone.make_aware(
-                        current_datetime, timezone.get_current_timezone()
-                    ),
                 )
                 return
             do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
@@ -321,6 +317,7 @@ class NewsSpider(scrapy.Spider):
                             article_url,
                             callback=self.parse_article,
                             headers=crawler_consts.SCRAPPY_HEADERS,
+                            errback=self.handle_error,
                             cb_kwargs={"source": source},
                         )
                 if source.site_name is None and response.status != 403:
@@ -329,13 +326,6 @@ class NewsSpider(scrapy.Spider):
                 if source.icon is None and response.status < 300:
                     icon_href = self.get_site_icon(response)
                     source.icon = icon_href
-                current_datetime = datetime.datetime.now()
-                self.update_source(
-                    source.id,
-                    last_scraped=timezone.make_aware(
-                        current_datetime, timezone.get_current_timezone()
-                    ),
-                )
         else:
             self.process_new_url(source, response)
         self.urls_processed += 1
@@ -639,31 +629,31 @@ class NewsSpider(scrapy.Spider):
                     "parent_classes": parent,
                 }
         site_name = self.get_site_name(response)
-        current_datetime = datetime.datetime.now()
-        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
-        source = self.update_source(
-            source.id, scrape_data=scrape_dict, site_name=site_name, last_scraped=last_scraped
-        )
+        source = self.update_source(source.id, scrape_data=scrape_dict, site_name=site_name)
         selectors_check = common_selectors_check(source)
         return
 
     def get_sources(self):
+        current_datetime = datetime.datetime.now()
+        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+        sources = NewsSource.objects.filter(domain__in=self.start_urls)
+        sources.update(last_scraped=last_scraped)
         return NewsSource.objects.filter(domain__in=self.start_urls)
 
     def handle_error(self, failure):
         deactivate = False
         error = ""
-        if failure.check(TimeoutError):
+        if failure.check(TimeoutError, HttpError):
             deactivate = True
             error = "Request Timeout"
             self.logger.error(f"Timeout error occurred: {failure.request.url}")
-        elif failure.check(ResponseNeverReceived):
+        elif failure.check(twisted.web._newclient.ResponseNeverReceived):
             deactivate = True
             error = "Response never received"
             self.logger.error(
                 f"SSL Handshake Error occurred: {failure.request.url} - {failure.value}"
             )
-        elif failure.check(ConnectionLost):
+        elif failure.check(ConnectionLost, ConnectionDone):
             deactivate = True
             error = "Connection lost"
             self.logger.error(f"Connection lost: {failure.request.url}")
@@ -714,7 +704,7 @@ class NewsSpider(scrapy.Spider):
                 self.error_log.append(f"Failed on {url} ({str(e)})")
 
 
-class SitemapSpider(scrapy.Spider):
+class SitemapSpider(scrapy.spiders.SitemapSpider):
     name = "sitemap_spider"
 
     handle_httpstatus_list = [403]
@@ -791,6 +781,7 @@ class SitemapSpider(scrapy.Spider):
         return site_name
 
     def parse(self, response):
+        print(response)
         if response.status == 403:
             print(response.body)
         url = response.request.url
@@ -1249,3 +1240,443 @@ class SubstackSpider(scrapy.Spider):
         article_links = response.xpath("//div[@class='reader2-page-body']/div/div")
         print(article_links)
         return {"results": article_links}
+
+
+class ScrapeApiSpider(scrapy.Spider):
+    name = "news_spider"
+    handle_httpstatus_list = [403, 400, 410, 500, 501]
+    custom_settings = {
+        "FEED_EXPORT_ENCODING": "utf-8",
+        "DOWNLOAD_TIMEOUT": 30,
+        "RETRY_TIMES": 0,
+        "DOWNLOAD_DELAY_RANDOMIZE": True,
+        "DOWNLOAD_DELAY": 2,
+        "DOWNLOADER_MIDDLEWARES": {
+            "scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware": 100,
+            "managr.comms.webcrawler.middleware.ClearCacheMiddleware": 543,
+            "managr.comms.webcrawler.middleware.RandomizeHeaderMiddleware": 544,
+        },
+        "AUTOTHROTTLE_ENABLED": True,
+        "HTTPCACHE_ENABLED": True,
+        "HTTPCACHE_DIR": settings.HTTPCACHE_DIR,
+        "HTTPCACHE_EXPIRATION_SECS": 43200,
+        "LOG_LEVEL": settings.SCRAPY_LOG_LEVEL,
+        "DUPEFILTER_CLASS": "managr.comms.webcrawler.middleware.CustomDupeFilter",
+        # "ITEM_PIPELINES": {
+        #     "managr.comms.webcrawler.pipelines.BulkInsertPipeline": 1,
+        # },
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(ScrapeApiSpider, self).__init__(*args, **kwargs)
+        self.start_urls = kwargs.get("start_urls")
+        self.first_only = kwargs.get("first_only")
+        self.test = kwargs.get("test")
+        self.no_report = kwargs.get("no_report")
+        self.article_only = kwargs.get("article_only")
+        self.urls_processed = 0
+        self.articles_to_process = 0
+        self.error_log = []
+        self.start_time = time.time()
+        self.blocked_urls = 0
+        self.remove_urls = kwargs.get("remove_urls", [])
+        self.print_response = kwargs.get("print_response")
+        self.sources = self.get_sources()
+        self.sources_cache = {source.id: source for source in self.sources}
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(ScrapeApiSpider, cls).from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed_handler, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed_handler(self, spider):
+        if self.no_report:
+            return
+        report = CrawlerReport.objects.all().order_by("-datetime_created").first()
+        seconds = int((time.time() - self.start_time))
+        if len(self.error_log):
+            report_str = ",".join(self.error_log)
+            report.task_times.append(seconds)
+            report.error_log.append(report_str)
+        else:
+            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
+        report.start_url_counts.append(len(self.start_urls))
+        report.total_url_counts.append(self.urls_processed)
+        report.blocked_urls += self.blocked_urls
+        report.save()
+        for source in self.sources_cache.values():
+            source.save()
+            if not source.is_crawling:
+                source.crawling
+            source.check_if_stopped()
+        return
+
+    def handle_keyboard_interrupt(self):
+        self.logger.info("KeyboardInterrupt detected, preparing to stop spider...")
+        self.crawler.engine.close_spider(self, "Manual stop triggered by KeyboardInterrupt")
+        raise CloseSpider("Manual stop triggered")
+
+    def generate_report(self, data):
+        try:
+            send_html_email(
+                f"Managr Crawler Report",
+                "core/email-templates/crawler-email.html",
+                settings.DEFAULT_FROM_EMAIL,
+                ["zach@mymanagr.com"],
+                context=data,
+            )
+        except Exception as e:
+            logger.exception(e)
+        return
+
+    def update_source(self, id, **kwargs):
+        # Retrieve the source
+        source = self.sources_cache.get(id)
+        if not source:
+            return None
+
+        # Update attributes
+        for key, value in kwargs.items():
+            setattr(source, key, value)
+
+        # Cache the updated source
+        self.sources_cache[id] = source
+        return source
+
+    def get_site_name(self, response):
+        xpaths = [
+            "//meta[contains(@property, 'og:site_name')]/@content",
+            "//meta[contains(@property,'og:url')]/@content",
+        ]
+        site_name = response.request.url
+        for xpath in xpaths:
+            site_name = response.xpath(xpath).get()
+            if site_name:
+                break
+        return site_name
+
+    def get_site_icon(self, response):
+        xpath = "//link[@rel='icon']/@href"
+        icon_href = response.xpath(xpath).get()
+        if icon_href:
+            if icon_href[0] == "/":
+                icon_href = response.request.url + icon_href
+        return icon_href
+
+    def parse(self, response):
+        url = response.meta.get("og_url")
+        res = response.json()
+        body = res.get("response").get("body")
+        selector = Selector(text=body)
+        try:
+            source = self.sources.get(domain=url)
+        except NewsSource.DoesNotExist:
+            original_urls = response.meta.get("redirect_urls", [])
+            if len(original_urls):
+                original_url = original_urls[0]
+                sources = self.sources.filter(domain=original_url)
+                if len(sources):
+                    source = sources.first()
+                    source = self.update_source(
+                        source.id,
+                        is_crawling=False,
+                    )
+            return
+        if source.article_link_attribute is not None:
+            if not source.article_link_regex:
+                regex = source.create_search_regex()
+                source = self.update_source(source.id, article_link_regex=regex)
+            else:
+                regex = source.article_link_regex
+            article_links = selector.xpath(regex)
+            if len(article_links) < 1:
+                self.update_source(
+                    source.id,
+                    is_crawling=False,
+                )
+                return
+            do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
+            if source.last_scraped and source.article_link_attribute:
+                if len(article_links) and (self.first_only or self.test):
+                    article_links = article_links[:4]
+                article_batch = []
+                for anchor in article_links:
+                    classes = anchor.xpath("@class").get()
+                    skip = False
+                    article_url = anchor.xpath("@href").extract_first()
+                    if article_url is None:
+                        continue
+                    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+                        if word in article_url:
+                            skip = True
+                            break
+                    if classes:
+                        for class_word in comms_consts.NON_VIABLE_CLASSES:
+                            if class_word in classes:
+                                skip = True
+                                break
+                    if skip:
+                        continue
+                    article_url = complete_url(article_url, url)
+                    article_batch.append(article_url)
+                body = {
+                    "urls": article_batch,
+                    "render": "true",
+                    "apiKey": comms_consts.SCRAPER_API_KEY,
+                }
+                print(body)
+                yield scrapy.Request(
+                    comms_consts.SCRAPER_BATCH_URI,
+                    method="POST",
+                    headers={"Content-Type": "application/json"},
+                    callback=self.parse_bulk_response,
+                    errback=self.handle_error,
+                    meta={
+                        "is_article": True,
+                        "dont_cache": True,
+                        "source": url,
+                        "allow_duplicate": True,
+                    },
+                    body=json.dumps(body),
+                )
+                if source.site_name is None and response.status != 403:
+                    site_name = self.get_site_name(selector)
+                    source.site_name = site_name
+                if source.icon is None and response.status < 300:
+                    icon_href = self.get_site_icon(selector)
+                    source.icon = icon_href
+        self.urls_processed += 1
+        return
+
+    def parse_article(self, response):
+        print("In article")
+        xpath_copy = copy(crawler_consts.XPATH_STRING_OBJ)
+        source = self.sources.filter(domain=response.meta.get("source")).first()
+        url = response.meta.get("og_url")
+        res = response.json()
+        body = res.get("response").get("body")
+        html = Selector(text=body)
+        meta_tag_data = {"link": url, "source": source.id}
+        article_selectors = source.article_selectors()
+        fields_dict = {}
+        article_tags = None
+        print(source.selectors_defined)
+        if source.selectors_defined:
+            for key in article_selectors.keys():
+                path = article_selectors[key]
+                if "//script" in path:
+                    script_path = path.split("|")[0]
+                    selector = html.xpath(script_path).get()
+                else:
+                    selector = html.xpath(path).getall()
+                if "//script" in path:
+                    data_path = path.split("|")[1:]
+                    for i, v in enumerate(data_path):
+                        try:
+                            integer_value = int(v)
+                            data_path[i] = integer_value
+                        except ValueError:
+                            continue
+                    try:
+                        data = json.loads(selector)
+                        selector_value = data
+                        for path in data_path:
+                            selector_value = selector_value[path]
+                        selector = [selector_value]
+                    except Exception as e:
+                        print(e)
+                        selector = []
+                if len(selector) and key != "content" and key != "publish_date":
+                    selector = ",".join(selector)
+                if key == "publish_date":
+                    if isinstance(selector, list) and len(selector):
+                        selector = selector[0]
+                    selector = extract_date_from_text(selector)
+                if key == "content":
+                    article_tags = selector
+                    continue
+                if selector is not None:
+                    meta_tag_data[key] = selector
+                else:
+                    meta_tag_data[key] = "N/A"
+            print(meta_tag_data)
+        else:
+            for key in xpath_copy.keys():
+                if article_selectors[key] is not None:
+                    xpath_copy[key] = [article_selectors[key]]
+                for path in xpath_copy[key]:
+                    try:
+                        selector = html.xpath(path).get()
+                    except ValueError as e:
+                        selector = None
+                        print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
+                    if key == "publish_date":
+                        if "text" in path and selector is not None:
+                            selector = extract_date_from_text(selector)
+                        if "text" not in path:
+                            try:
+                                parser.parse(selector)
+                            except TypeError as e:
+                                selector = None
+                            except Exception as e:
+                                print(e)
+                                continue
+                    if selector is not None:
+                        fields_dict[key] = path
+                        meta_tag_data[key] = selector
+                        break
+                if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+                    meta_tag_data[key] = None
+            article_tag_list = ["article", "story", "content"]
+            article_xpaths = ["//article//p//text()"]
+            for a in article_tag_list:
+                article_xpaths.append(
+                    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+                )
+            if article_selectors["content"] is not None:
+                article_xpaths = [article_selectors["content"]]
+            for tag in article_xpaths:
+                tags = html.xpath(tag).getall()
+                if len(tags):
+                    fields_dict["content"] = tag
+                    article_tags = tags
+                    break
+        full_article = ""
+        cleaned_data = None
+        if article_tags is not None:
+            for article in article_tags:
+                article = article.replace("\n", "").strip()
+                full_article += article
+            meta_tag_data["content"] = full_article
+        else:
+            meta_tag_data["content"] = None
+        try:
+            if "content" in meta_tag_data.keys():
+                cleaned_data = data_cleaner(meta_tag_data)
+                if isinstance(cleaned_data, dict):
+                    serializer = ArticleSerializer(data=cleaned_data)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                else:
+                    raise Exception(cleaned_data)
+            else:
+                logger.info(f"No content for article: {url}")
+
+        except IntegrityError as e:
+            return
+        except Exception as e:
+            self.error_log.append(f"{url}|{str(e)}")
+            if source.error_log is None or len(source.error_log) <= 5:
+                error = source.add_error(f"{str(e)}")
+                source = self.update_source(source.id, error_log=error)
+        if len(fields_dict):
+            path_dict = {}
+            for key in fields_dict.keys():
+                path = fields_dict[key]
+                field = crawler_consts.XPATH_TO_FIELD[key]
+                path_dict[field] = path
+            source = self.update_source(source.id, **path_dict)
+        self.urls_processed += 1
+        self.articles_to_process -= 1
+        return
+
+    def get_sources(self):
+        current_datetime = datetime.datetime.now()
+        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+        sources = NewsSource.objects.filter(domain__in=self.start_urls)
+        sources.update(last_scraped=last_scraped)
+        return NewsSource.objects.filter(domain__in=self.start_urls)
+
+    def handle_error(self, failure):
+        deactivate = False
+        error = ""
+        if failure.check(TimeoutError, HttpError):
+            deactivate = True
+            error = "Request Timeout"
+            self.logger.error(f"Timeout error occurred: {failure.request.url}")
+        elif failure.check(twisted.web._newclient.ResponseNeverReceived):
+            deactivate = True
+            error = "Response never received"
+            self.logger.error(
+                f"SSL Handshake Error occurred: {failure.request.url} - {failure.value}"
+            )
+        elif failure.check(ConnectionLost, ConnectionDone):
+            deactivate = True
+            error = "Connection lost"
+            self.logger.error(f"Connection lost: {failure.request.url}")
+        elif failure.check(DNSLookupError):
+            deactivate = True
+            error = "DNS Lookup failed"
+            self.logger.error(f"DNS Lookup failed: {failure.request.url}")
+        elif failure.check(IgnoreRequest):
+            self.logger.error(f"Request ignored: {failure.request.url}")
+        # Handle generic exceptions or errors
+        elif failure.check(Exception):
+            self.logger.error(f"Request failed: {failure}")
+        else:
+            self.logger.error(f"Unexpected error: {failure}")
+
+        if deactivate:
+            url = failure.request.url
+            if "api.scraperapi.com" in url:
+                parsed_url = urlparse(url)
+                params = parse_qs(parsed_url.query)
+                url = params.get("url")[0]
+            source = self.sources.filter(domain=url).first()
+            if source:
+                self.update_source(source.id, is_active=False, error_log=error)
+                return
+        return failure
+
+    def check_task_status(self, response):
+        print(response.meta)
+        try:
+            task_status = response.json()
+        except json.JSONDecodeError as e:
+            print(e)
+        if task_status.get("status") == "finished":
+            callback = self.parse_article if response.meta.get("is_article") else self.parse
+            yield scrapy.Request(url=response.url, meta=response.meta, callback=callback)
+        else:
+            time.sleep(10)
+            yield scrapy.Request(
+                url=response.url,
+                headers={"Content-Type": "application/json"},
+                meta=response.meta,
+                callback=self.check_task_status,
+            )
+
+    def parse_bulk_response(self, response):
+        bulk_response = response.json()
+        print(response.meta)
+        for task in bulk_response:
+            yield scrapy.Request(
+                url=task["statusUrl"],
+                headers={"Content-Type": "application/json"},
+                meta={
+                    **response.meta,
+                    "og_url": task["url"],
+                },
+                callback=self.check_task_status,
+            )
+
+    def start_requests(self):
+        self.total_urls = len(self.start_urls)
+        timeout = self.settings.getint("DOWNLOAD_TIMEOUT")
+        body = {"urls": self.start_urls, "render": "true", "apiKey": comms_consts.SCRAPER_API_KEY}
+        url = comms_consts.SCRAPER_BATCH_URI
+        yield scrapy.Request(
+            url,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+            callback=self.parse_bulk_response,
+            errback=self.handle_error,
+            meta={
+                "download_timeout": timeout,
+                "is_article": False,
+                "dont_cache": True,
+                "allow_duplicate": True,
+            },
+            body=json.dumps(body),
+        )

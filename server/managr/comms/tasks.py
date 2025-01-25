@@ -4,7 +4,11 @@ import uuid
 import httpx
 import datetime
 import re
-from django.db import transaction
+import math
+from copy import copy
+from scrapy.selector import Selector
+from django.db import transaction, IntegrityError
+from urllib.parse import urlparse
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from dateutil import parser
@@ -13,6 +17,7 @@ from background_task import background
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
 from rest_framework.exceptions import ValidationError
+from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
 from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
 from . import constants as comms_consts
 from .models import (
@@ -32,6 +37,7 @@ from .serializers import (
     JournalistSerializer,
     JournalistContactSerializer,
     EmailTrackerSerializer,
+    ArticleSerializer,
 )
 from managr.core.models import TaskResults
 from managr.core import constants as core_consts
@@ -53,6 +59,12 @@ from managr.comms.utils import (
     get_tweet_data,
     get_youtube_data,
     merge_sort_dates,
+    complete_url,
+    send_url_batch,
+    get_site_icon,
+    get_site_name,
+    data_cleaner,
+    extract_date_from_text,
 )
 from managr.api.emails import send_html_email
 
@@ -681,6 +693,7 @@ def _send_social_summary(news_alert_id):
         else:
             if value == "twitter":
                 email_data["includes"] = social_data["includes"]
+                email_data["media"] = social_data["tweetMedia"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     email_list = []
@@ -710,7 +723,8 @@ def _send_social_summary(news_alert_id):
         thread.meta_data["summary"] = message
         thread.meta_data["summaries"] = []
         if user.has_twitter_integration:
-            thread.meta_data["tweetMedia"] = email_data["includes"]
+            thread.meta_data["tweetMedia"] = email_data["media"]
+            thread.meta_data["includes"] = email_data["includes"]
         thread.save()
 
     content = {
@@ -793,7 +807,7 @@ def _process_user_hashtag_list(user_id):
     return
 
 
-@background()
+@background(queue="CRAWLER")
 def _run_spider_batch(urls):
     from subprocess import Popen
 
@@ -860,7 +874,7 @@ def news_source_report(report_type):
             )
 
 
-@background(schedule=2)
+@background(schedule=2, queue="DEFAULT")
 def get_article_by_week(result_id, search, date_from, date_to):
 
     articles = InternalArticle.search_by_query(search, date_to, date_from)
@@ -1160,6 +1174,198 @@ def _process_bulk_draft(data, user_id, task_id):
     return
 
 
+@background(queue="CRAWLER")
+def parse_homepage(domain, body):
+    selector = Selector(text=body)
+    try:
+        source = NewsSource.objects.get(domain=domain)
+    except NewsSource.DoesNotExist:
+        print(f"Could not find source with domain {domain}")
+        return
+    if source.article_link_attribute is not None:
+        if not source.article_link_regex:
+            regex = source.create_search_regex()
+            source.article_link_regex = regex
+            source.save()
+        else:
+            regex = source.article_link_regex
+        article_links = selector.xpath(regex)
+        if len(article_links) < 1:
+            source.is_crawling = False
+            source.save()
+            return
+        if source.last_scraped and source.article_link_attribute:
+            article_batch = []
+            for anchor in article_links:
+                classes = anchor.xpath("@class").get()
+                skip = False
+                article_url = anchor.xpath("@href").extract_first()
+                if article_url is None:
+                    continue
+                for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+                    if word in article_url:
+                        skip = True
+                        break
+                if classes:
+                    for class_word in comms_consts.NON_VIABLE_CLASSES:
+                        if class_word in classes:
+                            skip = True
+                            break
+                if skip:
+                    continue
+                article_url = complete_url(article_url, domain)
+                article_batch.append(article_url)
+            article_check = list(
+                Article.objects.filter(link__in=article_url).values_list("link", flat=True)
+            )
+            new_articles = list(set(article_check).difference(set(article_check)))
+            send_url_batch(new_articles, True)
+            if source.site_name is None:
+                site_name = get_site_name(selector, domain)
+                source.site_name = site_name
+            if source.icon is None:
+                icon_href = get_site_icon(selector, domain)
+                source.icon = icon_href
+    current_datetime = datetime.datetime.now()
+    source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
+    print(f"Finished scrapping {domain} and found {len(new_articles)} articles to scrape.")
+    return source.save()
+
+
+@background(queue="CRAWLER")
+def parse_article(body, url, domain):
+    xpath_copy = copy(XPATH_STRING_OBJ)
+    parsed_url = urlparse(url).netloc
+    try:
+        source = NewsSource.objects.get(domain__contains=parsed_url)
+    except NewsSource.DoesNotExist:
+        print(f"Could not find instance matching {url} ({domain})")
+        return
+    except NewsSource.MultipleObjectsReturned:
+        print(f"Multiple instances matching {url} ({domain})")
+        return
+    html = Selector(text=body)
+    meta_tag_data = {"link": url, "source": source.id}
+    article_selectors = source.article_selectors()
+    fields_dict = {}
+    article_tags = None
+    if source.selectors_defined:
+        for key in article_selectors.keys():
+            path = article_selectors[key]
+            if "//script" in path:
+                script_path = path.split("|")[0]
+                selector = html.xpath(script_path).get()
+            else:
+                selector = html.xpath(path).getall()
+            if "//script" in path:
+                data_path = path.split("|")[1:]
+                for i, v in enumerate(data_path):
+                    try:
+                        integer_value = int(v)
+                        data_path[i] = integer_value
+                    except ValueError:
+                        continue
+                try:
+                    data = json.loads(selector)
+                    selector_value = data
+                    for path in data_path:
+                        selector_value = selector_value[path]
+                    selector = [selector_value]
+                except Exception as e:
+                    print(e)
+                    selector = []
+            if len(selector) and key != "content" and key != "publish_date":
+                selector = ",".join(selector)
+            if key == "publish_date":
+                if isinstance(selector, list) and len(selector):
+                    selector = selector[0]
+                selector = extract_date_from_text(selector)
+            if key == "content":
+                article_tags = selector
+                continue
+            if selector is not None:
+                meta_tag_data[key] = selector
+            else:
+                meta_tag_data[key] = "N/A"
+    else:
+        for key in xpath_copy.keys():
+            if article_selectors[key] is not None:
+                xpath_copy[key] = [article_selectors[key]]
+            for path in xpath_copy[key]:
+                try:
+                    selector = html.xpath(path).get()
+                except ValueError as e:
+                    selector = None
+                    print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
+                if key == "publish_date":
+                    if "text" in path and selector is not None:
+                        selector = extract_date_from_text(selector)
+                    if "text" not in path:
+                        try:
+                            parser.parse(selector)
+                        except TypeError as e:
+                            selector = None
+                        except Exception as e:
+                            print(e)
+                            continue
+                if selector is not None:
+                    fields_dict[key] = path
+                    meta_tag_data[key] = selector
+                    break
+            if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
+                meta_tag_data[key] = None
+        article_tag_list = ["article", "story", "content"]
+        article_xpaths = ["//article//p//text()"]
+        for a in article_tag_list:
+            article_xpaths.append(
+                f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+            )
+        if article_selectors["content"] is not None:
+            article_xpaths = [article_selectors["content"]]
+        for tag in article_xpaths:
+            tags = html.xpath(tag).getall()
+            if len(tags):
+                fields_dict["content"] = tag
+                article_tags = tags
+                break
+    full_article = ""
+    cleaned_data = None
+    if article_tags is not None:
+        for article in article_tags:
+            article = article.replace("\n", "").strip()
+            full_article += article
+        meta_tag_data["content"] = full_article
+    else:
+        meta_tag_data["content"] = None
+    try:
+        if "content" in meta_tag_data.keys():
+            cleaned_data = data_cleaner(meta_tag_data)
+            if isinstance(cleaned_data, dict):
+                serializer = ArticleSerializer(data=cleaned_data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+            else:
+                raise Exception(cleaned_data)
+        else:
+            logger.info(f"No content for article: {url}")
+
+    except IntegrityError as e:
+        return
+    except Exception as e:
+        if source.error_log is None or len(source.error_log) <= 5:
+            error = source.add_error(f"{str(e)}")
+            source.error_log = error
+            source.save()
+    if len(fields_dict):
+        for key in fields_dict.keys():
+            path = fields_dict[key]
+            field = XPATH_TO_FIELD[key]
+            setattr(source, field, path)
+        source.save()
+    print(f"Finished scrapping {url}")
+    return
+
+
 @background()
 def test_send_pitch():
     user = User.objects.get(email="zach@mymanagr.com")
@@ -1283,7 +1489,7 @@ def test_pitch():
 
 
 @background()
-def archive_articles(months=6, count_only=False):
+def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
     """
     Archives articles older than a given date and deletes them from the original table.
 
@@ -1295,44 +1501,58 @@ def archive_articles(months=6, count_only=False):
     """
     # Get all articles older than the specified date
     current_date = timezone.now()
-    month_date = current_date - relativedelta(months=months)
-    print(f"Archiving publish dates older than {month_date}")
-    if count_only:
-        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date).count()
-        print(f"{articles_to_archive} articles older than {month_date}")
+    if auto:
+        counter = 1
+        target = 50000
+        while True:
+            if counter >= 25:
+                print(f"No date with a close article count")
+                break
+            month_date = current_date - relativedelta(
+                months=counter,
+            )
+            test_count = InternalArticle.objects.filter(publish_date__lt=month_date).count()
+            if math.isclose(target, test_count, abs_tol=20000):
+                print(f"Closest date: {month_date} || Count: {test_count}")
+                break
+            print(f"Date ({month_date}) does not meet criteria ({test_count})")
+            counter += 1
         return
-    articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
-    print(f"Found {len(articles_to_archive)} articles to archive")
-    # List to hold archived articles for bulk creation
-    archived_articles = []
-
-    # Use a database transaction to ensure atomicity
-    with transaction.atomic():
-        # Prepare archived articles for bulk creation
-        for article in articles_to_archive:
-            archived_articles.append(
-                ArchivedArticle(
-                    title=article.title,
-                    description=article.description,
-                    author=article.author,
-                    publish_date=article.publish_date,
-                    link=article.link,
-                    image_url=article.image_url,
-                    source=article.source,
-                    content=article.content,
-                )
-            )
-
-        # Bulk create the archived articles
-        print(f"Attempting to archive {len(archived_articles)} articles")
-        if archived_articles:
-            successful_arts = ArchivedArticle.objects.bulk_create(
-                archived_articles, 1000, ignore_conflicts=True
-            )
-            print(
-                f"Successfully archived {len(successful_arts)}/{len(archived_articles)} articles."
-            )
-
-        # Delete the original articles after they have been archived
+    else:
+        month_date = current_date - relativedelta(months=months, weeks=weeks)
+        print(f"Archiving publish dates older than {month_date}")
+        if count_only:
+            articles_to_archive = InternalArticle.objects.filter(
+                publish_date__lt=month_date
+            ).count()
+            print(f"{articles_to_archive} articles older than {month_date}")
+            return
+        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
+        print(f"Found {len(articles_to_archive)} articles to archive")
+        print(f"Attempting to archive {len(articles_to_archive)} articles")
+        if articles_to_archive:
+            for i in range(0, len(archived_articles), int(10000)):
+                archived_articles = []
+                # Prepare archived articles for bulk creation
+                batch = articles_to_archive[i : i + 10000]
+                for article in batch:
+                    archived_articles.append(
+                        ArchivedArticle(
+                            title=article.title,
+                            description=article.description,
+                            author=article.author,
+                            publish_date=article.publish_date,
+                            link=article.link,
+                            image_url=article.image_url,
+                            source=article.source,
+                            content=article.content,
+                        )
+                    )
+                with transaction.atomic():
+                    batch = archived_articles[i : i + 10000]
+                    successful_arts = ArchivedArticle.objects.bulk_create(
+                        batch, 1000, ignore_conflicts=True
+                    )
+                    print(f"Successfully archived {len(successful_arts)}/{len(batch)} articles.")
         articles_to_archive.delete()
         return

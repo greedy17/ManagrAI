@@ -7,6 +7,11 @@ import tempfile
 import requests
 import pytz
 import io
+import math
+from django.db import transaction
+from django.utils import timezone as util_timezone
+from dateutil.relativedelta import relativedelta
+from .models import Article as InternalArticle
 from datetime import datetime, timezone, timedelta
 from newspaper import Article, ArticleException
 from functools import reduce
@@ -19,12 +24,13 @@ from django.conf import settings
 from urllib.parse import urlparse, urlunparse
 from collections import OrderedDict
 from . import exceptions as comms_exceptions
-from .models import NewsSource, Journalist, JournalistContact
+from .models import NewsSource, Journalist, JournalistContact, ArchivedArticle
 from botocore.exceptions import ClientError
 from django.contrib.postgres.search import SearchQuery
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
+
 
 s3 = boto3.client("s3")
 
@@ -867,115 +873,6 @@ def separate_weeks(start_date, end_date, delta=7):
     return dates
 
 
-# def submit_job(url, id):
-#     response = batch_client.submit_job(
-#         jobName=f"crawler-{id}",
-#         jobQueue="crawler-queue",
-#         jobDefinition="web-scraper-prod",
-#         containerOverrides={"command": ["server/manage.py", "crawl_spider.py", url]},
-#     )
-#     return response
-
-
-def test_get_clips(search, boolean=False):
-    from managr.comms.models import Article, Search
-    from managr.core.constants import (
-        OPEN_AI_CHAT_COMPLETIONS_URI,
-        OPEN_AI_CHAT_COMPLETIONS_BODY,
-        OPEN_AI_HEADERS,
-    )
-    from managr.core.exceptions import _handle_response
-
-    try:
-        today = datetime.now()
-        date_to = str(datetime.now().date())
-        date_from = str((today - timedelta(days=7)).date())
-        if "journalist:" in search:
-            internal_articles = Article.search_by_query(search, date_to, date_from, True)
-            articles = normalize_article_data([], internal_articles)
-            return {"articles": articles, "string": search}
-        if not boolean:
-            url = OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "support@mymanagr.com",
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
-            r = _handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            print("BOOLEAN:", query_input)
-            print("---------------------------------------")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-            print("NEWSAPI CLIPS:", len(articles), articles)
-            print("---------------------------------------")
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = Article.search_by_query(query_input, date_to, date_from)
-        dict_articles = [article.fields_to_dict() for article in internal_articles]
-        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
-        print("---------------------------------------")
-        articles = normalize_article_data(articles, internal_articles, True)
-        return {"articles": articles, "string": query_input}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def test_prompt(pitch, user_id):
-    user = User.objects.get(email="zach@mymanagr.com")
-    token_amount = 4000
-    timeout = 60.0
-    while True:
-        try:
-            journalists_query = JournalistContact.objects.filter(user=user)
-            journalists = [
-                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
-                for journalist in journalists_query
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "zach@mymanagr.com",
-                prompt,
-                token_amount=token_amount,
-                temperature=0,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
-            message = json.loads(message)
-            journalist_data = message["journalists"]
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount >= 6000:
-                journalist_data = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-        except Exception as e:
-            journalist_data = f"Unknown exception: {e}"
-            break
-    return journalist_data
-
-
 def generate_test_journalists(start, stop, email="zach@mymanagr.com"):
     from managr.comms.serializers import JournalistSerializer, JournalistContactSerializer
 
@@ -1149,18 +1046,23 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     tweet_data = {}
     tweet_list = []
     attempts = 1
+    now = datetime.now(timezone.utc)
+    hour = now.hour if now.hour >= 10 else f"0{now.hour}"
+    from_minute = (now.minute + 5) if (now.minute + 5) >= 10 else f"0{now.minute + 5}"
+    to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
     while True:
         try:
             if attempts >= 10:
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
-                date_from=f"{date_from}T23:59:00Z",
-                date_to=f"{date_to}T00:00:00Z",
+                date_from=f"{date_from}T{hour}:{from_minute}:00Z",
+                date_to=f"{date_to}T{hour}:{to_minute}:00Z",
                 next_token=next_token,
             )
             tweets = tweet_res.get("data", None)
-            includes = tweet_res.get("includes", None)
+            includes = tweet_res.get("includes", [])
+            media = includes.get("media", [])
             attempts += 1
             if not tweets:
                 suggestions = twitter_account.no_results(user.email, query_input)
@@ -1184,7 +1086,17 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                             break
             if len(tweet_list) < 20 and tweets:
                 continue
-            tweet_data = {"data": tweet_list, "string": query_input, "includes": includes}
+            ordered_dict = OrderedDict()
+            for obj in tweet_list:
+                if obj["text"] not in ordered_dict.keys():
+                    ordered_dict[obj["text"]] = obj
+            duplicated_removed = list(ordered_dict.values())
+            tweet_data = {
+                "data": duplicated_removed,
+                "string": query_input,
+                "includes": includes,
+                "tweetMedia": media,
+            }
             break
         except KeyError as e:
             tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
@@ -1200,19 +1112,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
             tweet_data["error"] = str(e)
             break
     return tweet_data
-
-
-# def normalize_youtube_data(data):
-#     normalized_data = []
-#     for video in data:
-#         video_data = {}
-#         video_data["url"] = "https://www.youtube.com/watch?v=" + video["id"]["videoId"]
-#         video_data["text"] = video["title"]
-#         video_data["created_at"] = video["publishedAt"]
-#         video_data["image_url"] = video["snippet"]["thumbnails"]["default"]
-#         video_data["author"] = video["snippet"]["channelTitle"]
-#         normalized_data.append(video_data)
-#     return normalized_data
 
 
 def normalize_youtube_data(data):
@@ -1321,6 +1220,68 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
     return bluesky_data
 
 
+def send_url_batch(urls, is_article=False):
+    url = comms_consts.SCRAPER_BATCH_URI
+    body = comms_consts.SCRAPER_BATCH_BODY(urls, is_article)
+    with Variable_Client() as client:
+        res = client.post(url, json=body, headers={"Content-Type": "application/json"})
+        if res.status_code == 200:
+            return True
+        else:
+            print(vars(res))
+            return False
+
+
+def get_site_name(response, url):
+    xpaths = [
+        "//meta[@property='og:site_name']/@content",
+        "//meta[@property='og:url']/@content",
+    ]
+    site_name = url
+    for xpath in xpaths:
+        site_name = response.xpath(xpath).get()
+        if site_name:
+            break
+    return site_name
+
+
+def get_site_icon(response, url):
+    xpath = "//link[@rel='icon']/@href"
+    icon_href = response.xpath(xpath).get()
+    if icon_href:
+        if icon_href[0] == "/":
+            icon_href = url + icon_href
+    return icon_href
+
+
+def data_cleaner(data):
+    try:
+        content = data.pop("content")
+        date = data.pop("publish_date")
+        parsed_date = parser.parse(date)
+        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
+        data["author"] = (
+            data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
+        )
+        authors = data["author"].split(",")
+        author = authors[0]
+        data["author"] = author
+        data["content"] = content
+        data["publish_date"] = parsed_date
+        if len(data["title"]) > 150:
+            data["title"] = data["title"][:145] + "..."
+    except TypeError as e:
+        return f"Error cleaning data: {data}"
+    except KeyError as e:
+        return f"Error cleaning data: {data}"
+    except parser.ParserError as e:
+        return f"Error cleaning data: {data}"
+    return data
+
+
+#################################
+# DEV FUNCTIONS
+#################################
 def test_social_response(news_alert_id=False):
     from managr.comms.models import AssistAlert
 
@@ -1408,3 +1369,185 @@ def test_social_summary_response(post_list, alert_id=False, completion_token=100
         )
         print(f"Response: {res}")
     print(response_times)
+
+
+def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=False, auto=False):
+    import sys
+
+    """
+    Archives articles older than a given date and deletes them from the original table.
+    Args:
+        months (int) - sets month_date to this many months back from current date, defaults to 6 months
+        count_only (bool) - if True prints the count of the queryset the function would be working with.
+                            Useful when there's a lot of articles within the timeframe so breaking up
+                            archiving articles into smaller groups would be better.
+    """
+    # Get all articles older than the specified date
+    if as_background:
+        from .tasks import bg_archive_articles
+
+        bg_archive_articles(months, count_only)
+        return
+    current_date = timezone.now()
+    if auto:
+        counter = 1
+        target = 50000
+        while True:
+            if counter >= 25:
+                print(f"No date with a close article count")
+                break
+            month_date = current_date - relativedelta(
+                months=counter,
+            )
+            test_count = InternalArticle.objects.filter(publish_date__lt=month_date)
+            if math.isclose(target, test_count, abs_tol=20000):
+                print(f"Closest date: {month_date} || Count: {test_count}")
+                break
+            print(f"Date ({month_date}) does not meet criteria ({test_count})")
+            counter += 1
+        return
+    else:
+        month_date = current_date - relativedelta(months=months, weeks=weeks, days=days)
+        print(f"Archiving publish dates older than {month_date}")
+        if count_only:
+            articles_to_archive = InternalArticle.objects.filter(
+                publish_date__lt=month_date
+            ).count()
+            print(f"{articles_to_archive} articles older than {month_date}")
+            return
+        articles_to_archive = InternalArticle.objects.filter(publish_date__lt=month_date)
+        count = articles_to_archive.count()
+        print(f"Found {count} articles to archive")
+        archived_articles = []
+        counter = 1
+        batch_size = 1000
+        for article in articles_to_archive.iterator(chunk_size=500):
+            archived_articles.append(
+                ArchivedArticle(
+                    title=article.title,
+                    description=article.description,
+                    author=article.author,
+                    publish_date=article.publish_date,
+                    link=article.link,
+                    image_url=article.image_url,
+                    source=article.source,
+                    content=article.content,
+                )
+            )
+            if len(archived_articles) >= batch_size:
+                with transaction.atomic():
+                    successful_arts = ArchivedArticle.objects.bulk_create(
+                        archived_articles, 1000, ignore_conflicts=True
+                    )
+                    sys.stdout.write(
+                        f"\rSuccessfully archived {batch_size*counter}/{count} articles."
+                    )
+                    sys.stdout.flush()
+                    archived_articles.clear()
+                    counter += 1
+        if archived_articles:
+            with transaction.atomic():
+                ArchivedArticle.objects.bulk_create(archived_articles)
+        sys.stdout.write(f"\rSuccessfully archived {count}/{count} articles.\n")
+        print("Deleting articles")
+        articles_to_archive.delete()
+        return
+
+
+def test_get_clips(search, boolean=False):
+    from managr.comms.models import Article, Search
+    from managr.core.constants import (
+        OPEN_AI_CHAT_COMPLETIONS_URI,
+        OPEN_AI_CHAT_COMPLETIONS_BODY,
+        OPEN_AI_HEADERS,
+    )
+    from managr.core.exceptions import _handle_response
+
+    try:
+        today = datetime.now()
+        date_to = str(datetime.now().date())
+        date_from = str((today - timedelta(days=7)).date())
+        if "journalist:" in search:
+            internal_articles = Article.search_by_query(search, date_to, date_from, True)
+            articles = normalize_article_data([], internal_articles)
+            return {"articles": articles, "string": search}
+        if not boolean:
+            url = OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
+            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "support@mymanagr.com",
+                prompt,
+                token_amount=500,
+                top_p=0.1,
+            )
+            with Variable_Client() as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=OPEN_AI_HEADERS,
+                )
+            r = _handle_response(r)
+            query_input = r.get("choices")[0].get("message").get("content")
+            print("BOOLEAN:", query_input)
+            print("---------------------------------------")
+            news_res = Search.get_clips(query_input, date_to, date_from)
+            articles = news_res["articles"]
+            print("NEWSAPI CLIPS:", len(articles), articles)
+            print("---------------------------------------")
+        else:
+            news_res = Search.get_clips(boolean, date_to, date_from)
+            articles = news_res["articles"]
+            query_input = boolean
+        articles = [article for article in articles if article["title"] != "[Removed]"]
+        internal_articles = Article.search_by_query(query_input, date_to, date_from)
+        dict_articles = [article.fields_to_dict() for article in internal_articles]
+        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
+        print("---------------------------------------")
+        articles = normalize_article_data(articles, internal_articles, True)
+        return {"articles": articles, "string": query_input}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def test_prompt(pitch, user_id):
+    user = User.objects.get(email="zach@mymanagr.com")
+    token_amount = 4000
+    timeout = 60.0
+    while True:
+        try:
+            journalists_query = JournalistContact.objects.filter(user=user)
+            journalists = [
+                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
+                for journalist in journalists_query
+            ]
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                "zach@mymanagr.com",
+                prompt,
+                token_amount=token_amount,
+                temperature=0,
+                response_format={"type": "json_object"},
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            r = open_ai_exceptions._handle_response(r)
+            message = r.get("choices")[0].get("message").get("content")
+            message = json.loads(message)
+            journalist_data = message["journalists"]
+            break
+        except open_ai_exceptions.StopReasonLength:
+            if token_amount >= 6000:
+                journalist_data = "Token amount error"
+                break
+            else:
+                token_amount += 1000
+                continue
+        except Exception as e:
+            journalist_data = f"Unknown exception: {e}"
+            break
+    return journalist_data

@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 from scrapy.crawler import CrawlerProcess
-from managr.comms.webcrawler.crawler import NewsSpider, SitemapSpider, XMLSpider
+from managr.comms.webcrawler.crawler import NewsSpider, XMLSpider
 from managr.comms.models import NewsSource
-from managr.comms.utils import remove_api_sources
+from managr.comms.utils import remove_api_sources, send_url_batch
 
 
 class Command(BaseCommand):
@@ -59,9 +59,16 @@ class Command(BaseCommand):
             else:
                 sources = NewsSource.objects.filter(domain__in=urls)
                 html_urls = list(
-                    sources.filter(scrape_type="HTML").values_list("domain", flat=True)
+                    sources.filter(scrape_type="HTML", use_scrape_api=False).values_list(
+                        "domain", flat=True
+                    )
                 )
                 xml_urls = list(sources.filter(scrape_type="XML").values_list("sitemap", flat=True))
+                scraper_urls = list(
+                    sources.filter(scrape_type="HTML", use_scrape_api=True).values_list(
+                        "domain", flat=True
+                    )
+                )
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
@@ -89,4 +96,6 @@ class Command(BaseCommand):
                 no_report=options["noreport"],
                 article_only=options["article"],
             )
+        if scraper_urls:
+            send_url_batch(scraper_urls)
         process.start()

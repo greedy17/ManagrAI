@@ -151,7 +151,9 @@ def add_sequence_state(contact_id, sequence_id):
                 created = True
 
             res = sequence.helper_class.add_sequence_state(
-                outreach_account.access_token, prospect_id, outreach_account.mailbox,
+                outreach_account.access_token,
+                prospect_id,
+                outreach_account.mailbox,
             )
             break
         except TokenExpired:

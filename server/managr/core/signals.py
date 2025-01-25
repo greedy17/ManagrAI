@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
-from django.db.models.signals import post_save, pre_delete
-
+from django.db.models.signals import post_save, pre_delete, pre_save
+from background_task.signals import task_created
 from .models import User
 from background_task.models import CompletedTask, Task
 from managr.hubspot import constants as hs_consts
@@ -15,6 +15,13 @@ def create_auth_token(sender, instance, created, **kwargs):
     """When a new user is created, automatically generate an auth token for them."""
     if created:
         ManagrToken.objects.create(user=instance, assigned_user=instance)
+
+
+@receiver(pre_save, sender=Task)
+def add_default_queue(sender, instance, **kwargs):
+    if not instance.queue:
+        instance.queue = "DEFAULT"
+        instance.save()
 
 
 @receiver(post_save, sender=CompletedTask)

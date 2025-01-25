@@ -2,6 +2,7 @@ import os
 import random
 from scrapy.utils.request import request_fingerprint
 from .constants import USER_AGENT_LIST, REFERER_LIST
+from scrapy.dupefilters import RFPDupeFilter
 
 
 class ClearCacheMiddleware:
@@ -35,3 +36,11 @@ class RandomizeHeaderMiddleware:
         request.headers["User-Agent"] = user_agent
         request.headers["Referer"] = referer
         request.headers["DNT"] = dnt
+
+
+class CustomDupeFilter(RFPDupeFilter):
+    def request_seen(self, request):
+        # Allow polling URLs to be requested multiple times
+        if request.meta.get("allow_duplicate", False):
+            return False
+        return super().request_seen(request)

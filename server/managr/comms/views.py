@@ -1,5 +1,4 @@
 import json
-from django.db.models.fields import FloatField
 import httpx
 import logging
 import io
@@ -57,6 +56,8 @@ from .tasks import (
     _add_journalist_to_db,
     emit_process_contacts_excel,
     emit_process_bulk_draft,
+    parse_homepage,
+    parse_article,
 )
 from .serializers import (
     SearchSerializer,
@@ -80,6 +81,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     authentication_classes,
+    parser_classes,
 )
 from managr.comms.utils import (
     generate_config,
@@ -3800,3 +3802,20 @@ def get_bluesky_profile(request):
         print(e)
         Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=data)
     return Response(status=status.HTTP_200_OK, data=data)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([])
+def scraper_webhook(request):
+    is_article = request.query_params.get("isArticle", "False")
+    res = json.loads(request.body.decode("utf-8"))
+    response = res.get("response")
+    url = res.get("url")
+    body = response.get("body")
+    if is_article == "True":
+        domain = get_domain(url, True)
+        parse_article(body, url, domain, priority=5)
+    else:
+        parse_homepage(url, body, priority=5)
+    return Response()
