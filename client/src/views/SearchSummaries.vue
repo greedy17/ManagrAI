@@ -8415,6 +8415,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.followupShares = null
       this.totalShares = null
       this.notifiedList = []
+      this.secondaryLoaderAlt = false
+      this.secondaryLoader = false
       this.hideShare()
     },
     resetSearch() {
