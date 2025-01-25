@@ -4361,7 +4361,7 @@ export default {
       loadingAnalytics: false,
       showingAnalytics: false,
       currentArticle: {},
-      noResultsString: 'No results found for your query. Please try again',
+      noResultsString: 'No results found. Try a different request',
       alternateAricles: [],
       originalSearch: '',
       followUps: [],
@@ -6644,7 +6644,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.loading = true
       this.summary = ''
       this.originalSearch = ''
-      this.noResultsString = 'No results found for your query. Please try again'
+      this.noResultsString = 'No results found. Try a different request'
       this.alternateAricles = []
       this.followUps = []
       this.summaries = []
@@ -8385,7 +8385,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.journalistInfo = ''
       this.newSearch = ''
       this.originalSearch = ''
-      this.noResultsString = 'No results found for your query. Please try again'
+      this.noResultsString = 'No results found. Try a different request'
       this.alternateAricles = []
       this.followUps = []
       this.summaries = []
@@ -9315,7 +9315,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         if (this.summary.length) {
           this.tweetMedia = []
           this.summaries.push({
-            summary: 'No results found for your query. Please try again',
+            summary: 'No results found. Try a different request',
             clips: [],
             media: [],
           })
@@ -9517,7 +9517,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.secondaryLoaderAlt = false
 
         this.summaries.push({
-          summary: 'No results found for your query. Please try again',
+          summary: 'No results found. Try a different request',
           clips: [],
           media: [],
         })
