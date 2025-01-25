@@ -524,6 +524,7 @@ class NewsSource(TimeStampModel):
             author_selector=self.author_selector,
             article_content_selector=self.article_content_selector,
             is_active=self.is_active,
+            use_scrape_api=self.use_scrape_api,
             article_title_selector=self.article_title_selector,
             image_url_selector=self.image_url_selector,
             description_selector=self.description_selector,

@@ -83,12 +83,21 @@ YOUTUBE_VIDEO_PARAMS = lambda video_id: {
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SCRAPER_BATCH_URI = "https://async.scraperapi.com/batchjobs"
-SCRAPER_BATCH_BODY = lambda urls, is_article: {
-    "urls": urls,
-    "render": "true",
-    "apiKey": SCRAPER_API_KEY,
-    "callback": {"type": "webhook", "url": f"{SCRAPER_API_WEBHOOK}?isArticle={is_article}"},
-}
+
+
+def SCRAPER_BATCH_BODY(urls, include_webhook=False, is_article=False):
+    body = {
+        "urls": urls,
+        "render": "true",
+        "apiKey": SCRAPER_API_KEY,
+    }
+    if include_webhook:
+        body["callback"] = {
+            "type": "webhook",
+            "url": f"{SCRAPER_API_WEBHOOK}?isArticle={is_article}",
+        }
+    return body
+
 
 SEMRUSH_TRAFFIC_URI = "https://api.semrush.com/analytics/ta/api/v3/summary"
 

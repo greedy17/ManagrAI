@@ -1216,24 +1216,44 @@ def parse_homepage(domain, body):
                 article_url = complete_url(article_url, domain)
                 article_batch.append(article_url)
             article_check = list(
-                Article.objects.filter(link__in=article_url).values_list("link", flat=True)
+                InternalArticle.objects.filter(link__in=article_url).values_list("link", flat=True)
             )
             new_articles = list(set(article_check).difference(set(article_check)))
-            send_url_batch(new_articles, True)
+            if len(new_articles):
+                send_url_batch(new_articles, False, True)
             if source.site_name is None:
                 site_name = get_site_name(selector, domain)
                 source.site_name = site_name
             if source.icon is None:
                 icon_href = get_site_icon(selector, domain)
                 source.icon = icon_href
+            print(f"Finished scrapping {domain} and found {len(new_articles)} articles to scrape.")
+    else:
+        print(f"No article link attribute for {domain}")
     current_datetime = datetime.datetime.now()
     source.last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
-    print(f"Finished scrapping {domain} and found {len(new_articles)} articles to scrape.")
     return source.save()
 
 
 @background(queue="CRAWLER")
-def parse_article(body, url, domain):
+def parse_article(status_url):
+    from managr.comms.utils import get_domain
+
+    try:
+        with Variable_Client() as client:
+            res = client.get(status_url, headers={"Content-Type": "application/json"})
+            res = res.json()
+        if res.get("status") == "finished":
+            response = res.get("response")
+            url = res.get("url")
+            body = response.get("body")
+            domain = get_domain(url, True)
+        else:
+            parse_article(status_url, schedule=60)
+            return
+    except json.JSONDecodeError as e:
+        print(res)
+        print(e)
     xpath_copy = copy(XPATH_STRING_OBJ)
     parsed_url = urlparse(url).netloc
     try:

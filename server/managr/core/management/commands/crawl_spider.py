@@ -97,5 +97,5 @@ class Command(BaseCommand):
                 article_only=options["article"],
             )
         if scraper_urls:
-            send_url_batch(scraper_urls)
+            send_url_batch(scraper_urls, True, False)
         process.start()

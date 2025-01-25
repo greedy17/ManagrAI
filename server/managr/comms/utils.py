@@ -9,7 +9,6 @@ import pytz
 import io
 import math
 from django.db import transaction
-from django.utils import timezone as util_timezone
 from dateutil.relativedelta import relativedelta
 from .models import Article as InternalArticle
 from datetime import datetime, timezone, timedelta
@@ -30,7 +29,6 @@ from django.contrib.postgres.search import SearchQuery
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
-
 
 s3 = boto3.client("s3")
 
@@ -1220,13 +1218,19 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
     return bluesky_data
 
 
-def send_url_batch(urls, is_article=False):
+def send_url_batch(urls, include_webhook=False, is_article=False):
+    from managr.comms.tasks import parse_article
+
+    print(urls)
     url = comms_consts.SCRAPER_BATCH_URI
-    body = comms_consts.SCRAPER_BATCH_BODY(urls, is_article)
+    body = comms_consts.SCRAPER_BATCH_BODY(urls, include_webhook, is_article)
     with Variable_Client() as client:
         res = client.post(url, json=body, headers={"Content-Type": "application/json"})
-        if res.status_code == 200:
-            return True
+        if res.status_code == 200 and is_article:
+            res = res.json()
+            for task in res:
+                parse_article(task["statusUrl"])
+            return
         else:
             print(vars(res))
             return False

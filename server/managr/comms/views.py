@@ -3808,14 +3808,9 @@ def get_bluesky_profile(request):
 @permission_classes([permissions.AllowAny])
 @authentication_classes([])
 def scraper_webhook(request):
-    is_article = request.query_params.get("isArticle", "False")
     res = json.loads(request.body.decode("utf-8"))
     response = res.get("response")
     url = res.get("url")
     body = response.get("body")
-    if is_article == "True":
-        domain = get_domain(url, True)
-        parse_article(body, url, domain, priority=5)
-    else:
-        parse_homepage(url, body, priority=5)
+    parse_homepage(url, body, priority=5)
     return Response()
