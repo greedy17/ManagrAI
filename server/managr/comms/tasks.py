@@ -1235,6 +1235,9 @@ def parse_article(body, url, domain):
     except NewsSource.DoesNotExist:
         print(f"Could not find instance matching {url} ({domain})")
         return
+    except NewsSource.MultipleObjectsReturned:
+        print(f"Multiple instances matching {url} ({domain})")
+        return
     html = Selector(text=body)
     meta_tag_data = {"link": url, "source": source.id}
     article_selectors = source.article_selectors()
