@@ -414,6 +414,7 @@ def OPEN_AI_NEWS_CLIPS_SUMMARY(
                 User Request: {search}
                 News Coverage: {clips}
                 Project details (campaign, media pitch, etc): {project}
+                
                 Output format:
                 **Heading** in `<h2>` tags,
                 Sections with `<strong>` subheadings,
@@ -612,7 +613,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     
     Follow these instructions carefully:
     
-    1. The user is most likely asking a follow up question (query) based on the previous response and the tweets / clips. Also assume the user's follow up is related to the current topic, event, entity, or company.
+    1. The user is most likely asking a follow up question (query) based on the previous response and the social media coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
     2. If the answer can not be provided using the previous response or news coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
     3. Focus on only answering the query. No need to regurgitate other/irrelevant parts of the previous response.
     4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
