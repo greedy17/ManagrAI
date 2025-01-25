@@ -2570,7 +2570,7 @@
               "
             >
               <div class="citation-text" v-html="noResultsString"></div>
-              <div
+              <!-- <div
                 style="margin: 12px 0"
                 class="row"
                 v-if="mainView === 'news' || mainView === 'social'"
@@ -2607,7 +2607,7 @@
                   <img src="@/assets/images/google.svg" height="16px" alt="" />
                   <div class="s-tooltip">{{ isViewOnly ? 'Locked' : 'Switch to Web' }}</div>
                 </div>
-              </div>
+              </div> -->
             </div>
 
             <div v-else class="content-padding relative">
@@ -4361,7 +4361,7 @@ export default {
       loadingAnalytics: false,
       showingAnalytics: false,
       currentArticle: {},
-      noResultsString: '',
+      noResultsString: 'No results found for your query. Please try again',
       alternateAricles: [],
       originalSearch: '',
       followUps: [],
@@ -6644,7 +6644,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.loading = true
       this.summary = ''
       this.originalSearch = ''
-      this.noResultsString = ''
+      this.noResultsString = 'No results found for your query. Please try again'
       this.alternateAricles = []
       this.followUps = []
       this.summaries = []
@@ -8385,7 +8385,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.journalistInfo = ''
       this.newSearch = ''
       this.originalSearch = ''
-      this.noResultsString = ''
+      this.noResultsString = 'No results found for your query. Please try again'
       this.alternateAricles = []
       this.followUps = []
       this.summaries = []
@@ -9311,8 +9311,25 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } catch (e) {
         this.loading = false
         this.summaryLoading = false
-        console.log('ERROR IS HERE', e)
-        this.showingArticles = false
+
+        if (this.summary.length) {
+          this.tweetMedia = []
+          this.summaries.push({
+            summary: 'No results found for your query. Please try again',
+            clips: [],
+            media: [],
+          })
+
+          this.showingArticles = false
+          this.secondaryLoaderAlt = false
+        } else {
+          this.showingArticles = false
+          this.latestArticles = []
+          this.latestMedia = []
+
+          this.showingArticles = false
+          this.secondaryLoaderAlt = false
+        }
       } finally {
         this.refreshUser()
         this.loading = false
@@ -9497,6 +9514,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.secondaryLoader = false
       } catch (e) {
         console.log(e)
+        this.secondaryLoaderAlt = false
+
+        this.summaries.push({
+          summary: 'No results found for your query. Please try again',
+          clips: [],
+          media: [],
+        })
       } finally {
       }
     },
