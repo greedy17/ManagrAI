@@ -34,10 +34,15 @@ class Command(BaseCommand):
             help="Won't run the report after the crawler runs",
         )
         parser.add_argument(
+            "--rescrape",
+            action="store_true",
+            help="Rescrapes the scrape data of the source",
+        )
+        parser.add_argument(
             "--article",
             action="store_true",
             help="Runs the spider with parse article instead of parse",
-        ),
+        )
         parser.add_argument(
             "--response",
             action="store_true",
@@ -80,7 +85,7 @@ class Command(BaseCommand):
             process.crawl(
                 NewsSpider,
                 start_urls=html_urls,
-                first_only=first_only,
+                rescrape=options["rescrape"],
                 test=options["test"],
                 no_report=options["noreport"],
                 article_only=options["article"],
@@ -91,7 +96,6 @@ class Command(BaseCommand):
             process.crawl(
                 XMLSpider,
                 start_urls=xml_urls,
-                first_only=first_only,
                 test=options["test"],
                 no_report=options["noreport"],
                 article_only=options["article"],

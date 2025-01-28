@@ -89,7 +89,13 @@ class CustomNewsSource(admin.ModelAdmin):
     ordering = ("-datetime_created",)
     readonly_fields = ("access_count", "newest_article_date")
     search_fields = ["domain"]
-    list_filter = ("is_active", "is_crawling", "is_stopped", CustomActiveNotCrawlingFilter)
+    list_filter = (
+        "is_active",
+        "is_crawling",
+        "is_stopped",
+        "use_scrape_api",
+        CustomActiveNotCrawlingFilter,
+    )
     actions = [update_crawling, update_active_status]
 
     def get_ordering(self, request):

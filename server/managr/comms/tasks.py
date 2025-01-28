@@ -847,7 +847,7 @@ def news_source_report(report_type):
     if report_type == "problem":
         domains = NewsSource.problem_urls()
     elif report_type == "stopped":
-        domains = NewsSource.get_stopped_sources()
+        domains = NewsSource.objects.stopped()
     if not len(domains):
         domains = [f"No {report_type} domains"]
     for i in range(0, len(domains), 50):

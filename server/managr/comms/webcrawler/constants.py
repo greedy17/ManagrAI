@@ -90,13 +90,21 @@ MONTH_DAY_TO_NAME = {
 }
 
 COMMON_SELECTORS = {
-    "value": ["/news/.a", "article_.a", "/article/.a", "year.a"],
+    "value": ["year.a", "/news/.a", "/article/.a", "article_.a", "/articles/.a"],
     "class": [
         "tnt-asset-link.a",
         "article-link.a",
         "entry-title.*,a",
         "td-image-wrap.a",
-        "title-link.a",
+        "title.a",
         "title-link.a",
     ],
 }
+
+URL_DATE_PATTERN = r"(?i)\/([0-9]{2,4})(?:[-/_])([0-9]{1,2}|1[0-2]|[a-z]{3}|march|april)(?:[-/_])([0-9]{2,4})?(?:[-/_])?"
+
+VALID_ARTICLE_WORDS = [
+    "story",
+    "article",
+    "news",
+]

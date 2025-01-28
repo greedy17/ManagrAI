@@ -8,6 +8,7 @@ import requests
 import pytz
 import io
 import math
+import random
 from django.db import transaction
 from dateutil.relativedelta import relativedelta
 from .models import Article as InternalArticle
@@ -518,15 +519,37 @@ def remove_api_sources():
     return
 
 
+def valid_slug(slug):
+    dash_count = slug.count("-")
+    underscore_count = slug.count("_")
+    if dash_count < 4 or underscore_count < 4:
+        return True
+    else:
+        return False
+
+
 def potential_link_check(href, website_url):
-    parsed_url = urlparse(website_url)
-    site_url = parsed_url.netloc
-    if "https" in href:
-        if site_url in href:
+    from .webcrawler.constants import URL_DATE_PATTERN, VALID_ARTICLE_WORDS
+
+    source_domain = urlparse(website_url)
+    site_url = source_domain.netloc
+    if "https" in href and site_url not in href:
+        return False
+    parsed_url = urlparse(href)
+    parsed_path = parsed_url.path
+    path_list = [x for x in parsed_path.split("/") if len(x) > 0]
+    if len(path_list) < 1:
+        return False
+    pattern = re.compile(URL_DATE_PATTERN)
+    m = pattern.search(href)
+    if m:
+        return True
+    for word in VALID_ARTICLE_WORDS:
+        if word in href:
             return True
-        else:
-            return False
-    return True
+    slug = path_list[-1]
+    is_valid_slug = valid_slug(slug)
+    return is_valid_slug
 
 
 def complete_url(url, default_domain, default_scheme="https"):
@@ -1555,3 +1578,27 @@ def test_prompt(pitch, user_id):
             journalist_data = f"Unknown exception: {e}"
             break
     return journalist_data
+
+
+def check_if_date_format(urls):
+    from .webcrawler.constants import URL_DATE_PATTERN
+
+    sample_size = max(1, len(urls) // 10)
+    sample = random.sample(urls, sample_size)
+    matches = []
+    pattern = re.compile(URL_DATE_PATTERN)
+    for url in sample:
+        try:
+            m = pattern.search(url)
+            if m:
+                matches.append(m.groups())
+        except Exception as e:
+            print(url, e)
+            continue
+    if matches:
+        is_date = len(matches) / len(sample) >= 0.5
+        year, month, day = matches[0]
+        print((len(matches) / len(sample)), f"{year}/{month}/{day}")
+        full_date = True if day else False
+        return (is_date, full_date)
+    return (False, False)

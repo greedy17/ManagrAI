@@ -379,6 +379,30 @@ class Pitch(TimeStampModel):
         return open_ai_exceptions._handle_response(r)
 
 
+class NewsSourceQuerySet(models.QuerySet):
+    def active(self, extra_filters=None):
+        active_sources = self.filter(is_active=True, is_crawling=True)
+        if extra_filters:
+            active_sources = active_sources.filter(**extra_filters)
+        return active_sources
+
+    def scrape_api(self, extra_filters=None):
+        scrape_sources = self.filter(is_active=True, is_crawling=True, use_scrape_api=True)
+        if extra_filters:
+            scrape_sources = scrape_sources.filter(**extra_filters)
+        return scrape_sources
+
+    def stopped(self, extra_filters=None):
+        stopped_sources = self.filter(is_crawling=True, is_active=True, is_stopped=True)
+        if extra_filters:
+            stopped_sources = stopped_sources.filter(**extra_filters)
+        return stopped_sources
+
+    def as_list(self):
+        domains = self.values_list("domain", flat=True)
+        return list(domains)
+
+
 class NewsSource(TimeStampModel):
     domain = models.CharField(max_length=255, unique=True)
     site_name = models.CharField(max_length=255, blank=True, null=True)
@@ -422,6 +446,8 @@ class NewsSource(TimeStampModel):
 
     def __str__(self):
         return self.domain
+
+    objects = NewsSourceQuerySet.as_manager()
 
     class Meta:
         ordering = ["-datetime_created"]
@@ -532,45 +558,37 @@ class NewsSource(TimeStampModel):
 
     @property
     def crawling(self):
-        article_check = Article.objects.filter(source=self)
-        if len(article_check):
-            self.is_crawling = True
-            self.save()
-            return self.is_crawling
-        return False
-
-    @classmethod
-    def get_stopped_sources(cls, include_date=False):
-        news = NewsSource.objects.filter(
-            is_crawling=True, is_active=True, is_stopped=True
-        ).values_list("domain", flat=True)
-        stopped_sources = list(news)
-        return stopped_sources
+        article_check = True if self.articles.first() else False
+        self.is_crawling = article_check
+        self.save()
+        return article_check
 
     @classmethod
     def domain_list(
-        cls, scrape_ready=False, new=False, type="HTML", run_now=False, scrape_api=False
+        cls,
+        scrape_ready=True,
+        run_now=False,
+        type="HTML",
+        is_crawling=True,
+        scrape_api=False,
+        as_queryset=False,
     ):
         six_hours = datetime.now() - timedelta(hours=6)
-        active_sources = cls.objects.filter(
-            is_active=True, scrape_type=type, use_scrape_api=scrape_api
+        sources = cls.objects.filter(
+            is_active=scrape_ready,
+            scrape_type=type,
+            is_crawling=is_crawling,
+            use_scrape_api=scrape_api,
         )
-        if scrape_ready and new:
-            active_sources = active_sources.filter(
-                article_link_selector__isnull=False, article_link_regex__isnull=True
+        if settings.IN_DEV or run_now:
+            ready_sources = sources.filter(is_crawling=True)
+        else:
+            ready_sources = sources.filter(is_crawling=True, is_stopped=False).filter(
+                last_scraped__lt=six_hours
             )
-        # filters sources that are already scrapping
-        elif scrape_ready and not new:
-            if settings.IN_DEV or run_now:
-                active_sources = active_sources.filter(is_crawling=True)
-            else:
-                active_sources = active_sources.filter(is_crawling=True, is_stopped=False).filter(
-                    last_scraped__lt=six_hours
-                )
-        # filters sources that were just added and don't have scrape data yet
-        elif not scrape_ready and new:
-            active_sources = active_sources.filter(article_link_attribute__isnull=True)
-        source_list = [source.domain for source in active_sources]
+        if as_queryset:
+            return ready_sources
+        source_list = [source.domain for source in ready_sources]
         return source_list
 
     @classmethod
@@ -582,10 +600,8 @@ class NewsSource(TimeStampModel):
         return list(news)
 
     def newest_article_date(self):
-        articles = self.articles.all().order_by("-publish_date")
-        if articles:
-            newest_article_date = articles.first().publish_date
-            return newest_article_date
+        if self.articles.first():
+            return self.articles.first().publish_date
         return None
 
     def add_error(self, error):
@@ -716,6 +732,7 @@ class Article(TimeStampModel):
 
     class Meta:
         constraints = [UniqueConstraint(fields=["source", "title"], name="unique_article")]
+        ordering = ["-publish_date"]
 
     def update_search_vector(self):
         try:

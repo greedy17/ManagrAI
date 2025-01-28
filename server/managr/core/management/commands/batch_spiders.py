@@ -21,10 +21,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         batch_size = options["batch_size"] if options["batch_size"] is not None else 10
         if options["stopped"]:
-            news = NewsSource.get_stopped_sources()
+            news = NewsSource.stopped().as_list()
         else:
-            news = NewsSource.domain_list(True, False)
-            scrape_api_news = NewsSource.domain_list(True, False, scrape_api=True)
+            news = NewsSource.objects.active().as_list()
+            scrape_api_news = NewsSource.scrape_api().as_list()
             scrape_api_news = ",".join(scrape_api_news)
             report = CrawlerReport.objects.create()
             d = datetime.now().strftime("%I:%M %p")
