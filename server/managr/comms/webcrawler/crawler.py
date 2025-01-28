@@ -95,10 +95,13 @@ def common_selectors_check(source, use_date=False):
 
 
 def data_cleaner(data):
+    now = datetime.datetime.now()
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
         parsed_date = parser.parse(date)
+        if parsed_date > now:
+            parsed_date = None
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
         data["author"] = (
             data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()

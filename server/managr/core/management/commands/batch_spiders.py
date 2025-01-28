@@ -24,7 +24,7 @@ class Command(BaseCommand):
             news = NewsSource.stopped().as_list()
         else:
             news = NewsSource.objects.active().as_list()
-            scrape_api_news = NewsSource.scrape_api().as_list()
+            scrape_api_news = NewsSource.objects.scrape_api().as_list()
             scrape_api_news = ",".join(scrape_api_news)
             report = CrawlerReport.objects.create()
             d = datetime.now().strftime("%I:%M %p")
