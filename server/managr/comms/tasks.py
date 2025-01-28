@@ -1216,9 +1216,11 @@ def parse_homepage(domain, body):
                 article_url = complete_url(article_url, domain)
                 article_batch.append(article_url)
             article_check = list(
-                InternalArticle.objects.filter(link__in=article_url).values_list("link", flat=True)
+                InternalArticle.objects.filter(link__in=article_batch, source=source).values_list(
+                    "link", flat=True
+                )
             )
-            new_articles = list(set(article_check).difference(set(article_check)))
+            new_articles = list(set(article_batch).difference(set(article_check)))
             if len(new_articles):
                 send_url_batch(new_articles, False, True)
             if source.site_name is None:
