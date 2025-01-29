@@ -3765,10 +3765,15 @@
               >
                 <img class="invert" src="@/assets/images/chart.svg" height="15px" alt="" />
 
-                <div :class="{ widetip: !searchSaved && !isViewOnly }" class="s-tooltip">
+                <div
+                  :class="{ widetip: (!searchSaved && !isViewOnly) || !isPaid }"
+                  class="s-tooltip"
+                >
                   {{
                     isViewOnly
                       ? 'Locked'
+                      : !isPaid
+                      ? 'Upgrade to PRO'
                       : searchSaved
                       ? 'Generate Report'
                       : 'Save Thread to enable report'
@@ -4815,8 +4820,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `Tell me about {Journalist Name, Article Headline, URL, etc.}`,
         },
         {
-          name: `Create briefing sheet...`,
-          value: `Create a briefing sheet for {journalist name} from {outlet}`,
+          name: `Latest news on...`,
+          value: `Latest news on {Topic, Brand, etc}`,
         },
         {
           name: `Who covered AI in 2024`,
@@ -5377,7 +5382,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.$router.push({ name: 'Reports' })
     },
     openReportModal() {
-      if (this.searchSaved) {
+      if (this.searchSaved && this.isPaid) {
         this.reportModalOpen = true
       }
     },
