@@ -1243,9 +1243,9 @@ DO_NOT_TRACK_LIST = [
 
 
 DO_NOT_INCLUDE_WORDS = [
-    "photos",
+    "/photos",
     "sex",
-    "review",
+    "/review",
     "linkedin",
     ".pdf",
     "facebook",
@@ -1255,10 +1255,11 @@ DO_NOT_INCLUDE_WORDS = [
     "x.com",
     ".png",
     ".jpeg",
-    "category",
-    "podcast",
-    "author",
+    "/category",
+    "/podcast",
+    "/author",
     ".jpeg",
+    "/event",
 ]
 
 NON_VIABLE_CLASSES = ["menu", "nav"]

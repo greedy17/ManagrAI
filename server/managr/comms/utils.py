@@ -62,7 +62,7 @@ def get_domain(url, full_netloc=False):
     return domain_parts[0]
 
 
-def extract_date_from_text(text):
+def extract_date_from_text(text, timezone_dict):
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
@@ -72,7 +72,7 @@ def extract_date_from_text(text):
         else:
             return None
     try:
-        parsed_date = parser.parse(text)
+        parsed_date = parser.parse(text, tzinfos=timezone_dict)
         return str(parsed_date)
     except parser.ParserError:
         pass
@@ -1578,27 +1578,3 @@ def test_prompt(pitch, user_id):
             journalist_data = f"Unknown exception: {e}"
             break
     return journalist_data
-
-
-def check_if_date_format(urls):
-    from .webcrawler.constants import URL_DATE_PATTERN
-
-    sample_size = max(1, len(urls) // 10)
-    sample = random.sample(urls, sample_size)
-    matches = []
-    pattern = re.compile(URL_DATE_PATTERN)
-    for url in sample:
-        try:
-            m = pattern.search(url)
-            if m:
-                matches.append(m.groups())
-        except Exception as e:
-            print(url, e)
-            continue
-    if matches:
-        is_date = len(matches) / len(sample) >= 0.5
-        year, month, day = matches[0]
-        print((len(matches) / len(sample)), f"{year}/{month}/{day}")
-        full_date = True if day else False
-        return (is_date, full_date)
-    return (False, False)

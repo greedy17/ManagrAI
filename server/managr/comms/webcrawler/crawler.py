@@ -3,12 +3,12 @@ import logging
 import datetime
 import time
 import json
+from dateutil.tz import gettz
 from scrapy import signals
 from scrapy.exceptions import CloseSpider, IgnoreRequest
 from scrapy.selector import Selector
 import scrapy.spiders
 import twisted
-from managr.utils.client import Variable_Client
 from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError, ConnectionDone
 from scrapy.spidermiddlewares.httperror import HttpError
 from django.utils import timezone
@@ -28,7 +28,6 @@ from ..utils import (
     extract_date_from_text,
     potential_link_check,
     complete_url,
-    check_if_date_format,
 )
 from .. import constants as comms_consts
 
@@ -65,12 +64,7 @@ def check_classes(classes_str):
     return found_value, found_attribute
 
 
-def common_selectors_check(source, use_date=False):
-    if use_date:
-        source.article_link_selector = "year"
-        source.article_link_attribute = "a"
-        return True
-    check = False
+def common_selectors_check(source):
     selector = None
     attribute = None
     for dataset in source.scrape_data.values():
@@ -89,9 +83,21 @@ def common_selectors_check(source, use_date=False):
         if selector:
             source.article_link_selector = selector
             source.article_link_attribute = attribute
-            check = True
             break
-    return check
+    return source
+
+
+timezone_dict = {
+    "MYT": gettz("Asia/Kuala_Lumpur"),
+    "PT": gettz("America/Los_Angeles"),
+    "EST": gettz("America/New_York"),
+    "UK": gettz("Europe/London"),
+    "MT": gettz("America/Denver"),
+    "CT": gettz("America/Chicago"),
+    "ET": gettz("America/New_York"),
+    "EDT": gettz("America/New_York"),
+    "PST": gettz("America/Los_Angeles"),
+}
 
 
 def data_cleaner(data):
@@ -99,7 +105,7 @@ def data_cleaner(data):
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
-        parsed_date = parser.parse(date)
+        parsed_date = parser.parse(date, tzinfos=timezone_dict)
         if parsed_date > now:
             parsed_date = None
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
@@ -175,16 +181,17 @@ class NewsSpider(scrapy.Spider):
             return
         report = CrawlerReport.objects.all().order_by("-datetime_created").first()
         seconds = int((time.time() - self.start_time))
-        if len(self.error_log):
-            report_str = ",".join(self.error_log)
-            report.task_times.append(seconds)
-            report.error_log.append(report_str)
-        else:
-            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
-        report.start_url_counts.append(len(self.start_urls))
-        report.total_url_counts.append(self.urls_processed)
-        report.blocked_urls += self.blocked_urls
-        report.save()
+        if report:
+            if len(self.error_log):
+                report_str = ",".join(self.error_log)
+                report.task_times.append(seconds)
+                report.error_log.append(report_str)
+            else:
+                report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
+            report.start_url_counts.append(len(self.start_urls))
+            report.total_url_counts.append(self.urls_processed)
+            report.blocked_urls += self.blocked_urls
+            report.save()
         for source in self.sources_cache.values():
             source.save()
             if not source.is_crawling:
@@ -386,7 +393,7 @@ class NewsSpider(scrapy.Spider):
                 if key == "publish_date":
                     if isinstance(selector, list) and len(selector):
                         selector = selector[0]
-                    selector = extract_date_from_text(selector)
+                    selector = extract_date_from_text(selector, timezone_dict)
                 if key == "content":
                     article_tags = selector
                     continue
@@ -409,7 +416,7 @@ class NewsSpider(scrapy.Spider):
                             selector = extract_date_from_text(selector)
                         if "text" not in path:
                             try:
-                                parser.parse(selector)
+                                parser.parse(selector, tzinfos=timezone_dict)
                             except TypeError as e:
                                 selector = None
                             except Exception as e:
@@ -478,27 +485,12 @@ class NewsSpider(scrapy.Spider):
         return
 
     def process_new_url(self, response, source):
-        exclude_classes_list = ["menu", "nav", "footer", "header", "social"]
         exclude_classes = " or ".join(
-            f"contains(@class, '{word}')" for word in exclude_classes_list
+            f"contains(@class, '{word}')" for word in crawler_consts.EXCLUDE_CLASSES
         )
-        exclude_word_list = [
-            "/about",
-            "/section/",
-            "/terms",
-            "-policy",
-            "/privacy",
-            "/careers",
-            "/accessibility",
-            "/category",
-            "/tag",
-            "/author",
-            "/videos",
-            ".jpg",
-            ".png",
-            ".pdf",
-        ]
-        exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
+        exclude_words = " or ".join(
+            f"contains(@href, '{word}')" for word in crawler_consts.EXCLUDE_WORDS
+        )
         xpath = (
             "//body//a["
             + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
@@ -518,7 +510,7 @@ class NewsSpider(scrapy.Spider):
                         response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
                     )
                     if parent:
-                        for word in exclude_classes_list:
+                        for word in crawler_consts.EXCLUDE_CLASSES:
                             if word in parent:
                                 is_potential_link = False
                                 break
@@ -538,11 +530,19 @@ class NewsSpider(scrapy.Spider):
                     "parent_classes": parent,
                 }
         if len(scrape_dict):
-            valid_links = [data["href"] for data in scrape_dict.values()]
-            is_date_format, has_full_date = check_if_date_format(valid_links)
+            source.scrape_data = scrape_dict
+            source = source.check_if_date_format()
             site_name = self.get_site_name(response)
-            source = self.update_source(source.id, scrape_data=scrape_dict, site_name=site_name)
-            selectors_check = common_selectors_check(source, is_date_format)
+            if not source.article_content_selector:
+                source = common_selectors_check(source)
+            source = self.update_source(
+                source.id,
+                scrape_data=scrape_dict,
+                site_name=site_name,
+                article_link_selector=source.article_link_selector,
+                article_link_attribute=source.article_link_attribute,
+            )
+
         return
 
     def get_sources(self):

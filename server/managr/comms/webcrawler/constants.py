@@ -108,3 +108,26 @@ VALID_ARTICLE_WORDS = [
     "article",
     "news",
 ]
+
+
+EXCLUDE_WORDS = [
+    "/about",
+    "/section/",
+    "/terms",
+    "-policy",
+    "/privacy",
+    "/careers",
+    "/accessibility",
+    "/category",
+    "/tag",
+    "/author",
+    "/videos",
+    ".jpg",
+    ".png",
+    ".pdf",
+    "/subscription",
+    "/ads",
+    "/ad",
+]
+
+EXCLUDE_CLASSES = ["menu", "nav", "footer", "header", "social"]

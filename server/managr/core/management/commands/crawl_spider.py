@@ -77,9 +77,9 @@ class Command(BaseCommand):
         else:
             remove_api_sources()
             scrape_ready = True if options["active"] else False
-            html_urls = NewsSource.domain_list(scrape_ready, new, type="HTML")
+            html_urls = NewsSource.domain_list(scrape_ready, new)
             xml_urls = NewsSource.domain_list(scrape_ready, new, type="XML")
-        first_only = True if (options["active"] and options["new"]) else False
+            scraper_urls = NewsSource.domain_list(scrape_ready, scrape_api=True)
         process = CrawlerProcess()
         if html_urls:
             process.crawl(
