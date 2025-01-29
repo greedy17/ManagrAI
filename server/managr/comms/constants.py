@@ -1246,6 +1246,36 @@ REGENERATE_REPORT_SUMMARY = (
 )
 
 
+def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project):
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response based on the media media coverage below. 
+    User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, 
+    just provide a brief summary of the the coverage as it pertains to their search term. 
+    For additional context, user may provide their Project details (custom prompt instructions, media pitch, company details, etc).
+
+    Input Format:
+    User Request: {search}
+    News Coverage: {clips}
+    Social Media Coverage from X: {tweets}
+    Social Media Coverage from Youtube: {vids}
+    Social Media Coverage from Bluesky: {skeets}
+    Web Data: {web}
+    Project details: {project}
+
+    Output format:
+
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings,
+    Ordered or unordered lists using `<ol>` or `<ul>`,
+    Paragraphs with `<p>`, and
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+    return body
+
+
 DO_NOT_TRACK_LIST = [
     "https://www.bizjournals.com",
     "https://www.tiktok.com",

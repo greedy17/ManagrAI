@@ -3821,66 +3821,74 @@ def scraper_webhook(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_omni_summary(request):
-    user = request.user
-    clips = request.get("clips", [])
-    social_data = request.get("social_data", [])
-    google_results = request.get("google_results", [])
+    user = request.data.user
+    clips = request.data.get("clips", [])
+    social_data = request.data.get("social_data", [])
+    web = request.data.get("web", [])
     summary = "<h2>Tesla: Current News and Developments</h2>\n<strong>Stock Performance and Financial Outlook</strong>\n<ul>\n<li><p>Tesla's stock has experienced a significant rally, more than doubling over the past year, largely attributed to the election of President Donald Trump, which is perceived as favorable for Tesla's regulatory environment[7].</p></li>\n<li><p>The company's fourth-quarter earnings report is anticipated, with analysts focusing on self-driving technology and robotaxis[22].</p></li>\n</ul>\n<strong>Product Challenges and Public Perception</strong>\n<ul>\n<li><p>The Tesla Cybertruck has faced numerous recalls and has not met sales expectations, leading to negative press since its release in 2023[4].</p></li>\n</ul>\n<strong>Political and Social Context</strong>\n<ul>\n<li><p>Elon Musk's political activities, including his support for Germany's far-right Alternative for Germany party, have sparked controversy and criticism from figures like German Chancellor Olaf Scholz[11][9].</p></li>\n<li><p>Musk's involvement in U.S. politics, particularly his close ties with President Trump, has raised questions among Tesla shareholders about potential distractions from his role as CEO[41].</p></li>\n</ul>"
     has_error = False
-    # attempts = 1
-    # token_amount = 1000
-    # timeout = 60.0
+    tweets = [t for t in social_data if t["type"] == "twitter"]
+    vids = [v for v in social_data if v["type"] == "youtube"]
+    skeets = [s for s in social_data if s["type"] == "bluesky"]
+    search = request.data.get("search")
+    project = request.data.get("project")
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    date = datetime.now().date()
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
+                date, search, clips, tweets, vids, skeets, web, project
+            )
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
 
-    # while True:
-    #     try:
-    #         url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    #         prompt = comms_consts.REGENERATE_REPORT_SUMMARY(content, instructions, clips)
-    #         body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-    #             user.email,
-    #             prompt,
-    #             "You are a VP of Communications",
-    #             token_amount=token_amount,
-    #             top_p=0.1,
-    #         )
-    #         with Variable_Client(timeout) as client:
-    #             r = client.post(
-    #                 url,
-    #                 data=json.dumps(body),
-    #                 headers=core_consts.OPEN_AI_HEADERS,
-    #             )
-    #         res = open_ai_exceptions._handle_response(r)
+            message = res.get("choices")[0].get("message").get("content")
 
-    #         message = res.get("choices")[0].get("message").get("content")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount >= 2000:
+                has_error = True
 
-    #         break
-    #     except open_ai_exceptions.StopReasonLength:
-    #         logger.exception(
-    #             f"Retrying again due to token amount, amount currently at: {token_amount}"
-    #         )
-    #         if token_amount >= 2000:
-    #             has_error = True
-
-    #             message = "Token amount error"
-    #             break
-    #         else:
-    #             token_amount += 500
-    #             continue
-    #     except httpx.ReadTimeout as e:
-    #         print(e)
-    #         timeout += 30.0
-    #         if timeout >= 120.0:
-    #             has_error = True
-    #             message = "Read timeout issue"
-    #             logger.exception(f"Read timeout from Open AI {e}")
-    #             break
-    #         else:
-    #             attempts += 1
-    #             continue
-    #     except Exception as e:
-    #         has_error = True
-    #         message = f"Unknown exception: {e}"
-    #         logger.exception(e)
-    #         break
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
     if has_error:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "Test error"})
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
+    # return Response(status=status.HTTP_200_OK, data={"summary": message})
     return Response(status=status.HTTP_200_OK, data={"summary": summary})
