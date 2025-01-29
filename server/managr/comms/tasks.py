@@ -66,9 +66,21 @@ from managr.comms.utils import (
     data_cleaner,
     extract_date_from_text,
 )
+from dateutil.tz import gettz
 from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
+timezone_dict = {
+    "MYT": gettz("Asia/Kuala_Lumpur"),
+    "PT": gettz("America/Los_Angeles"),
+    "EST": gettz("America/New_York"),
+    "UK": gettz("Europe/London"),
+    "MT": gettz("America/Denver"),
+    "CT": gettz("America/Chicago"),
+    "ET": gettz("America/New_York"),
+    "EDT": gettz("America/New_York"),
+    "PST": gettz("America/Los_Angeles"),
+}
 
 
 def emit_process_slack_news_summary(payload, context, schedule=datetime.datetime.now()):
@@ -1301,7 +1313,7 @@ def parse_article(status_url):
             if key == "publish_date":
                 if isinstance(selector, list) and len(selector):
                     selector = selector[0]
-                selector = extract_date_from_text(selector)
+                selector = extract_date_from_text(selector, timezone_dict=time)
             if key == "content":
                 article_tags = selector
                 continue

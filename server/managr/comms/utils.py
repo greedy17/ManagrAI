@@ -62,7 +62,7 @@ def get_domain(url, full_netloc=False):
     return domain_parts[0]
 
 
-def extract_date_from_text(text, timezone_dict):
+def extract_date_from_text(text, timezone_dict={}):
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
