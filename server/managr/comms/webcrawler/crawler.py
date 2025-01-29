@@ -27,6 +27,7 @@ from ..utils import (
     extract_date_from_text,
     potential_link_check,
     complete_url,
+    data_cleaner,
 )
 from .. import constants as comms_consts
 
