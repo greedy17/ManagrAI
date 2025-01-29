@@ -657,7 +657,7 @@ def convert_pdf_from_url(url):
         return "", image_list
 
 
-def google_search(query, number_of_results=5, include_images=True):
+def google_search(query, number_of_results=10, include_images=True):
     url = comms_consts.GOOGLE_SEARCH_URI
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
@@ -688,7 +688,7 @@ def google_search(query, number_of_results=5, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=6):
+def alternate_google_search(query, number_of_results=10):
     url = comms_consts.GOOGLE_SEARCH_URI
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
