@@ -1313,7 +1313,7 @@ def parse_article(status_url):
             if key == "publish_date":
                 if isinstance(selector, list) and len(selector):
                     selector = selector[0]
-                selector = extract_date_from_text(selector, timezone_dict=time)
+                selector = extract_date_from_text(selector, timezone_dict=timezone_dict)
             if key == "content":
                 article_tags = selector
                 continue

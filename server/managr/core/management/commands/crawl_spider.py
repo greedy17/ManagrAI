@@ -92,14 +92,6 @@ class Command(BaseCommand):
                 remove_urls=remove_urls,
                 print_response=response,
             )
-        if xml_urls:
-            process.crawl(
-                XMLSpider,
-                start_urls=xml_urls,
-                test=options["test"],
-                no_report=options["noreport"],
-                article_only=options["article"],
-            )
         if scraper_urls:
             send_url_batch(scraper_urls, True, False)
         process.start()

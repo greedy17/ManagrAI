@@ -384,7 +384,7 @@ class Pitch(TimeStampModel):
 
 class NewsSourceQuerySet(models.QuerySet):
     def active(self, extra_filters=None):
-        active_sources = self.filter(is_active=True, is_crawling=True)
+        active_sources = self.filter(is_active=True, is_crawling=True, use_scrape_api=False)
         if extra_filters:
             active_sources = active_sources.filter(**extra_filters)
         return active_sources
