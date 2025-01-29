@@ -274,6 +274,7 @@ class PRSearchViewSet(
                     True,
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+                print(message)
                 user.add_meta_data("news_summaries")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -3814,3 +3815,14 @@ def scraper_webhook(request):
     body = response.get("body")
     parse_homepage(url, body, priority=5)
     return Response()
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_omni_summary(request):
+    clips = request.get("clips", [])
+    social_data = request.get("social_data", [])
+    google_results = request.get("google_results", [])
+    summary = "<h2>Tesla: Current News and Developments</h2>\n<strong>Stock Performance and Financial Outlook</strong>\n<ul>\n<li><p>Tesla's stock has experienced a significant rally, more than doubling over the past year, largely attributed to the election of President Donald Trump, which is perceived as favorable for Tesla's regulatory environment[7].</p></li>\n<li><p>The company's fourth-quarter earnings report is anticipated, with analysts focusing on self-driving technology and robotaxis[22].</p></li>\n</ul>\n<strong>Product Challenges and Public Perception</strong>\n<ul>\n<li><p>The Tesla Cybertruck has faced numerous recalls and has not met sales expectations, leading to negative press since its release in 2023[4].</p></li>\n</ul>\n<strong>Political and Social Context</strong>\n<ul>\n<li><p>Elon Musk's political activities, including his support for Germany's far-right Alternative for Germany party, have sparked controversy and criticism from figures like German Chancellor Olaf Scholz[11][9].</p></li>\n<li><p>Musk's involvement in U.S. politics, particularly his close ties with President Trump, has raised questions among Tesla shareholders about potential distractions from his role as CEO[41].</p></li>\n</ul>"
+    return Response(status=status.HTTP_200_OK, data={"summary": summary})
