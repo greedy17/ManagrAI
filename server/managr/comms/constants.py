@@ -1,4 +1,5 @@
 from django.conf import settings
+from dateutil.tz import gettz
 
 USE_NEWS_API = settings.USE_NEWS_API
 NEWS_API_KEY = settings.NEWS_API_KEY if USE_NEWS_API else None
@@ -79,6 +80,19 @@ YOUTUBE_VIDEO_PARAMS = lambda video_id: {
     "part": "statistics",
     "id": video_id,
     "key": GOOGLE_SEARCH_KEY,
+}
+
+
+TIMEZONE_DICT = {
+    "MYT": gettz("Asia/Kuala_Lumpur"),
+    "PT": gettz("America/Los_Angeles"),
+    "EST": gettz("America/New_York"),
+    "UK": gettz("Europe/London"),
+    "MT": gettz("America/Denver"),
+    "CT": gettz("America/Chicago"),
+    "ET": gettz("America/New_York"),
+    "EDT": gettz("America/New_York"),
+    "PST": gettz("America/Los_Angeles"),
 }
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY

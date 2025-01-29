@@ -72,7 +72,7 @@ def extract_date_from_text(text, timezone_dict={}):
         else:
             return None
     try:
-        parsed_date = parser.parse(text, tzinfos=timezone_dict)
+        parsed_date = parser.parse(text, tzinfos=comms_consts.TIMEZONE_DICT)
         return str(parsed_date)
     except parser.ParserError:
         pass
@@ -1282,10 +1282,17 @@ def get_site_icon(response, url):
 
 
 def data_cleaner(data):
+    import pytz
+
+    now = datetime.datetime.now(pytz.timezone("UTC"))
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
-        parsed_date = parser.parse(date)
+        parsed_date = parser.parse(date, tzinfos=comms_consts.TIMEZONE_DICT)
+        if not parsed_date.tzinfo:
+            parsed_date = parsed_date.astimezone(pytz.timezone("UTC"))
+        if parsed_date > now:
+            parsed_date = None
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
         data["author"] = (
             data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
@@ -1298,10 +1305,13 @@ def data_cleaner(data):
         if len(data["title"]) > 150:
             data["title"] = data["title"][:145] + "..."
     except TypeError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     except KeyError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     except parser.ParserError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     return data
 

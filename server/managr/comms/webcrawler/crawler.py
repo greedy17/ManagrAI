@@ -3,7 +3,6 @@ import logging
 import datetime
 import time
 import json
-from dateutil.tz import gettz
 from scrapy import signals
 from scrapy.exceptions import CloseSpider, IgnoreRequest
 from scrapy.selector import Selector
@@ -80,52 +79,6 @@ def common_selectors_check(source):
             source.article_link_attribute = found_attribute
             break
     return source
-
-
-timezone_dict = {
-    "MYT": gettz("Asia/Kuala_Lumpur"),
-    "PT": gettz("America/Los_Angeles"),
-    "EST": gettz("America/New_York"),
-    "UK": gettz("Europe/London"),
-    "MT": gettz("America/Denver"),
-    "CT": gettz("America/Chicago"),
-    "ET": gettz("America/New_York"),
-    "EDT": gettz("America/New_York"),
-    "PST": gettz("America/Los_Angeles"),
-}
-
-
-def data_cleaner(data):
-    import pytz
-
-    now = datetime.datetime.now(pytz.timezone("UTC"))
-    try:
-        content = data.pop("content")
-        date = data.pop("publish_date")
-        parsed_date = parser.parse(date, tzinfos=timezone_dict)
-        if parsed_date > now:
-            parsed_date = None
-        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-        data["author"] = (
-            data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
-        )
-        authors = data["author"].split(",")
-        author = authors[0]
-        data["author"] = author
-        data["content"] = content
-        data["publish_date"] = parsed_date
-        if len(data["title"]) > 150:
-            data["title"] = data["title"][:145] + "..."
-    except TypeError as e:
-        data["error"] = e
-        return f"Error cleaning data: {data}"
-    except KeyError as e:
-        data["error"] = e
-        return f"Error cleaning data: {data}"
-    except parser.ParserError as e:
-        data["error"] = e
-        return f"Error cleaning data: {data}"
-    return data
 
 
 class NewsSpider(scrapy.Spider):
@@ -393,7 +346,7 @@ class NewsSpider(scrapy.Spider):
                 if key == "publish_date":
                     if isinstance(selector, list) and len(selector):
                         selector = selector[0]
-                    selector = extract_date_from_text(selector, timezone_dict)
+                    selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
                 if key == "content":
                     article_tags = selector
                     continue
@@ -413,10 +366,10 @@ class NewsSpider(scrapy.Spider):
                         print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
                     if key == "publish_date":
                         if "text" in path and selector is not None:
-                            selector = extract_date_from_text(selector, timezone_dict)
+                            selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
                         if "text" not in path:
                             try:
-                                parser.parse(selector, tzinfos=timezone_dict)
+                                parser.parse(selector, tzinfos=comms_consts.TIMEZONE_DICT)
                             except TypeError as e:
                                 selector = None
                             except Exception as e:

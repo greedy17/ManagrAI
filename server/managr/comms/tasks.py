@@ -66,21 +66,9 @@ from managr.comms.utils import (
     data_cleaner,
     extract_date_from_text,
 )
-from dateutil.tz import gettz
 from managr.api.emails import send_html_email
 
 logger = logging.getLogger("managr")
-timezone_dict = {
-    "MYT": gettz("Asia/Kuala_Lumpur"),
-    "PT": gettz("America/Los_Angeles"),
-    "EST": gettz("America/New_York"),
-    "UK": gettz("Europe/London"),
-    "MT": gettz("America/Denver"),
-    "CT": gettz("America/Chicago"),
-    "ET": gettz("America/New_York"),
-    "EDT": gettz("America/New_York"),
-    "PST": gettz("America/Los_Angeles"),
-}
 
 
 def emit_process_slack_news_summary(payload, context, schedule=datetime.datetime.now()):
@@ -900,38 +888,6 @@ def get_article_by_week(result_id, search, date_from, date_to):
     return
 
 
-@background()
-def test_database_pull(date_to, date_from, search, result_id):
-    date_to = parser.parse(date_to)
-    date_from = parser.parse(date_from)
-    dates = separate_weeks(date_from, date_to)
-    articles = []
-    task_ids = []
-    print(datetime.datetime.now())
-    for date_set in dates:
-        try:
-            result = TaskResults.objects.create()
-            task = get_article_by_week(str(result.id), search, str(date_set[0]), str(date_set[1]))
-            result.task = task
-            result.save()
-            task_ids.append(str(result.id))
-        except Exception as e:
-            print(e)
-    while True:
-        for task_id in task_ids:
-            task = TaskResults.objects.get(id=task_id)
-            if TaskResults.ready(task):
-                articles.append(task.json_result)
-                task_ids = task_ids.remove(task_id)
-        if not task_ids:
-            break
-        all_data = TaskResults.objects.get(id=result_id)
-        all_data.json_result = articles
-        all_data.save()
-    print(datetime.datetime.now())
-    return
-
-
 def create_contacts_from_file(journalist_ids, user_id, tags):
     user = User.objects.get(id=user_id)
     s = 0
@@ -1313,7 +1269,9 @@ def parse_article(status_url):
             if key == "publish_date":
                 if isinstance(selector, list) and len(selector):
                     selector = selector[0]
-                selector = extract_date_from_text(selector, timezone_dict=timezone_dict)
+                selector = extract_date_from_text(
+                    selector, timezone_dict=comms_consts.TIMEZONE_DICT
+                )
             if key == "content":
                 article_tags = selector
                 continue
@@ -1398,128 +1356,6 @@ def parse_article(status_url):
         source.save()
     print(f"Finished scrapping {url}")
     return
-
-
-@background()
-def test_send_pitch():
-    user = User.objects.get(email="zach@mymanagr.com")
-    pitch = "Hi [Journalist first name],\n\nYour insightful coverage on aerospace technology advancements has been noted. An exclusive story about SpaceX's latest achievements might pique your interest.\n\nRecently, the Starship prototype was launched by SpaceX, marking a significant stride in space exploration. This development is poised to revolutionize interplanetary travel and aligns with the trend of private companies leading space missions, as highlighted in recent industry reports.\n\nAn exclusive opportunity is offered to explore the technical innovations and strategic vision driving SpaceX's success. Detailed insights and access to key experts can be provided to discuss the implications of these advancements for the future of space exploration.\n\nWould a collaboration on a feature exploring these groundbreaking developments interest you? Your expertise and perspective would bring a unique angle to this story.\n\nLooking forward to your thoughts.\n\nThanks,"
-    prompt = "Craft a short media pitch for Space X"
-    detail_id = None
-    writing_style_id = None
-    channel_id = False
-    params = [f"u={str(user.id)}"]
-    if detail_id:
-        params.append(f"d={detail_id}")
-    if writing_style_id:
-        params.append(f"ws={writing_style_id}")
-    try:
-        blocks = [
-            block_builders.context_block(f"{prompt}", "mrkdwn"),
-            block_builders.header_block("Answer:"),
-            block_builders.simple_section(f"{pitch}\n", "mrkdwn", "PITCH"),
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Edit",
-                        "EDIT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_EDIT_FIELD,
-                            params,
-                        ),
-                    )
-                ]
-            ),
-        ]
-        channel = channel_id if channel_id else user.slack_integration.channel
-        slack_res = slack_requests.send_channel_message(
-            channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
-    except Exception as e:
-        print(e)
-    return
-
-
-@background()
-def test_pitch():
-    user = User.objects.get(email="zach@mymanagr.com")
-    pitch = """Dear [Recipient's Name],
-
-    We are pleased to introduce a groundbreaking technology designed to enhance rainforest conservation efforts. This innovative solution leverages advanced data analytics and remote sensing to provide real-time monitoring and actionable insights.
-
-    Our technology integrates satellite imagery with machine learning algorithms to detect deforestation activities with unprecedented accuracy. By analyzing high-resolution images, it can identify illegal logging, land-use changes, and other threats to rainforest ecosystems. This allows for timely intervention and more effective enforcement of conservation policies.
-
-    Additionally, the system offers predictive analytics to forecast potential areas of deforestation, enabling proactive measures to protect vulnerable regions. The platform is user-friendly and can be accessed by conservationists, policymakers, and researchers through a secure web interface.
-
-    We believe this technology will significantly contribute to preserving the biodiversity and ecological integrity of rainforests worldwide. For further details or to schedule a demonstration, please do not hesitate to contact us.
-
-    Thank you for your attention to this important matter.
-
-    Sincerely,[Your Name][Your Position][Your Organization]"""
-
-    has_error = False
-    attempts = 1
-    token_amount = 3000
-    timeout = 60.0
-    while True:
-        try:
-            contacts = JournalistContact.objects.filter(user=user)
-            contact_list = [
-                f"Name:{contact.journalist.full_name}, Outlet:{contact.journalist.outlet}"
-                for contact in contacts
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(contact_list, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                "You are a VP of Communications",
-                token_amount=token_amount,
-                top_p=0.1,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            res = open_ai_exceptions._handle_response(r)
-            res_content = res.get("choices")[0].get("message").get("content")
-            journalists = json.loads(res_content).get("journalists")
-            break
-        except open_ai_exceptions.StopReasonLength:
-            logger.exception(
-                f"Retrying again due to token amount, amount currently at: {token_amount}"
-            )
-            if token_amount <= 2000:
-                has_error = True
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 500
-                continue
-        except httpx.ReadTimeout as e:
-            timeout += 30.0
-            if timeout >= 120.0:
-                has_error = True
-                message = "Read timeout issue"
-                logger.exception(f"Read timeout from Open AI {e}")
-                break
-            else:
-                attempts += 1
-                continue
-        except Exception as e:
-            has_error = True
-            message = f"Unknown exception: {e}"
-            logger.exception(e)
-            break
-    if has_error:
-        return message
-
-    return journalists
 
 
 @background()
