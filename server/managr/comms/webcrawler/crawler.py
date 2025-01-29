@@ -8,7 +8,6 @@ from scrapy.exceptions import CloseSpider, IgnoreRequest
 from scrapy.selector import Selector
 import scrapy.spiders
 import twisted
-from managr.utils.client import Variable_Client
 from twisted.internet.error import ConnectionLost, TimeoutError, DNSLookupError, ConnectionDone
 from scrapy.spidermiddlewares.httperror import HttpError
 from django.utils import timezone
@@ -28,7 +27,6 @@ from ..utils import (
     extract_date_from_text,
     potential_link_check,
     complete_url,
-    check_if_date_format,
 )
 from .. import constants as comms_consts
 
@@ -65,58 +63,22 @@ def check_classes(classes_str):
     return found_value, found_attribute
 
 
-def common_selectors_check(source, use_date=False):
-    if use_date:
-        source.article_link_selector = "year"
-        source.article_link_attribute = "a"
-        return True
-    check = False
-    selector = None
-    attribute = None
+def common_selectors_check(source):
     for dataset in source.scrape_data.values():
         href = dataset["href"]
         classes = dataset["classes"]
         if classes:
             found_class, found_attribute = check_classes(classes)
             if found_class:
-                selector = found_class
-                attribute = found_attribute
-            else:
-                found_value, found_attribute = check_values(href)
-                if found_value:
-                    selector = found_value
-                    attribute = found_attribute
-        if selector:
-            source.article_link_selector = selector
-            source.article_link_attribute = attribute
-            check = True
+                source.article_link_selector = found_class
+                source.article_link_attribute = found_attribute
+                break
+        found_value, found_attribute = check_values(href)
+        if found_value:
+            source.article_link_selector = found_value
+            source.article_link_attribute = found_attribute
             break
-    return check
-
-
-def data_cleaner(data):
-    try:
-        content = data.pop("content")
-        date = data.pop("publish_date")
-        parsed_date = parser.parse(date)
-        content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
-        data["author"] = (
-            data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
-        )
-        authors = data["author"].split(",")
-        author = authors[0]
-        data["author"] = author
-        data["content"] = content
-        data["publish_date"] = parsed_date
-        if len(data["title"]) > 150:
-            data["title"] = data["title"][:145] + "..."
-    except TypeError as e:
-        return f"Error cleaning data: {data}"
-    except KeyError as e:
-        return f"Error cleaning data: {data}"
-    except parser.ParserError as e:
-        return f"Error cleaning data: {data}"
-    return data
+    return source
 
 
 class NewsSpider(scrapy.Spider):
@@ -172,16 +134,17 @@ class NewsSpider(scrapy.Spider):
             return
         report = CrawlerReport.objects.all().order_by("-datetime_created").first()
         seconds = int((time.time() - self.start_time))
-        if len(self.error_log):
-            report_str = ",".join(self.error_log)
-            report.task_times.append(seconds)
-            report.error_log.append(report_str)
-        else:
-            report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
-        report.start_url_counts.append(len(self.start_urls))
-        report.total_url_counts.append(self.urls_processed)
-        report.blocked_urls += self.blocked_urls
-        report.save()
+        if report:
+            if len(self.error_log):
+                report_str = ",".join(self.error_log)
+                report.task_times.append(seconds)
+                report.error_log.append(report_str)
+            else:
+                report.error_log.append(f"No errors for task urls {','.join(self.start_urls)}")
+            report.start_url_counts.append(len(self.start_urls))
+            report.total_url_counts.append(self.urls_processed)
+            report.blocked_urls += self.blocked_urls
+            report.save()
         for source in self.sources_cache.values():
             source.save()
             if not source.is_crawling:
@@ -383,7 +346,7 @@ class NewsSpider(scrapy.Spider):
                 if key == "publish_date":
                     if isinstance(selector, list) and len(selector):
                         selector = selector[0]
-                    selector = extract_date_from_text(selector)
+                    selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
                 if key == "content":
                     article_tags = selector
                     continue
@@ -403,10 +366,10 @@ class NewsSpider(scrapy.Spider):
                         print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
                     if key == "publish_date":
                         if "text" in path and selector is not None:
-                            selector = extract_date_from_text(selector)
+                            selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
                         if "text" not in path:
                             try:
-                                parser.parse(selector)
+                                parser.parse(selector, tzinfos=comms_consts.TIMEZONE_DICT)
                             except TypeError as e:
                                 selector = None
                             except Exception as e:
@@ -475,27 +438,12 @@ class NewsSpider(scrapy.Spider):
         return
 
     def process_new_url(self, response, source):
-        exclude_classes_list = ["menu", "nav", "footer", "header", "social"]
         exclude_classes = " or ".join(
-            f"contains(@class, '{word}')" for word in exclude_classes_list
+            f"contains(@class, '{word}')" for word in crawler_consts.EXCLUDE_CLASSES
         )
-        exclude_word_list = [
-            "/about",
-            "/section/",
-            "/terms",
-            "-policy",
-            "/privacy",
-            "/careers",
-            "/accessibility",
-            "/category",
-            "/tag",
-            "/author",
-            "/videos",
-            ".jpg",
-            ".png",
-            ".pdf",
-        ]
-        exclude_words = " or ".join(f"contains(@href, '{word}')" for word in exclude_word_list)
+        exclude_words = " or ".join(
+            f"contains(@href, '{word}')" for word in crawler_consts.EXCLUDE_WORDS
+        )
         xpath = (
             "//body//a["
             + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
@@ -515,7 +463,7 @@ class NewsSpider(scrapy.Spider):
                         response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
                     )
                     if parent:
-                        for word in exclude_classes_list:
+                        for word in crawler_consts.EXCLUDE_CLASSES:
                             if word in parent:
                                 is_potential_link = False
                                 break
@@ -535,11 +483,19 @@ class NewsSpider(scrapy.Spider):
                     "parent_classes": parent,
                 }
         if len(scrape_dict):
-            valid_links = [data["href"] for data in scrape_dict.values()]
-            is_date_format, has_full_date = check_if_date_format(valid_links)
+            source.scrape_data = scrape_dict
+            source = source.check_if_date_format()
             site_name = self.get_site_name(response)
-            source = self.update_source(source.id, scrape_data=scrape_dict, site_name=site_name)
-            selectors_check = common_selectors_check(source, is_date_format)
+            if not source.article_content_selector:
+                source = common_selectors_check(source)
+            source = self.update_source(
+                source.id,
+                scrape_data=scrape_dict,
+                site_name=site_name,
+                article_link_selector=source.article_link_selector,
+                article_link_attribute=source.article_link_attribute,
+            )
+
         return
 
     def get_sources(self):

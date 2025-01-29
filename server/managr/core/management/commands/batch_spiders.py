@@ -24,11 +24,12 @@ class Command(BaseCommand):
             news = NewsSource.stopped().as_list()
         else:
             news = NewsSource.objects.active().as_list()
-            scrape_api_news = NewsSource.scrape_api().as_list()
+            scrape_api_news = NewsSource.objects.scrape_api().as_list()
             scrape_api_news = ",".join(scrape_api_news)
             report = CrawlerReport.objects.create()
             d = datetime.now().strftime("%I:%M %p")
-            _run_spider_batch(scrape_api_news, priority=5)
+            if len(scrape_api_news):
+                _run_spider_batch(scrape_api_news, priority=5)
         counter = 0
         for i in range(0, len(news), int(batch_size)):
             counter += 1

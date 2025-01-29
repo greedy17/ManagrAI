@@ -57,7 +57,7 @@ XPATH_STRING_OBJ = {
     ],
     "publish_date": [
         "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
-        "//meta[@property='article:published_time']/@content"
+        "//meta[@property='article:published_time']/@content",
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@name, 'date')]/@content",
@@ -108,3 +108,26 @@ VALID_ARTICLE_WORDS = [
     "article",
     "news",
 ]
+
+
+EXCLUDE_WORDS = [
+    "/about",
+    "/section/",
+    "/terms",
+    "-policy",
+    "/privacy",
+    "/careers",
+    "/accessibility",
+    "/category",
+    "/tag",
+    "/author",
+    "/videos",
+    ".jpg",
+    ".png",
+    ".pdf",
+    "/subscription",
+    "/ads",
+    "/ad",
+]
+
+EXCLUDE_CLASSES = ["menu", "nav", "footer", "header", "social"]

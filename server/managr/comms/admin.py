@@ -99,18 +99,38 @@ class CustomNewsSource(admin.ModelAdmin):
     actions = [update_crawling, update_active_status]
 
     def get_ordering(self, request):
-        if request.GET.get("new_sources", None):
-            return ["is_active", ""]
+        """
+        Handles dynamic ordering from the `o` parameter in the request,
+        which supports multiple fields for ordering.
+        """
+        if request.GET.get("new_sources"):
+            return ["is_active", "-datetime_created"]
+        ordering_param = request.GET.get("o")
+        if ordering_param:
+            order_fields = ordering_param.split(".")
+            ordering = []
+            for order_field in order_fields:
+                try:
+                    ordering_index = int(order_field.lstrip("-")) - 1
+                    ordering_field = self.list_display[ordering_index]
+                    if order_field.startswith("-"):
+                        ordering.append(f"-{ordering_field}")
+                    else:
+                        ordering.append(ordering_field)
+                except (IndexError, ValueError):
+                    pass
+            if ordering:
+                return ordering
         return super().get_ordering(request)
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
-        extra_context["new_sources"] = True if request.GET.get("new_sources") else False
+        extra_context["new_sources"] = bool(request.GET.get("new_sources"))
         return super().changelist_view(request, extra_context=extra_context)
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
-        if search_term:
+        if search_term and not request.GET.get("new_sources"):
             search_terms = search_term.split(",")
             query = Q()
             for term in search_terms:
@@ -120,6 +140,9 @@ class CustomNewsSource(admin.ModelAdmin):
                 if param.endswith("__exact") and value in ["0", "1"]:
                     boolean_value = value == "1"
                     queryset = queryset.filter(**{param: boolean_value})
+        ordering = self.get_ordering(request)
+        if ordering:
+            queryset = queryset.order_by(*ordering)
         return queryset, use_distinct
 
 
@@ -127,14 +150,14 @@ class CustomArticle(admin.ModelAdmin):
     list_display = ("title", "publish_date", "source")
     list_filter = ("source",)
     ordering = ("-publish_date",)
-    search_fields = ("title",)
+    search_fields = ("title", "link")
 
 
 class CustomArchivedArticle(admin.ModelAdmin):
     list_display = ("title", "publish_date", "source", "archived_on")
     list_filter = ("source",)
     ordering = ("-publish_date",)
-    search_fields = ("title",)
+    search_fields = ("title", "link")
 
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):

@@ -7,6 +7,9 @@ import httpx
 import pytz
 import math
 import re
+import requests
+import random
+from lxml import etree
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -381,7 +384,7 @@ class Pitch(TimeStampModel):
 
 class NewsSourceQuerySet(models.QuerySet):
     def active(self, extra_filters=None):
-        active_sources = self.filter(is_active=True, is_crawling=True)
+        active_sources = self.filter(is_active=True, is_crawling=True, use_scrape_api=False)
         if extra_filters:
             active_sources = active_sources.filter(**extra_filters)
         return active_sources
@@ -715,6 +718,59 @@ class NewsSource(TimeStampModel):
                 self.is_stopped = False
         self.save()
         return self.is_stopped
+
+    def check_sitemap(self):
+        try:
+            sitemap_url = f"{self.domain}/sitemap.xml"
+            response = requests.get(sitemap_url, timeout=10)
+            if response.status_code == 200:
+                tree = etree.fromstring(response.content)
+                for sitemap in tree.xpath(
+                    "//xmlns:sitemap/xmlns:loc",
+                    namespaces={"xmlns": "http://www.sitemaps.org/schemas/sitemap/0.9"},
+                ):
+                    loc = sitemap.text
+                    if "news.xml" in loc:
+                        sitemap_url = loc
+                        break
+                self.sitemap = sitemap_url
+            else:
+                robots_url = f"{self.domain}/robots.txt"
+                response = requests.get(robots_url, timeout=10)
+                if response.status_code == 200:
+                    if "Sitemap" in response.text:
+                        sitemap_url = response.text.split("Sitemap: ")[1].strip().split("\n")[0]
+                        self.sitemap = sitemap_url
+                    else:
+                        return "No sitemap found"
+        except Exception as e:
+            return "No sitemap found"
+        return self.save()
+
+    def check_if_date_format(self):
+        from .webcrawler.constants import URL_DATE_PATTERN
+
+        urls = [u["href"] for u in self.scrape_data.values()]
+        sample_size = max(1, len(urls) // 10)
+        sample = random.sample(urls, sample_size)
+        matches = []
+        pattern = re.compile(URL_DATE_PATTERN)
+        for url in sample:
+            try:
+                m = pattern.search(url)
+                if m:
+                    matches.append(m.groups())
+            except Exception as e:
+                continue
+        if matches:
+            is_date = len(matches) / len(sample) >= 0.5
+            year, month, day = matches[0]
+            print((len(matches) / len(sample)), f"{year}/{month}/{day}")
+            if is_date:
+                self.article_link_selector = "year"
+                self.article_link_attribute = "a"
+                return self
+        return self
 
 
 class Article(TimeStampModel):
