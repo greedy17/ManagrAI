@@ -1,5 +1,107 @@
 <template>
   <div class="reports">
+    <Modal class="bio-modal med-modal" v-if="threadModalOpen">
+      <div class="bio-container med-container">
+        <div class="header-alt">
+          <h2 style="margin: 12px 0">{{ reportThread.title }}</h2>
+          <!-- <p>shoudl something be here </p> -->
+        </div>
+
+        <div
+          class="col"
+          style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%"
+        >
+          <div class="row" style="margin-bottom: 8px">
+            <label style="font-size: 16px; margin-right: 4px" class="bold">Thread:</label>
+            <p>{{ reportThread.thread.title }}</p>
+          </div>
+
+          <div class="row">
+            <label style="font-size: 16px; margin-right: 4px" class="bold" for="outlet"
+              >Brand:</label
+            >
+            <p>{{ reportThread.brand }}</p>
+          </div>
+
+          <div style="margin-top: 8px" class="col">
+            <div class="row">
+              <p class="bold">
+                {{ urlCount }}
+                URLs added from the thread. Add additional URLs below, separated by commas:
+              </p>
+            </div>
+
+            <textarea
+              style="
+                width: 100%;
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                padding: 12px;
+                margin-top: 8px;
+              "
+              :rows="5"
+              id="search-input"
+              class="area-input"
+              autocomplete="off"
+              :placeholder="urlPlaceholder"
+              v-model="reportUrls"
+              v-autoresize
+              :disabled="urlsSet"
+              @input="handleInput"
+            />
+          </div>
+        </div>
+
+        <div style="margin: 8px 0">
+          <label style="font-size: 16px" class="bold">Report banner:</label>
+          <div style="margin-top: 8px" class="file-input-wrapper">
+            <label class="file-input-label">
+              <input type="file" @change="uploadImage" class="file-input" />
+              <span style="margin-right: 4px" class="secondary-button">
+                <img
+                  v-if="loading && !fileName"
+                  style="margin-right: 4px"
+                  class="invert rotation"
+                  src="@/assets/images/loading.svg"
+                  height="14px"
+                  alt=""
+                />
+                Upload Banner
+              </span>
+            </label>
+            <p style="margin-left: 8px" class="file-name">
+              {{ fileName ? fileName : 'No file selected' }}
+            </p>
+
+            <img
+              v-if="fileName"
+              style="margin-left: 8px"
+              :src="uploadedImageUrl"
+              height="40px"
+              alt=""
+            />
+          </div>
+        </div>
+
+        <footer>
+          <div></div>
+          <div class="row">
+            <!-- <button class="secondary-button" @click="threadModalOpen = false">Cancel</button> -->
+            <button :disabled="!fileName || loading" @click="getReportClips" class="primary-button">
+              {{ !loading ? 'Run Report' : loadingText }}
+
+              <img
+                style="margin: 0 0 0 6px; filter: none"
+                v-if="loading"
+                class="rotation"
+                src="@/assets/images/loading.svg"
+                height="14px"
+                alt=""
+              />
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
     <div v-if="creating">
       <div class="chat-window">
         <div class="chat-window__header">
@@ -1453,6 +1555,7 @@ export default {
   name: 'Reports',
   components: {
     ReportLineChart,
+    Modal: () => import(/* webpackPrefetch: true */ '@/components/InviteModal'),
   },
   data() {
     return {
@@ -1500,7 +1603,7 @@ export default {
       creating: true,
       reportName: '',
       brandText: 'Next, tell us which brands are included in this report (e.g. Nike, Tesla, FSU)',
-      nameText: 'Using the message bar below, provide a name for your report',
+      nameText: 'Using the message bar below, provide a title for your report',
       loading: false,
       brand: '',
       searchText: '',
@@ -1531,6 +1634,7 @@ www.forbes.com/article-3
       dateStart: null,
       dateEnd: null,
       blueskyPlaceholder: require('@/assets/images/bluesky.png'),
+      threadModalOpen: false,
     }
   },
   watch: {
@@ -1545,6 +1649,9 @@ www.forbes.com/article-3
     },
   },
   computed: {
+    reportThread() {
+      return this.$store.state.reportThread
+    },
     reports() {
       return this.$store.state.allReports
     },
@@ -1565,6 +1672,17 @@ www.forbes.com/article-3
       return this.$store.state.user
     },
   },
+  mounted() {
+    if (this.$store.state.reportThread) {
+      this.setReportClips()
+      this.threadModalOpen = true
+      // console.log(this.reportThread)
+    }
+  },
+  beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('updateSharedObject', null)
+    next()
+  },
   created() {
     const today = new Date()
     const sevenDaysAgo = new Date(today)
@@ -1574,6 +1692,42 @@ www.forbes.com/article-3
     this.dateEnd = today.toISOString().split('T')[0]
   },
   methods: {
+    setReportClips() {
+      this.selectedSearch = this.reportThread.thread
+      this.reportName = this.reportThread.title
+      this.brand = this.reportThread.brand
+
+      let articles = []
+      let clips = []
+
+      if (this.selectedSearch.meta_data.type !== 'social') {
+        articles = this.selectedSearch.meta_data.filteredArticles
+        this.urls = articles.map((art) => {
+          return art.link
+        })
+      } else {
+        articles = this.selectedSearch.meta_data.preparedTweets
+        clips = this.selectedSearch.meta_data.tweets
+      }
+
+      let additionalClips = this.selectedSearch.meta_data.summaries
+        ? this.selectedSearch.meta_data.summaries.map((summary) => summary.clips)
+        : []
+
+      articles = [articles, ...additionalClips].flat()
+      clips = [clips, ...additionalClips].flat()
+
+      if (this.selectedSearch.meta_data.type !== 'social') {
+        this.reportUrls = articles.map((art) => {
+          return art.link
+        })
+      } else {
+        this.reportUrls = articles
+      }
+
+      this.urlCount = this.reportUrls.length
+      this.useSearchUrls = true
+    },
     openTweet(username, id) {
       window.open(`https://twitter.com/${username}/status/${id}`, '_blank')
     },
@@ -1650,7 +1804,6 @@ www.forbes.com/article-3
       this.selectedSearch = val
       this.hideSearches()
       this.scrollToChatTop()
-      console.log(val)
       this.getClips()
     },
     closeSummaryEdit() {
@@ -1984,7 +2137,7 @@ www.forbes.com/article-3
       if (this.selectedSearch.meta_data.type === 'news') {
         try {
           const res = await Comms.api.getReportClips({
-            urls: this.urls,
+            urls: this.reportUrls.length ? this.reportUrls : this.urls,
           })
           this.clips = res
           this.getTrafficData()
@@ -2093,6 +2246,7 @@ www.forbes.com/article-3
 
       this.loading = false
       this.creating = false
+      this.threadModalOpen = false
     },
 
     async getTrafficData() {
@@ -2159,10 +2313,13 @@ www.forbes.com/article-3
           .replace(/^## (.*$)/gim, '<h2>$1</h2>')
           // Convert # to <h1></h1> (if needed)
           .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+
         this.loading = false
         this.creating = false
+        this.threadModalOpen = false
       } catch (e) {
         console.error(e)
+
         this.urlsSet = false
         this.loading = false
         this.$toast('Error uploading clips, try again', {
@@ -3649,5 +3806,126 @@ textarea::placeholder {
 .text {
   cursor: text;
   outline: 2px solid $lite-blue;
+}
+
+.bio-modal {
+  margin-top: 72px;
+  @media only screen and (max-width: 600px) {
+    margin-top: 62px;
+  }
+
+  width: 70vw;
+}
+
+.med-modal {
+  width: 55vw !important;
+}
+.med-container {
+  width: 48vw !important;
+  padding: 0 16px 0 16px !important;
+}
+.bio-container {
+  width: 60vw;
+  max-height: 75vh;
+  position: relative;
+  overflow-y: scroll;
+  color: $base-gray;
+  font-family: $thin-font-family;
+  padding: 0 24px 0 24px;
+
+  label {
+    font-size: 14px;
+  }
+  @media only screen and (max-width: 600px) {
+    width: 95%;
+    padding: 0;
+  }
+
+  header {
+    // border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    padding: 0 0 8px 0;
+
+    p {
+      font-weight: bold;
+    }
+  }
+
+  footer {
+    // border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    position: sticky;
+    bottom: -1px;
+    background-color: white;
+    margin: 0;
+    padding: 24px 0 0 0;
+
+    .row {
+      margin-bottom: 8px;
+
+      .secondary-button {
+        margin: 0;
+      }
+    }
+  }
+
+  section {
+    padding: 24px 0 16px 0;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    overflow: scroll;
+
+    .bio-body {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-size: 15px;
+      overflow: scroll;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      margin-left: 40px;
+
+      img {
+        height: 110px;
+        width: 120px;
+        margin-bottom: 16px;
+        object-fit: cover;
+        cursor: text;
+        border-radius: 4px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+.bold {
+  font-family: $base-font-family;
+}
+
+.header-alt {
+  h2 {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: white;
+    font-family: $base-font-family;
+  }
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0 0 8px 0;
 }
 </style>
