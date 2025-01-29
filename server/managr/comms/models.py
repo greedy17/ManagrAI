@@ -9,6 +9,7 @@ import math
 import re
 import requests
 import random
+from lxml import etree
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -723,6 +724,15 @@ class NewsSource(TimeStampModel):
             sitemap_url = f"{self.domain}/sitemap.xml"
             response = requests.get(sitemap_url, timeout=10)
             if response.status_code == 200:
+                tree = etree.fromstring(response.content)
+                for sitemap in tree.xpath(
+                    "//xmlns:sitemap/xmlns:loc",
+                    namespaces={"xmlns": "http://www.sitemaps.org/schemas/sitemap/0.9"},
+                ):
+                    loc = sitemap.text
+                    if "news.xml" in loc:
+                        sitemap_url = loc
+                        break
                 self.sitemap = sitemap_url
             else:
                 robots_url = f"{self.domain}/robots.txt"
