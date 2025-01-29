@@ -65,24 +65,19 @@ def check_classes(classes_str):
 
 
 def common_selectors_check(source):
-    selector = None
-    attribute = None
     for dataset in source.scrape_data.values():
         href = dataset["href"]
         classes = dataset["classes"]
         if classes:
             found_class, found_attribute = check_classes(classes)
             if found_class:
-                selector = found_class
-                attribute = found_attribute
-            else:
-                found_value, found_attribute = check_values(href)
-                if found_value:
-                    selector = found_value
-                    attribute = found_attribute
-        if selector:
-            source.article_link_selector = selector
-            source.article_link_attribute = attribute
+                source.article_link_selector = found_class
+                source.article_link_attribute = found_attribute
+                break
+        found_value, found_attribute = check_values(href)
+        if found_value:
+            source.article_link_selector = found_value
+            source.article_link_attribute = found_attribute
             break
     return source
 
@@ -101,7 +96,9 @@ timezone_dict = {
 
 
 def data_cleaner(data):
-    now = datetime.datetime.now()
+    import pytz
+
+    now = datetime.datetime.now(pytz.timezone("UTC"))
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
@@ -120,10 +117,13 @@ def data_cleaner(data):
         if len(data["title"]) > 150:
             data["title"] = data["title"][:145] + "..."
     except TypeError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     except KeyError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     except parser.ParserError as e:
+        data["error"] = e
         return f"Error cleaning data: {data}"
     return data
 
@@ -413,7 +413,7 @@ class NewsSpider(scrapy.Spider):
                         print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
                     if key == "publish_date":
                         if "text" in path and selector is not None:
-                            selector = extract_date_from_text(selector)
+                            selector = extract_date_from_text(selector, timezone_dict)
                         if "text" not in path:
                             try:
                                 parser.parse(selector, tzinfos=timezone_dict)
