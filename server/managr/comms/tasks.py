@@ -693,7 +693,8 @@ def _send_social_summary(news_alert_id):
         else:
             if value == "twitter":
                 email_data["includes"] = social_data["includes"]
-                email_data["media"] = social_data["tweetMedia"]
+                if "media" in email_data.keys():
+                    email_data["media"] = social_data["tweetMedia"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     email_list = []
@@ -723,8 +724,10 @@ def _send_social_summary(news_alert_id):
         thread.meta_data["summary"] = message
         thread.meta_data["summaries"] = []
         if user.has_twitter_integration:
-            thread.meta_data["tweetMedia"] = email_data["media"]
-            thread.meta_data["includes"] = email_data["includes"]
+            if "tweetMedia" in email_data.keys():
+                thread.meta_data["tweetMedia"] = email_data["media"]
+            if "includes" in email_data.keys():
+                thread.meta_data["includes"] = email_data["includes"]
         thread.save()
 
     content = {
