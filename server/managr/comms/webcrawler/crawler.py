@@ -297,10 +297,6 @@ class NewsSpider(scrapy.Spider):
     def parse_article(self, response, source=False):
         xpath_copy = copy(crawler_consts.XPATH_STRING_OBJ)
         url = response.url
-        if "api.scraperapi.com" in response.url:
-            parsed_url = urlparse(response.url)
-            params = parse_qs(parsed_url.query)
-            url = params.get("url")[0]
         if source is False:
             try:
                 instance = Article.objects.get(link=url)

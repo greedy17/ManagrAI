@@ -1284,7 +1284,7 @@ def get_site_icon(response, url):
 def data_cleaner(data):
     import pytz
 
-    now = datetime.datetime.now(pytz.timezone("UTC"))
+    now = datetime.now(pytz.timezone("UTC"))
     try:
         content = data.pop("content")
         date = data.pop("publish_date")
