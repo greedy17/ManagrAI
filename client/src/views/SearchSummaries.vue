@@ -1063,7 +1063,7 @@
                       <div @click.stop="toggleSources" class="drop-header img-blue s-wrapper">
                         <img
                           v-if="mainView === 'write'"
-                          src="@/assets/images/brain.svg"
+                          src="@/assets/images/edit.svg"
                           height="15px"
                           alt=""
                         />
@@ -1175,7 +1175,7 @@
                             :class="{ activeswitch: mainView === 'write' }"
                           >
                             <span>
-                              <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                              <img src="@/assets/images/edit.svg" height="11px" alt="" />
                               Write
                             </span>
 
@@ -1183,15 +1183,15 @@
                           </div>
 
                           <div
-                            @click="toggleContactsModal()"
+                            @click="switchMainView('omni')"
                             :class="{ activeswitch: mainView === 'discover' }"
                           >
                             <span>
-                              <img src="@/assets/images/users.svg" height="11px" alt="" />
-                              Media Contacts
+                              <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                              Omni
                             </span>
 
-                            <p>Search media contacts</p>
+                            <p>Search news, social and web</p>
                           </div>
                         </section>
                       </div>
@@ -3281,7 +3281,7 @@
               >
                 <img
                   v-if="mainView === 'write'"
-                  src="@/assets/images/brain.svg"
+                  src="@/assets/images/edit.svg"
                   height="15px"
                   alt=""
                 />
@@ -3375,7 +3375,7 @@
                     :class="{ activeswitch: mainView === 'write' }"
                   >
                     <span>
-                      <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                      <img src="@/assets/images/edit.svg" height="11px" alt="" />
                       Write
                     </span>
 
