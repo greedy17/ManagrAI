@@ -1142,6 +1142,13 @@
                           alt=""
                         />
 
+                        <img
+                          v-else-if="mainView === 'trending'"
+                          src="@/assets/images/arrow-trend-up.svg"
+                          height="11px"
+                          alt=""
+                        />
+
                         <small>{{
                           mainView === 'discover' ? 'Media Contacts' : toCamelCase(mainView)
                         }}</small>
@@ -3357,6 +3364,12 @@
                   v-else-if="mainView === 'discover'"
                   src="@/assets/images/users.svg"
                   height="15px"
+                  alt=""
+                />
+                <img
+                  v-else-if="mainView === 'trending'"
+                  src="@/assets/images/arrow-trend-up.svg"
+                  height="11px"
                   alt=""
                 />
 
