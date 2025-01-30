@@ -63,6 +63,7 @@ def get_domain(url, full_netloc=False):
 
 
 def extract_date_from_text(text, timezone_dict={}):
+    text = text.replace("\n", "").replace("\t", "").strip()
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
@@ -76,7 +77,8 @@ def extract_date_from_text(text, timezone_dict={}):
         return str(parsed_date)
     except parser.ParserError:
         pass
-    text = text.replace("\n", "").replace("\t", "").strip()
+
+    print(2, repr(text))
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
@@ -1066,6 +1068,8 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     next_token = False
     tweet_data = {}
     tweet_list = []
+    include_data = {"users": [], "media": []}
+    media_data = []
     attempts = 1
     now = datetime.now(timezone.utc)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
@@ -1082,7 +1086,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 next_token=next_token,
             )
             tweets = tweet_res.get("data", {})
-            includes = tweet_res.get("includes", [])
+            includes = tweet_res.get("includes", {})
             media = includes.get("media", [])
             attempts += 1
             if not tweets and len(tweet_list) == 0:
@@ -1105,6 +1109,8 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                                 tweet["type"] = "twitter"
                                 tweet_list.append(tweet)
                             break
+                media_data.extends(media)
+                include_data["users"].extends(includes["users"])
             if len(tweet_list) < 20 and tweets:
                 continue
             break
@@ -1126,11 +1132,12 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         if obj["text"] not in ordered_dict.keys():
             ordered_dict[obj["text"]] = obj
     duplicated_removed = list(ordered_dict.values())
+    include_data["media"] = media_data
     tweet_data = {
         "data": duplicated_removed,
         "string": query_input,
-        "includes": includes,
-        "tweetMedia": media,
+        "includes": include_data,
+        "tweetMedia": media_data,
     }
     return tweet_data
 
