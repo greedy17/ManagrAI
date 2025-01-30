@@ -995,6 +995,56 @@
       </div>
     </Modal>
 
+    <Modal class="bio-modal med-modal" v-if="reportModalOpen">
+      <div class="bio-container med-container">
+        <div class="header-alt">
+          <h2 style="margin: 12px 0">Generate Report</h2>
+          <p>Generate a report based on this thread</p>
+        </div>
+
+        <div
+          class="col"
+          style="margin-top: 16px; margin-bottom: 24px; min-height: 120px; width: 100%"
+        >
+          <div class="col" style="margin-bottom: 8px">
+            <label style="font-size: 16px" class="bold">Thread</label>
+            <p>{{ savedSearch ? savedSearch.title : searchName }}</p>
+          </div>
+
+          <label style="font-size: 16px" class="bold" for="contact">Title</label>
+          <input
+            class="primary-input"
+            type="text"
+            name="contact"
+            v-model="reportTitle"
+            placeholder="Give your report a title..."
+          />
+          <label style="font-size: 16px" class="bold" for="outlet">Brand</label>
+          <input
+            class="primary-input"
+            type="text"
+            name="outlet"
+            v-model="reportBrands"
+            placeholder="Which brand is this report for (e.g. Nike, Tesla, FSU). Include multiple brands if applicable..."
+          />
+        </div>
+
+        <footer>
+          <div></div>
+          <div class="row">
+            <button class="secondary-button" @click="reportModalOpen = false">Cancel</button>
+            <button
+              @click="goToReports"
+              :disabled="!reportBrands || !reportTitle"
+              class="primary-button"
+            >
+              Continue
+            </button>
+          </div>
+        </footer>
+      </div>
+    </Modal>
+
     <div style="margin-top: 16px; width: 100%" v-if="!selectedSearch">
       <div class="fadein" v-if="!chatting">
         <div class="small-container letter-spacing">
@@ -1089,6 +1139,13 @@
                           v-else-if="mainView === 'discover'"
                           src="@/assets/images/users.svg"
                           height="15px"
+                          alt=""
+                        />
+
+                        <img
+                          v-else-if="mainView === 'trending'"
+                          src="@/assets/images/arrow-trend-up.svg"
+                          height="11px"
                           alt=""
                         />
 
@@ -3309,6 +3366,12 @@
                   height="15px"
                   alt=""
                 />
+                <img
+                  v-else-if="mainView === 'trending'"
+                  src="@/assets/images/arrow-trend-up.svg"
+                  height="11px"
+                  alt=""
+                />
 
                 <small>{{ mainView === 'discover' ? 'Contacts' : toCamelCase(mainView) }}</small>
 
@@ -3704,6 +3767,30 @@
                     :min="mainView === 'news' ? minDate : minDateSocial"
                     v-model="dateEnd"
                   />
+                </div>
+              </div>
+
+              <div
+                @click.stop="openReportModal"
+                :class="{ 'soft-gray-bg': showDateSelection }"
+                class="image-container s-wrapper"
+                style="margin-left: 8px"
+              >
+                <img class="invert" src="@/assets/images/chart.svg" height="15px" alt="" />
+
+                <div
+                  :class="{ widetip: (!searchSaved && !isViewOnly) || reportCredits < 1 }"
+                  class="s-tooltip"
+                >
+                  {{
+                    isViewOnly
+                      ? 'Locked'
+                      : reportCredits < 1
+                      ? 'Upgrade to PRO'
+                      : searchSaved
+                      ? 'Generate Report'
+                      : 'Save Thread to enable report'
+                  }}
                 </div>
               </div>
             </div>
@@ -4350,6 +4437,8 @@ export default {
   },
   data() {
     return {
+      threadCopy: {},
+      selectedThread: null,
       followupShares: {},
       totalShares: {},
       editingProjects: false,
@@ -4371,7 +4460,7 @@ export default {
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
-      showingArticles: true,
+      showingArticles: false,
       citationsMounted: true,
       altCitationsMounted: true,
       reportInstructions: '',
@@ -4398,6 +4487,9 @@ www.forbes.com/article-3
       responseEmpty: false,
       bioModalOpen: false,
       contactsModalOpen: false,
+      reportModalOpen: false,
+      reportTitle: '',
+      reportBrands: '',
       contactName: '',
       outletName: '',
       newContactBio: '',
@@ -4741,8 +4833,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
           value: `Tell me about {Journalist Name, Article Headline, URL, etc.}`,
         },
         {
-          name: `Create briefing sheet...`,
-          value: `Create a briefing sheet for {journalist name} from {outlet}`,
+          name: `Latest news on...`,
+          value: `Latest news on {Topic, Brand, etc}`,
         },
         {
           name: `Who covered AI in 2024`,
@@ -5287,6 +5379,26 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.abortFunctions()
   },
   methods: {
+    goToReports() {
+      let data = {}
+
+      if (this.savedSearch) {
+        data.thread = this.savedSearch
+      } else {
+        data.thread = this.threadCopy
+      }
+
+      data.title = this.reportTitle
+      data.brand = this.reportBrands
+
+      this.$store.dispatch('updateSharedObject', data)
+      this.$router.push({ name: 'Reports' })
+    },
+    openReportModal() {
+      if (this.searchSaved && this.reportCredits > 0) {
+        this.reportModalOpen = true
+      }
+    },
     async shareThread(code) {
       try {
         const res = await Comms.api.shareThread({
@@ -5332,6 +5444,31 @@ Your goal is to create content that resonates deeply, connects authentically, an
             project: this.selectedOrg,
           },
         })
+
+        this.threadCopy = {
+          user: this.user.id,
+          title: this.searchName,
+          meta_data: {
+            searchTerm: this.newSearch,
+            summary: this.summary,
+            list: this.discoverList,
+            articlesFiltered: this.articlesFiltered,
+            filteredResults: this.filteredResults,
+            tweetMedia: this.tweetMedia,
+            summaries: this.summaries,
+            followUps: this.followUps,
+            preparedTweets: this.preparedTweets,
+            googleResults: this.googleResults,
+            filteredArticles: this.filteredArticles,
+            type: this.mainView,
+            originalSearch: this.originalSearch,
+            tweets: this.tweets,
+            followupShares: this.followupShares,
+            totalShares: this.totalShares,
+            boolean: this.booleanString,
+            project: this.selectedOrg,
+          },
+        }
         this.savedSearch = res
         this.threadId = res.id
         // this.showingSave = false
@@ -9326,8 +9463,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.showingArticles = false
           this.latestArticles = []
           this.latestMedia = []
-
-          this.showingArticles = false
           this.secondaryLoaderAlt = false
         }
       } finally {
@@ -10055,8 +10190,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
   },
   computed: {
+    reportCredits() {
+      return !!this.$store.state.user.organizationRef.metaData
+        ? this.$store.state.user.organizationRef.metaData.reportCredits
+        : 0
+    },
     isViewOnly() {
       return this.$store.state.viewOnly
+    },
+    allThreads() {
+      return this.$store.state.allThreads
     },
     hasGoogleIntegration() {
       return !!this.$store.state.user.hasGoogleIntegration
@@ -16168,5 +16311,8 @@ select {
 .pinkbg {
   background-color: $pinky !important;
   margin: 0;
+}
+.widetip {
+  width: 200px !important;
 }
 </style>
