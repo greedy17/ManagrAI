@@ -25,10 +25,8 @@
 
           <div style="margin-top: 8px" class="col">
             <div class="row">
-              <p class="bold">
-                {{ urlCount }}
-                URLs added from the thread. Add additional URLs below, separated by commas:
-              </p>
+              <label class="bold" for=""> {{ urlCount }} URLs added:</label>
+              <p style="margin-left: 4px">You can add or remove from the box below</p>
             </div>
 
             <textarea

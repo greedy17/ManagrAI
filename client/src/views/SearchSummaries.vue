@@ -1142,6 +1142,13 @@
                           alt=""
                         />
 
+                        <img
+                          v-else-if="mainView === 'trending'"
+                          src="@/assets/images/arrow-trend-up.svg"
+                          height="11px"
+                          alt=""
+                        />
+
                         <small>{{
                           mainView === 'discover' ? 'Media Contacts' : toCamelCase(mainView)
                         }}</small>
@@ -3359,6 +3366,12 @@
                   height="15px"
                   alt=""
                 />
+                <img
+                  v-else-if="mainView === 'trending'"
+                  src="@/assets/images/arrow-trend-up.svg"
+                  height="11px"
+                  alt=""
+                />
 
                 <small>{{ mainView === 'discover' ? 'Contacts' : toCamelCase(mainView) }}</small>
 
@@ -3766,13 +3779,13 @@
                 <img class="invert" src="@/assets/images/chart.svg" height="15px" alt="" />
 
                 <div
-                  :class="{ widetip: (!searchSaved && !isViewOnly) || !isPaid }"
+                  :class="{ widetip: (!searchSaved && !isViewOnly) || reportCredits < 1 }"
                   class="s-tooltip"
                 >
                   {{
                     isViewOnly
                       ? 'Locked'
-                      : !isPaid
+                      : reportCredits < 1
                       ? 'Upgrade to PRO'
                       : searchSaved
                       ? 'Generate Report'
@@ -4447,7 +4460,7 @@ export default {
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
-      showingArticles: true,
+      showingArticles: false,
       citationsMounted: true,
       altCitationsMounted: true,
       reportInstructions: '',
@@ -5382,7 +5395,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.$router.push({ name: 'Reports' })
     },
     openReportModal() {
-      if (this.searchSaved && this.isPaid) {
+      if (this.searchSaved && this.reportCredits > 0) {
         this.reportModalOpen = true
       }
     },
@@ -9450,8 +9463,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.showingArticles = false
           this.latestArticles = []
           this.latestMedia = []
-
-          this.showingArticles = false
           this.secondaryLoaderAlt = false
         }
       } finally {
@@ -10179,6 +10190,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
   },
   computed: {
+    reportCredits() {
+      return !!this.$store.state.user.organizationRef.metaData
+        ? this.$store.state.user.organizationRef.metaData.reportCredits
+        : 0
+    },
     isViewOnly() {
       return this.$store.state.viewOnly
     },
