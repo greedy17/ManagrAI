@@ -608,10 +608,7 @@ class NewsSource(TimeStampModel):
         return None
 
     def add_error(self, error):
-        if self.error_log:
-            self.error_log += error
-        else:
-            self.error_log = error
+        self.error_log += f"\n{error}"
         return self.error_log
 
     def sync_journalists(self):

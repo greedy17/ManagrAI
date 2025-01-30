@@ -420,9 +420,8 @@ class NewsSpider(scrapy.Spider):
             return
         except Exception as e:
             self.error_log.append(f"{url}|{str(e)}")
-            if source.error_log is None or len(source.error_log) <= 5:
-                error = source.add_error(f"{str(e)}")
-                source = self.update_source(source.id, error_log=error)
+            error = source.add_error(f"{str(e)}")
+            source = self.update_source(source.id, error_log=error)
         if len(fields_dict):
             path_dict = {}
             for key in fields_dict.keys():
@@ -496,10 +495,8 @@ class NewsSpider(scrapy.Spider):
         return
 
     def get_sources(self):
-        current_datetime = datetime.datetime.now()
-        last_scraped = timezone.make_aware(current_datetime, timezone.get_current_timezone())
         sources = NewsSource.objects.filter(domain__in=self.start_urls)
-        sources.update(last_scraped=last_scraped)
+        sources.update(error_log="")
         return NewsSource.objects.filter(domain__in=self.start_urls)
 
     def handle_error(self, failure):
@@ -811,8 +808,7 @@ class SitemapSpider(scrapy.spiders.SitemapSpider):
         except Exception as e:
             print(e)
             self.error_log.append(f"URL: {response.url} ({str(e)})")
-            if source.error_log is None or len(source.error_log) <= 5:
-                source.add_error(f"{str(e)} {meta_tag_data}\n")
+            source.add_error(f"{str(e)} {meta_tag_data}\n")
         if len(fields_dict):
             for key in fields_dict.keys():
                 path = fields_dict[key]

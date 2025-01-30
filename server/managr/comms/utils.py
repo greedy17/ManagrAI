@@ -1081,11 +1081,11 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 date_to=f"{date_to}T{hour}:{to_minute}:00Z",
                 next_token=next_token,
             )
-            tweets = tweet_res.get("data", None)
+            tweets = tweet_res.get("data", {})
             includes = tweet_res.get("includes", [])
             media = includes.get("media", [])
             attempts += 1
-            if not tweets:
+            if not tweets and len(tweet_list) == 0:
                 suggestions = twitter_account.no_results(user.email, query_input)
                 query_input = suggestions.get("choices")[0].get("message").get("content")
             if tweets:
@@ -1093,7 +1093,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                     next_token = tweet_res["meta"]["next_token"]
                 user_data = tweet_res["includes"].get("users")
                 for tweet in tweets:
-                    if len(tweet_list) > 19:
+                    if len(tweet_list) >= 20:
                         break
                     for u in user_data:
                         if u["id"] == tweet["author_id"]:
@@ -1107,17 +1107,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                             break
             if len(tweet_list) < 20 and tweets:
                 continue
-            ordered_dict = OrderedDict()
-            for obj in tweet_list:
-                if obj["text"] not in ordered_dict.keys():
-                    ordered_dict[obj["text"]] = obj
-            duplicated_removed = list(ordered_dict.values())
-            tweet_data = {
-                "data": duplicated_removed,
-                "string": query_input,
-                "includes": includes,
-                "tweetMedia": media,
-            }
             break
         except KeyError as e:
             tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
@@ -1132,6 +1121,17 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         except Exception as e:
             tweet_data["error"] = str(e)
             break
+    ordered_dict = OrderedDict()
+    for obj in tweet_list:
+        if obj["text"] not in ordered_dict.keys():
+            ordered_dict[obj["text"]] = obj
+    duplicated_removed = list(ordered_dict.values())
+    tweet_data = {
+        "data": duplicated_removed,
+        "string": query_input,
+        "includes": includes,
+        "tweetMedia": media,
+    }
     return tweet_data
 
 
@@ -1284,13 +1284,13 @@ def get_site_icon(response, url):
 def data_cleaner(data):
     import pytz
 
-    now = datetime.now(pytz.timezone("UTC"))
     try:
+        now = datetime.now(pytz.timezone("GMT"))
         content = data.pop("content")
         date = data.pop("publish_date")
         parsed_date = parser.parse(date, tzinfos=comms_consts.TIMEZONE_DICT)
         if not parsed_date.tzinfo:
-            parsed_date = parsed_date.astimezone(pytz.timezone("UTC"))
+            parsed_date = parsed_date.astimezone(pytz.timezone("GMT"))
         if parsed_date > now:
             parsed_date = None
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
@@ -1311,6 +1311,9 @@ def data_cleaner(data):
         data["error"] = e
         return f"Error cleaning data: {data}"
     except parser.ParserError as e:
+        data["error"] = e
+        return f"Error cleaning data: {data}"
+    except Exception as e:
         data["error"] = e
         return f"Error cleaning data: {data}"
     return data
