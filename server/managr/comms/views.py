@@ -3745,8 +3745,6 @@ def get_social_media_data(request):
         if "error" in social_data.keys():
             errors.append(social_data["error"])
         else:
-            if value == "twitter":
-                return_data["includes"] = social_data["includes"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
