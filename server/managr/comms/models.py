@@ -41,6 +41,26 @@ from django.conf import settings
 logger = logging.getLogger("managr")
 
 
+def common_selectors_check(source):
+    from .utils import check_classes, check_values
+
+    for dataset in source.scrape_data.values():
+        href = dataset["href"]
+        classes = dataset["classes"]
+        if classes:
+            found_class, found_attribute = check_classes(classes)
+            if found_class:
+                source.article_link_selector = found_class
+                source.article_link_attribute = found_attribute
+                break
+        found_value, found_attribute = check_values(href)
+        if found_value:
+            source.article_link_selector = found_value
+            source.article_link_attribute = found_attribute
+            break
+    return source
+
+
 class Search(TimeStampModel):
     user = models.ForeignKey(
         "core.User",
@@ -455,6 +475,22 @@ class NewsSource(TimeStampModel):
     class Meta:
         ordering = ["-datetime_created"]
 
+    @property
+    def crawling(self):
+        article_check = True if self.articles.first() else False
+        self.is_crawling = article_check
+        self.save()
+        return article_check
+
+    @property
+    def selectors_defined(self):
+        selector_obj = self.article_selectors
+        for value in selector_obj.values():
+            if value is None:
+                return False
+        return True
+
+    @property
     def article_selectors(self):
         return {
             "author": self.author_selector,
@@ -466,13 +502,89 @@ class NewsSource(TimeStampModel):
             "content": self.article_content_selector,
         }
 
-    @property
-    def selectors_defined(self):
-        selector_obj = self.article_selectors()
-        for value in selector_obj.values():
-            if value is None:
-                return False
-        return True
+    def _initialize(self, response):
+        if response.status >= 400:
+            self.use_scrape_api = True
+            return self
+        self.site_name = self.get_site_name(response)
+        self.icon = self.get_site_icon(response)
+        url = self.validate_url(response)
+        if url != self.domain:
+            self.domain == url
+        self.scrape_data = self.get_article_link_data(response)
+        self.check_if_date_format()
+        if not self.article_link_attribute:
+            self = common_selectors_check(self)
+        self.article_link_regex = self.create_search_regex()
+        return self
+
+    def validate_url(self, response):
+        og_domain = self.domain
+        response_url = response.url
+        validated_url = response_url
+        if og_domain not in response_url:
+            if response_url[0] == "/":
+                validated_url = og_domain + response_url
+            if response.status >= 300:
+                redirect_urls = response.meta.get("redirect_urls", [])
+                if redirect_urls:
+                    if og_domain not in redirect_urls[0]:
+                        validated_url = redirect_urls[0]
+                        logger.info(f"New URL found for {og_domain}: {validated_url}")
+        return validated_url
+
+    def get_site_name(self, response):
+        xpaths = ["//meta[contains(@property, 'og:site_name')]/@content", "//title/text()"]
+        site_url = urlparse(response.request.url).netloc.strip("www.")
+        site_name = site_url
+        for xpath in xpaths:
+            found = response.xpath(xpath).get()
+            if found:
+                site_name = found
+                break
+        return site_name
+
+    def get_site_icon(self, response):
+        xpath = "//link[contains(@href,'.ico')]/@href"
+        icon_href = response.xpath(xpath).get()
+        if icon_href:
+            if icon_href[0] == "/":
+                icon_href = response.request.url + icon_href
+        else:
+            return None
+        return icon_href
+
+    def get_article_link_data(self, response):
+        from .webcrawler.constants import HOMEPAGE_ANCHOR_TAG_XPATH, EXCLUDE_CLASSES
+        from .utils import potential_link_check, complete_url
+
+        anchor_tags = response.xpath(HOMEPAGE_ANCHOR_TAG_XPATH)
+        scrape_dict = {}
+        for idx, link in enumerate(anchor_tags):
+            href = link.css("::attr(href)").get()
+            updated_url = complete_url(href, self.domain)
+            is_potential_link = potential_link_check(updated_url, self.domain)
+            if is_potential_link:
+                parent = response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
+                if parent:
+                    for word in EXCLUDE_CLASSES:
+                        if word in parent:
+                            is_potential_link = False
+                            break
+                if not is_potential_link:
+                    continue
+                classes = link.css("::attr(class)").get()
+                data_attributes = {}
+                for key, value in link.attrib.items():
+                    if key.startswith("data-"):
+                        data_attributes[key] = value
+                scrape_dict[idx] = {
+                    "href": href,
+                    "data_attributes": data_attributes,
+                    "classes": classes,
+                    "parent_classes": parent,
+                }
+        return scrape_dict
 
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
@@ -559,13 +671,6 @@ class NewsSource(TimeStampModel):
             description_selector=self.description_selector,
         )
 
-    @property
-    def crawling(self):
-        article_check = True if self.articles.first() else False
-        self.is_crawling = article_check
-        self.save()
-        return article_check
-
     @classmethod
     def domain_list(
         cls,
@@ -602,6 +707,7 @@ class NewsSource(TimeStampModel):
         )
         return list(news)
 
+    @property
     def newest_article_date(self):
         if self.articles.first():
             return self.articles.first().publish_date
@@ -702,7 +808,7 @@ class NewsSource(TimeStampModel):
     def check_if_stopped(self):
         if self.posting_frequency == 0:
             return
-        newest_article = self.newest_article_date()
+        newest_article = self.newest_article_date
         if newest_article:
             article_date = newest_article.date()
             today = datetime.now().date()

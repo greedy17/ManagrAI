@@ -8,7 +8,6 @@ import requests
 import pytz
 import io
 import math
-import random
 from django.db import transaction
 from dateutil.relativedelta import relativedelta
 from .models import Article as InternalArticle
@@ -1598,3 +1597,37 @@ def test_prompt(pitch, user_id):
             journalist_data = f"Unknown exception: {e}"
             break
     return journalist_data
+
+
+def check_values(href):
+    from webcrawler.constants import COMMON_SELECTORS
+
+    found_value = None
+    found_attribute = None
+    for value_set in COMMON_SELECTORS["value"]:
+        value, attribute = value_set.split(".")
+        if value == "year":
+            year = datetime.datetime.now().year
+            if f"/{year}/" in href:
+                found_value = value
+                found_attribute = attribute
+                break
+        elif value != "year" and value in href:
+            found_value = f"value,{value}"
+            found_attribute = attribute
+            break
+    return found_value, found_attribute
+
+
+def check_classes(classes_str):
+    from webcrawler.constants import COMMON_SELECTORS
+
+    found_value = None
+    found_attribute = None
+    class_list = classes_str.split(" ")
+    for class_set in COMMON_SELECTORS["class"]:
+        class_value, attribute = class_set.split(".")
+        if class_value in class_list:
+            found_value = f"class,{class_value}"
+            found_attribute = attribute
+    return found_value, found_attribute

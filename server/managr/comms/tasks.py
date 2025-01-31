@@ -1239,7 +1239,7 @@ def parse_article(status_url):
         return
     html = Selector(text=body)
     meta_tag_data = {"link": url, "source": source.id}
-    article_selectors = source.article_selectors()
+    article_selectors = source.article_selectors
     fields_dict = {}
     article_tags = None
     if source.selectors_defined:

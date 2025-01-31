@@ -131,3 +131,12 @@ EXCLUDE_WORDS = [
 ]
 
 EXCLUDE_CLASSES = ["menu", "nav", "footer", "header", "social"]
+EXCLUDE_CLASS_XPATH = " or ".join(f"contains(@class, '{word}')" for word in EXCLUDE_CLASSES)
+EXCLUDE_WORD_XPATH = " or ".join(f"contains(@href, '{word}')" for word in EXCLUDE_WORDS)
+HOMEPAGE_ANCHOR_TAG_XPATH = (
+    "//body//a["
+    + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
+    + f" and not({EXCLUDE_CLASS_XPATH})"
+    + f" and not({EXCLUDE_WORD_XPATH}) and not(ancestor::*[contains(@class, 'nav')])"
+    + "]"
+)

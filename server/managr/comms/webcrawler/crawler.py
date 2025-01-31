@@ -34,52 +34,23 @@ from .. import constants as comms_consts
 logger = logging.getLogger("managr")
 
 
-def check_values(href):
-    found_value = None
-    found_attribute = None
-    for value_set in crawler_consts.COMMON_SELECTORS["value"]:
-        value, attribute = value_set.split(".")
-        if value == "year":
-            year = datetime.datetime.now().year
-            if f"/{year}/" in href:
-                found_value = value
-                found_attribute = attribute
-                break
-        elif value != "year" and value in href:
-            found_value = f"value,{value}"
-            found_attribute = attribute
-            break
-    return found_value, found_attribute
-
-
-def check_classes(classes_str):
-    found_value = None
-    found_attribute = None
-    class_list = classes_str.split(" ")
-    for class_set in crawler_consts.COMMON_SELECTORS["class"]:
-        class_value, attribute = class_set.split(".")
-        if class_value in class_list:
-            found_value = f"class,{class_value}"
-            found_attribute = attribute
-    return found_value, found_attribute
-
-
-def common_selectors_check(source):
-    for dataset in source.scrape_data.values():
-        href = dataset["href"]
-        classes = dataset["classes"]
-        if classes:
-            found_class, found_attribute = check_classes(classes)
-            if found_class:
-                source.article_link_selector = found_class
-                source.article_link_attribute = found_attribute
-                break
-        found_value, found_attribute = check_values(href)
-        if found_value:
-            source.article_link_selector = found_value
-            source.article_link_attribute = found_attribute
-            break
-    return source
+def check_article_validity(anchor):
+    classes = anchor.xpath("@class").get()
+    article_url = anchor.xpath("@href").extract_first()
+    if article_url is None:
+        return False
+    parsed_path = urlparse(article_url).path
+    path_list = parsed_path.split("/")
+    if len(path_list) <= 1:
+        return False
+    if classes:
+        for class_word in comms_consts.NON_VIABLE_CLASSES:
+            if class_word in classes:
+                return False
+    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+        if word in article_url:
+            return False
+    return True
 
 
 class NewsSpider(scrapy.Spider):
@@ -185,57 +156,9 @@ class NewsSpider(scrapy.Spider):
         self.sources_cache[id] = source
         return source
 
-    def get_site_name(self, response):
-        xpaths = [
-            "//meta[contains(@property, 'og:site_name')]/@content",
-            "//meta[contains(@property,'og:url')]/@content",
-        ]
-        site_name = response.request.url
-        for xpath in xpaths:
-            site_name = response.xpath(xpath).get()
-            if site_name:
-                break
-        return site_name
-
-    def get_site_icon(self, response):
-        xpath = "//link[@rel='icon']/@href"
-        icon_href = response.xpath(xpath).get()
-        if icon_href:
-            if icon_href[0] == "/":
-                icon_href = response.request.url + icon_href
-        return icon_href
-
-    def parse(self, response):
-        original_check = response.meta.get("redirect_urls", [])
-        if self.print_response:
-            for attribute in response.attributes:
-                print(attribute, ": ", getattr(response, attribute))
-                print("----------------------------------")
-        if response.status == 403:
-            self.blocked_urls += 1
-        url = original_check[0] if original_check else response.request.url
-        if url[len(url) - 1] == "/":
-            url = url[: len(url) - 1]
-        try:
-            source = self.sources.get(domain=url)
-            if response.status == 500:
-                source = self.update_source(source.id, use_scrape_api=False)
-                return
-            if response.status == 403:
-                source = self.update_source(source.id, use_scrape_api=True)
-                return
-        except NewsSource.DoesNotExist:
-            original_urls = response.meta.get("redirect_urls", [])
-            if len(original_urls):
-                original_url = original_urls[0]
-                sources = self.sources.filter(domain=original_url)
-                if len(sources):
-                    source = sources.first()
-                    source = self.update_source(
-                        source.id,
-                        is_crawling=False,
-                    )
-            return
+    def parse(self, response, source):
+        source = source._initialize(response)
+        self.sources_cache[source.id] = source
         if source.article_link_attribute is not None:
             if not source.article_link_regex:
                 regex = source.create_search_regex()
@@ -254,21 +177,9 @@ class NewsSpider(scrapy.Spider):
                 if len(article_links) and self.test:
                     article_links = article_links[:4]
                 for anchor in article_links:
-                    classes = anchor.xpath("@class").get()
-                    skip = False
                     article_url = anchor.xpath("@href").extract_first()
-                    if article_url is None:
-                        continue
-                    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
-                        if word in article_url:
-                            skip = True
-                            break
-                    if classes:
-                        for class_word in comms_consts.NON_VIABLE_CLASSES:
-                            if class_word in classes:
-                                skip = True
-                                break
-                    if skip:
+                    valid = check_article_validity(anchor)
+                    if not valid:
                         continue
                     article_domain = get_domain(article_url)
                     if (len(article_domain) and article_domain not in do_not_track_str) or not len(
@@ -283,12 +194,6 @@ class NewsSpider(scrapy.Spider):
                             errback=self.handle_error,
                             cb_kwargs={"source": source},
                         )
-                if source.site_name is None and response.status != 403:
-                    site_name = self.get_site_name(response)
-                    source.site_name = site_name
-                if source.icon is None and response.status < 300:
-                    icon_href = self.get_site_icon(response)
-                    source.icon = icon_href
         else:
             self.process_new_url(response, source)
         self.urls_processed += 1
@@ -310,7 +215,7 @@ class NewsSpider(scrapy.Spider):
                     logger.exception(f"Failed to find source with domain: {domain}")
                     return
         meta_tag_data = {"link": url, "source": source.id}
-        article_selectors = source.article_selectors()
+        article_selectors = source.article_selectors
         fields_dict = {}
         article_tags = None
         if source.selectors_defined:
@@ -500,6 +405,8 @@ class NewsSpider(scrapy.Spider):
         return NewsSource.objects.filter(domain__in=self.start_urls)
 
     def handle_error(self, failure):
+        print("HERE")
+        print(failure)
         deactivate = False
         error = ""
         if failure.check(TimeoutError, HttpError):
@@ -549,7 +456,7 @@ class NewsSpider(scrapy.Spider):
         else:
             callback = self.parse
         for url in self.start_urls:
-            if self.rescrape_data:
+            if not self.article_only:
                 cb_kwargs = {"source": self.sources.get(domain=url)}
             else:
                 cb_kwargs = {}
@@ -727,7 +634,7 @@ class SitemapSpider(scrapy.spiders.SitemapSpider):
             instance = Article.objects.get(link=response.url)
             source = instance.source
         meta_tag_data = {"link": response.url, "source": source.id}
-        article_selectors = source.article_selectors()
+        article_selectors = source.article_selectors
         fields_dict = {}
         article_tags = None
         if source.selectors_defined:
@@ -916,7 +823,7 @@ class XMLSpider(scrapy.Spider):
             url = url[: len(url) - 1]
         try:
             source = NewsSource.objects.get(sitemap=url)
-            article_check = source.newest_article_date()
+            article_check = source.newest_article_date
         except NewsSource.DoesNotExist:
             return
         if "rss" in url:
@@ -967,7 +874,7 @@ class XMLSpider(scrapy.Spider):
             instance = Article.objects.get(link=response.url)
             source = instance.source
         meta_tag_data = {"link": response.url, "source": source.id}
-        article_selectors = source.article_selectors()
+        article_selectors = source.article_selectors
         fields_dict = {}
         article_tags = None
         if source.selectors_defined:
@@ -1255,27 +1162,13 @@ class ScrapeApiSpider(scrapy.Spider):
                     is_crawling=False,
                 )
                 return
-            do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
             if source.last_scraped and source.article_link_attribute:
                 if len(article_links) and (self.first_only or self.test):
                     article_links = article_links[:4]
                 article_batch = []
                 for anchor in article_links:
-                    classes = anchor.xpath("@class").get()
-                    skip = False
-                    article_url = anchor.xpath("@href").extract_first()
-                    if article_url is None:
-                        continue
-                    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
-                        if word in article_url:
-                            skip = True
-                            break
-                    if classes:
-                        for class_word in comms_consts.NON_VIABLE_CLASSES:
-                            if class_word in classes:
-                                skip = True
-                                break
-                    if skip:
+                    valid = check_article_validity(anchor)
+                    if not valid:
                         continue
                     article_url = complete_url(article_url, url)
                     article_batch.append(article_url)
@@ -1284,7 +1177,6 @@ class ScrapeApiSpider(scrapy.Spider):
                     "render": "true",
                     "apiKey": comms_consts.SCRAPER_API_KEY,
                 }
-                print(body)
                 yield scrapy.Request(
                     comms_consts.SCRAPER_BATCH_URI,
                     method="POST",
@@ -1309,7 +1201,6 @@ class ScrapeApiSpider(scrapy.Spider):
         return
 
     def parse_article(self, response):
-        print("In article")
         xpath_copy = copy(crawler_consts.XPATH_STRING_OBJ)
         source = self.sources.filter(domain=response.meta.get("source")).first()
         url = response.meta.get("og_url")
@@ -1317,10 +1208,9 @@ class ScrapeApiSpider(scrapy.Spider):
         body = res.get("response").get("body")
         html = Selector(text=body)
         meta_tag_data = {"link": url, "source": source.id}
-        article_selectors = source.article_selectors()
+        article_selectors = source.article_selectors
         fields_dict = {}
         article_tags = None
-        print(source.selectors_defined)
         if source.selectors_defined:
             for key in article_selectors.keys():
                 path = article_selectors[key]
@@ -1359,7 +1249,6 @@ class ScrapeApiSpider(scrapy.Spider):
                     meta_tag_data[key] = selector
                 else:
                     meta_tag_data[key] = "N/A"
-            print(meta_tag_data)
         else:
             for key in xpath_copy.keys():
                 if article_selectors[key] is not None:
@@ -1562,7 +1451,7 @@ class ScrapeApiSpider(scrapy.Spider):
     #     meta_tag_data = {"link": url, "source": source.id}
     #     if self.article_only:
     #         meta_tag_data["id"] = source.id
-    #     article_selectors = source.article_selectors()
+    #     article_selectors = source.article_selectors
     #     fields_dict = {}
     #     article_tags = None
     #     if source.selectors_defined:
