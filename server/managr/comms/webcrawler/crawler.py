@@ -334,7 +334,7 @@ class NewsSpider(scrapy.Spider):
                         except ValueError:
                             continue
                     try:
-                        data = json.loads(selector)
+                        data = json.loads(selector.lower())
                         selector_value = data
                         for path in data_path:
                             selector_value = selector_value[path]

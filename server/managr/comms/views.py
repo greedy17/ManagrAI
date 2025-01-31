@@ -256,7 +256,7 @@ class PRSearchViewSet(
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
-        token_amount = 2000
+        token_amount = 3000
         timeout = 60.0
         while True:
             try:
@@ -750,7 +750,7 @@ class PRSearchViewSet(
             twitter_account = user.twitter_account
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:

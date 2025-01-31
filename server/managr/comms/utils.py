@@ -506,24 +506,22 @@ def get_news_api_sources():
 
 
 def remove_api_sources():
-    all_sources = NewsSource.objects.all()
     try:
         news_api_source_res = get_news_api_sources()
         r = news_api_source_res["sources"]
         source_list = [source["url"] for source in r]
     except Exception as e:
         print(str(e))
-    for url in source_list:
-        database_check = all_sources.filter(domain=url).first()
-        if database_check:
-            database_check.delete()
+    database_check = NewsSource.objects.filter(domain__in=source_list, is_active=True)
+    if database_check:
+        database_check.update(is_active=False)
     return
 
 
 def valid_slug(slug):
     dash_count = slug.count("-")
     underscore_count = slug.count("_")
-    if dash_count < 4 or underscore_count < 4:
+    if dash_count >= 4 or underscore_count >= 4:
         return True
     else:
         return False
