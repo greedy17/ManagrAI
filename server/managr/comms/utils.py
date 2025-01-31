@@ -63,7 +63,6 @@ def get_domain(url, full_netloc=False):
 
 
 def extract_date_from_text(text, timezone_dict={}):
-    text = text.replace("\n", "").replace("\t", "").strip()
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
@@ -72,13 +71,13 @@ def extract_date_from_text(text, timezone_dict={}):
             text = text[0]
         else:
             return None
+    text = text.replace("\n", "").replace("\t", "").strip()
     try:
         parsed_date = parser.parse(text, tzinfos=comms_consts.TIMEZONE_DICT)
         return str(parsed_date)
     except parser.ParserError:
         pass
 
-    print(2, repr(text))
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
