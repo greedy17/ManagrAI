@@ -1083,8 +1083,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 next_token=next_token,
             )
             tweets = tweet_res.get("data", {})
-            includes = tweet_res.get("includes", {})
-            media = includes.get("media", [])
             attempts += 1
             if not tweets and len(tweet_list) == 0:
                 suggestions = twitter_account.no_results(user.email, query_input)
@@ -1092,22 +1090,31 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
             if tweets:
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
-                user_data = tweet_res["includes"].get("users")
+                users = tweet_res["includes"].get("users")
+                media = tweet_res["includes"].get("media")
+                media_data = {m["media_key"]: m for m in media}
+                user_data = {u["id"]: u for u in users}
                 for tweet in tweets:
                     if len(tweet_list) >= 20:
                         break
-                    for u in user_data:
-                        if u["id"] == tweet["author_id"]:
-                            if u["public_metrics"]["followers_count"] > 10000:
-                                tweet["tweet_link"] = (
-                                    f"https://twitter.com/{u['username']}/status/{tweet['id']}"
-                                )
-                                tweet["user"] = u
-                                tweet["type"] = "twitter"
-                                tweet_list.append(tweet)
-                            break
-                media_data.extends(media)
-                include_data["users"].extends(includes["users"])
+                    u = user_data[tweet["author_id"]]
+                    if u["public_metrics"]["followers_count"] > 10000:
+                        new_attachments = []
+                        if (
+                            "attachments" in tweet.keys()
+                            and "media_keys" in tweet["attachments"].keys()
+                        ):
+                            new_attachments = []
+                            media_keys = tweet["attachments"]["media_keys"]
+                            for media_key in media_keys:
+                                new_attachments.append(media_data[media_key])
+                        tweet["attachments"] = new_attachments
+                        tweet["tweet_link"] = (
+                            f"https://twitter.com/{u['username']}/status/{tweet['id']}"
+                        )
+                        tweet["user"] = u
+                        tweet["type"] = "twitter"
+                        tweet_list.append(tweet)
             if len(tweet_list) < 20 and tweets:
                 continue
             break
@@ -1129,13 +1136,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         if obj["text"] not in ordered_dict.keys():
             ordered_dict[obj["text"]] = obj
     duplicated_removed = list(ordered_dict.values())
-    include_data["media"] = media_data
-    tweet_data = {
-        "data": duplicated_removed,
-        "string": query_input,
-        "includes": include_data,
-        "tweetMedia": media_data,
-    }
+    tweet_data = {"data": duplicated_removed, "string": query_input}
     return tweet_data
 
 

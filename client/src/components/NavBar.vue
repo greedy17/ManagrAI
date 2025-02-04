@@ -579,7 +579,7 @@
                   <img
                     class="search-icon"
                     v-else-if="search.meta_data.type === 'write'"
-                    src="@/assets/images/brain.svg"
+                    src="@/assets/images/edit.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"
@@ -592,6 +592,16 @@
                     alt=""
                     @click="selectSearch(search)"
                   />
+
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'omni'"
+                    src="@/assets/images/brain.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+
                   <p style="margin-left: 0" :title="search.title" @click="selectSearch(search)">
                     {{ search.title }}
                   </p>
