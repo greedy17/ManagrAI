@@ -147,6 +147,10 @@ class NewsSpider(scrapy.Spider):
             report.blocked_urls += self.blocked_urls
             report.save()
         for source in self.sources_cache.values():
+            current_datetime = datetime.datetime.now()
+            source.last_scraped = timezone.make_aware(
+                current_datetime, timezone.get_current_timezone()
+            )
             source.save()
             if not source.is_crawling:
                 source.crawling
@@ -330,7 +334,7 @@ class NewsSpider(scrapy.Spider):
                         except ValueError:
                             continue
                     try:
-                        data = json.loads(selector)
+                        data = json.loads(selector.lower())
                         selector_value = data
                         for path in data_path:
                             selector_value = selector_value[path]
