@@ -1248,10 +1248,12 @@ REGENERATE_REPORT_SUMMARY = (
 
 def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project):
     body = f"""
-    Today is {date}. Please provide a concise and accurate response based on the media media coverage below. 
+    Today is {date}. Please provide a concise and accurate response based on the media coverage below. 
     User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, 
     just provide a brief summary of the the coverage as it pertains to their search term. 
     For additional context, user may provide their Project details (custom prompt instructions, media pitch, company details, etc).
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
 
     Input Format:
     User Request: {search}
@@ -1268,6 +1270,41 @@ def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project
     Sections with `<strong>` subheadings,
     Ordered or unordered lists using `<ol>` or `<ul>`,
     Paragraphs with `<p>`, and
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+    return body
+
+def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, web, project ):
+    body = f"""
+    User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the media coverage below (news coverage, social media coverage, and web data). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. 
+    Cite your sources by enclosing the citationIndex of the coverage in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. 
+    
+    1. The user is most likely asking a follow up question (query) based on the previous response and the media coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
+    2. If the answer can not be provided using the previous response or media coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
+    3. The output should just be the answer to their question / request. Example 1: "List top journalist covering this news" = return a list of journalist. Example 2: "What's being said about Joe Smith" = an concise answer about Joe smith.
+    4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+
+    Previous respons: {summary}
+    User request: {instructions}
+
+    News coverage: {clips}
+    Social Media Coverage from X: {tweets}
+    Social Media Coverage from Youtube: {vids}
+    Social Media Coverage from Bluesky: {skeets}
+    Web Data: {web}
+
+    Project details (campaign, media pitch, etc): {project}
+
+    Output format:
+
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
     Line breaks `<br>` between main points for clarity.
     Do not include ```html in your response.
 

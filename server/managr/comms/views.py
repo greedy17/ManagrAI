@@ -3821,7 +3821,7 @@ def scraper_webhook(request):
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([ExpiringTokenAuthentication])
 def get_omni_summary(request):
-    user = request.data.user
+    user = request.user
     clips = request.data.get("clips", [])
     social_data = request.data.get("social_data", [])
     web = request.data.get("web", [])
@@ -3832,6 +3832,8 @@ def get_omni_summary(request):
     skeets = [s for s in social_data if s["type"] == "bluesky"]
     search = request.data.get("search")
     project = request.data.get("project")
+    follow_up = request.data.get("follow_up", False)
+    original = request.data.get("original", None)
     attempts = 1
     token_amount = 1000
     timeout = 60.0
@@ -3839,9 +3841,17 @@ def get_omni_summary(request):
     while True:
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
-                date, search, clips, tweets, vids, skeets, web, project
+            if follow_up:
+                print('IM FOLLOWING UP !!!')
+                prompt = comms_consts.OPEN_AI_OMNI_FOLLOW_UP(
+                    original, search, clips, tweets, vids, skeets, web, project
             )
+            else:   
+                print('I AM NOT FOLLOWING UP !!!') 
+                prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
+                    date, search, clips, tweets, vids, skeets, web, project
+                )
+
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 user.email,
                 prompt,
@@ -3890,5 +3900,5 @@ def get_omni_summary(request):
             break
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
-    # return Response(status=status.HTTP_200_OK, data={"summary": message})
-    return Response(status=status.HTTP_200_OK, data={"summary": summary})
+    return Response(status=status.HTTP_200_OK, data={"summary": message})
+    # return Response(status=status.HTTP_200_OK, data={"summary": summary})

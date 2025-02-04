@@ -752,7 +752,7 @@
 
           <aside>
             <img
-              v-for="(url, i) in currentJournalistImages"
+              v-for="(url, i) in currentJournalistImages.slice(0, 5)"
               :key="i"
               :src="`${url}`"
               height="24px"
@@ -1149,6 +1149,13 @@
                           alt=""
                         />
 
+                        <img
+                          v-else-if="mainView === 'omni'"
+                          src="@/assets/images/brain.svg"
+                          height="15px"
+                          alt=""
+                        />
+
                         <small>{{
                           mainView === 'discover' ? 'Media Contacts' : toCamelCase(mainView)
                         }}</small>
@@ -1180,6 +1187,18 @@
                           <p>Select the type of task you'd like ManagrAI to assist with</p>
                         </header>
                         <section>
+                          <div
+                            @click="switchMainView('omni')"
+                            :class="{ activeswitch: mainView === 'discover' }"
+                          >
+                            <span>
+                              <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                              Omni
+                            </span>
+
+                            <p>Search news, social and web</p>
+                          </div>
+
                           <div
                             @click="switchMainView('news')"
                             :class="{ activeswitch: mainView === 'news' }"
@@ -1215,7 +1234,7 @@
                             <p>Search the web</p>
                           </div>
 
-                          <div
+                          <!-- <div
                             @click="switchMainView('trending')"
                             :class="{ activeswitch: mainView === 'trending' }"
                           >
@@ -1225,7 +1244,7 @@
                             </span>
 
                             <p>Search trending news</p>
-                          </div>
+                          </div> -->
 
                           <div
                             @click="switchMainView('write')"
@@ -1240,15 +1259,15 @@
                           </div>
 
                           <div
-                            @click="switchMainView('omni')"
+                            @click="toggleContactsModal"
                             :class="{ activeswitch: mainView === 'discover' }"
                           >
                             <span>
-                              <img src="@/assets/images/brain.svg" height="11px" alt="" />
-                              Omni
+                              <img src="@/assets/images/users.svg" height="11px" alt="" />
+                              Media Contacts
                             </span>
 
-                            <p>Search news, social and web</p>
+                            <p>Search media contacts</p>
                           </div>
                         </section>
                       </div>
@@ -1511,7 +1530,7 @@
                     </div>
 
                     <div
-                      v-if="mainView === 'news' || mainView === 'social'"
+                      v-if="mainView === 'news' || mainView === 'social' || mainView === 'omni'"
                       class="row relative top-mar-mobile"
                     >
                       <div
@@ -1618,6 +1637,18 @@
                 <div
                   @click="setNewSearch(example.value)"
                   v-for="example in trendExamples"
+                  :key="example.value"
+                  class="example-title"
+                >
+                  <img src="@/assets/images/lightbulb-on.svg" height="15px" alt="" />
+                  {{ example.name }}
+                </div>
+              </div>
+
+              <div v-else-if="mainView === 'omni'" style="gap: 12px" class="row">
+                <div
+                  @click="setNewSearch(example.value)"
+                  v-for="example in omniExamples"
                   :key="example.value"
                   class="example-title"
                 >
@@ -1848,12 +1879,12 @@
                 }"
                 @click.stop="showSave"
                 v-if="
-                  ((filteredArticles && filteredArticles.length) ||
-                    tweets.length ||
-                    (mainView === 'write' && summary) ||
-                    (mainView === 'discover' && summary) ||
-                    (mainView === 'web' && summary)) &&
-                  !isViewOnly
+                  (filteredArticles && filteredArticles.length) ||
+                  tweets.length ||
+                  (mainView === 'write' && summary) ||
+                  (mainView === 'discover' && summary) ||
+                  (mainView === 'web' && summary) ||
+                  (mainView === 'omni' && summary && !isViewOnly)
                 "
                 :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
               >
@@ -2549,6 +2580,21 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
+              v-else-if="mainView === 'omni'"
+            >
+              <div style="width: 24%" v-for="(article, i) in omniNews.slice(0, 4)" :key="i">
+                <img
+                  @click="setOriginalArticles"
+                  :src="article.image_url ? article.image_url : logoPlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+              </div>
+            </div>
+
+            <div
+              style="width: 100%; justify-content: space-between"
+              class="row"
               v-else-if="mainView === 'web'"
             >
               <div style="width: 24%" v-for="(result, i) in filteredResults.slice(0, 4)" :key="i">
@@ -2566,7 +2612,7 @@
               class="row"
               v-else-if="mainView === 'social'"
             >
-              <div class="row" style="width: 100%; gap: 8px" v-if="tweetMedia.length">
+              <div class="row" style="width: 100%; gap: 8px" v-if="tweetMedia && tweetMedia.length">
                 <div
                   style="width: 24%"
                   v-for="media in tweetMedia.slice(0, 4)"
@@ -2719,6 +2765,12 @@
                 v-html="insertCitations(summary)"
               ></div>
               <div
+                style="margin-top: 32px"
+                v-else-if="mainView === 'omni'"
+                v-html="insertOmniCitations(summary)"
+                class="citation-text"
+              ></div>
+              <div
                 style="padding: 32px 0"
                 v-else-if="mainView === 'write'"
                 class="citation-text"
@@ -2774,7 +2826,13 @@
                   style="margin: 0"
                 >
                   {{
-                    mainView === 'news' ? `Articles ` : mainView === 'social' ? `Posts ` : `Results`
+                    mainView === 'news'
+                      ? `Articles `
+                      : mainView === 'social'
+                      ? `Posts `
+                      : mainView === 'web'
+                      ? `Results`
+                      : 'Sources'
                   }}
 
                   <div
@@ -2803,7 +2861,7 @@
                   </div>
 
                   <div
-                    v-else-if="mainView === 'social' && tweetMedia.length"
+                    v-else-if="mainView === 'social' && tweetMedia && tweetMedia.length"
                     style="margin-left: 4px"
                     class="row"
                     v-for="media in tweetMedia.slice(0, 3)"
@@ -2845,6 +2903,17 @@
                       class="circle-img"
                     />
                   </div>
+
+                  <div v-else-if="mainView === 'omni'" style="margin-left: 4px" class="row">
+                    <img
+                      v-for="(article, i) in omniResults.slice(0, 3)"
+                      :key="i"
+                      :src="article.image_url ? article.image_url : logoPlaceholder"
+                      @error="onImageError($event)"
+                      alt=""
+                      class="circle-img"
+                    />
+                  </div>
                 </button>
 
                 <button
@@ -2854,7 +2923,13 @@
                 >
                   Hide
                   {{
-                    mainView === 'news' ? `Articles` : mainView === 'social' ? `Posts` : `Results`
+                    mainView === 'news'
+                      ? `Articles`
+                      : mainView === 'social'
+                      ? `Posts`
+                      : mainView === 'web'
+                      ? `Results`
+                      : 'Sources'
                   }}
                 </button>
 
@@ -2929,12 +3004,21 @@
                   <div
                     style="width: 100%; justify-content: space-between; gap: 4px"
                     class="row"
-                    v-if="summary.clips.length && (mainView === 'news' || mainView === 'trending')"
+                    v-if="
+                      summary.clips.length &&
+                      (mainView === 'news' || mainView === 'trending' || mainView === 'omni')
+                    "
                   >
                     <div style="width: 24%" v-for="(clip, i) in summary.clips.slice(0, 4)" :key="i">
                       <img
                         @click="setAndShowArticles(summary.clips)"
-                        :src="clip.image_url ? clip.image_url : clip.image"
+                        :src="
+                          clip.image_url
+                            ? clip.image_url
+                            : clip.image
+                            ? clip.image
+                            : logoPlaceholder
+                        "
                         @error="onImageError($event)"
                         class="card-photo-header-small"
                       />
@@ -3004,7 +3088,6 @@
                   <div v-if="mainView !== 'discover'" style="position: relative">
                     <div
                       style="width: 100%"
-                      v-if="mainView !== 'discover'"
                       class="space-between abs-container"
                       :class="{ lesserTop: mainView === 'write' }"
                     >
@@ -3027,6 +3110,13 @@
                       v-if="mainView === 'social'"
                       style="margin-top: 24px"
                       v-html="insertAltTweetCitations(summary.summary, i)"
+                      class="citation-text"
+                    ></div>
+
+                    <div
+                      v-else-if="mainView === 'omni'"
+                      style="margin-top: 24px"
+                      v-html="insertAltOmniCitations(summary.summary, i)"
                       class="citation-text"
                     ></div>
 
@@ -3084,7 +3174,8 @@
                       (mainView === 'news' ||
                         mainView === 'trending' ||
                         mainView === 'web' ||
-                        mainView === 'social')
+                        mainView === 'social' ||
+                        mainView === 'omni')
                     "
                     @click="setAndShowArticles(summary.clips)"
                     class="secondary-button-white fadein"
@@ -3095,18 +3186,26 @@
                         ? `Articles `
                         : mainView === 'social'
                         ? `Posts `
+                        : mainView === 'omni'
+                        ? `Sources `
                         : `Results`
                     }}
 
                     <div
-                      v-if="mainView === 'news' || mainView === 'trending'"
+                      v-if="mainView === 'news' || mainView === 'trending' || mainView === 'omni'"
                       style="margin-left: 4px"
                       class="row"
                     >
                       <img
                         v-for="(article, i) in summary.clips.slice(0, 3)"
                         :key="i"
-                        :src="article.image_url ? article.image_url : article.image"
+                        :src="
+                          article.image_url
+                            ? article.image_url
+                            : article.image
+                            ? article.image
+                            : logoPlaceholder
+                        "
                         alt=""
                         class="circle-img"
                       />
@@ -3224,6 +3323,13 @@
                   >
                     Scanning social posts...
                   </p>
+                  <p
+                    v-else-if="mainView === 'omni'"
+                    style="margin: 0; margin-right: 8px"
+                    class="bold-text"
+                  >
+                    Searching...
+                  </p>
                   <p v-else style="margin: 0; margin-right: 8px" class="bold-text">
                     Scanning the web...
                   </p>
@@ -3285,6 +3391,8 @@
                   ? getChatSummary($event, filteredArticles, newTemplate)
                   : mainView === 'social'
                   ? getChatSummary($event, preparedTweets, newTemplate)
+                  : mainView === 'omni'
+                  ? getChatSummary($event, omniResults, newTemplate)
                   : mainView === 'write'
                   ? regeneratePitch($event)
                   : getChatSummary($event, googleResults, newTemplate)
@@ -3295,10 +3403,12 @@
             <div
               v-if="newTemplate"
               @click="
-                mainView === 'news'
+                mainView === 'news' || mainView === 'trending'
                   ? getChatSummary($event, filteredArticles, newTemplate)
                   : mainView === 'social'
                   ? getChatSummary($event, preparedTweets, newTemplate)
+                  : mainView === 'omni'
+                  ? getChatSummary($event, omniResults, newTemplate)
                   : mainView === 'write'
                   ? regeneratePitch($event)
                   : getChatSummary($event, googleResults, newTemplate)
@@ -3372,6 +3482,12 @@
                   height="11px"
                   alt=""
                 />
+                <img
+                  v-else-if="mainView === 'omni'"
+                  src="@/assets/images/brain.svg"
+                  height="15px"
+                  alt=""
+                />
 
                 <small>{{ mainView === 'discover' ? 'Contacts' : toCamelCase(mainView) }}</small>
 
@@ -3389,6 +3505,18 @@
                   <p>Select the type of task you'd like ManagrAI to assist with</p>
                 </header>
                 <section>
+                  <div
+                    @click="switchMainView('omni')"
+                    :class="{ activeswitch: mainView === 'discover' }"
+                  >
+                    <span>
+                      <img src="@/assets/images/brain.svg" height="11px" alt="" />
+                      Omni
+                    </span>
+
+                    <p>Search news, social and web</p>
+                  </div>
+
                   <div
                     @click="switchMainView('news')"
                     :class="{ activeswitch: mainView === 'news' }"
@@ -3421,7 +3549,7 @@
                     <p>Search the web</p>
                   </div>
 
-                  <div
+                  <!-- <div
                     @click="switchMainView('trending')"
                     :class="{ activeswitch: mainView === 'trending' }"
                   >
@@ -3431,7 +3559,7 @@
                     </span>
 
                     <p>Search trending news</p>
-                  </div>
+                  </div> -->
 
                   <div
                     @click="switchMainView('write')"
@@ -3446,7 +3574,7 @@
                   </div>
 
                   <div
-                    @click="switchMainView('discover')"
+                    @click="toggleContactsModal"
                     :class="{ activeswitch: mainView === 'discover' }"
                   >
                     <span>
@@ -3455,18 +3583,6 @@
                     </span>
 
                     <p>Search media contacts</p>
-                  </div>
-
-                  <div
-                    @click="switchMainView('trending')"
-                    :class="{ activeswitch: mainView === 'trending' }"
-                  >
-                    <span>
-                      <img src="@/assets/images/arrow-trend-up.svg" height="11px" alt="" />
-                      Trending
-                    </span>
-
-                    <p>Search trending news</p>
                   </div>
                 </section>
               </div>
@@ -3729,7 +3845,7 @@
             </div>
 
             <div
-              v-if="mainView === 'news' || mainView === 'social'"
+              v-if="mainView === 'news' || mainView === 'social' || mainView === 'omni'"
               class="row relative top-mar-mobile"
             >
               <div
@@ -3771,6 +3887,7 @@
               </div>
 
               <div
+                v-if="mainView !== 'omni'"
                 @click.stop="openReportModal"
                 :class="{ 'soft-gray-bg': showDateSelection }"
                 class="image-container s-wrapper"
@@ -3809,9 +3926,9 @@
             <div style="margin-bottom: 12px">
               <img
                 :src="
-                  mainView === 'news' || mainView === 'social'
-                    ? currentArticle.image_url
-                    : currentArticle.image
+                  currentArticle.hasOwnProperty('snippet')
+                    ? currentArticle.image
+                    : currentArticle.image_url
                 "
                 class="photo-header-small"
               />
@@ -3837,7 +3954,14 @@
               </div>
             </div>
 
-            <div v-if="mainView !== 'social'" style="margin-bottom: 12px">
+            <div
+              v-if="
+                mainView === 'web' ||
+                mainView === 'news' ||
+                (mainView === 'omni' && !currentArticle.hasOwnProperty('type'))
+              "
+              style="margin-bottom: 12px"
+            >
               <img
                 @error="onImageError($event)"
                 :src="currentArticle.image_url"
@@ -3866,7 +3990,15 @@
 
             <div class="space-between-top no-letter-margin">
               <div class="col">
-                <p v-if="mainView !== 'social'" style="margin: 0" class="bold-font">
+                <p
+                  v-if="
+                    mainView === 'web' ||
+                    mainView === 'news' ||
+                    (mainView === 'omni' && !currentArticle.hasOwnProperty('type'))
+                  "
+                  style="margin: 0"
+                  class="bold-font"
+                >
                   {{
                     currentArticle.traffic ? removeDomain(currentArticle.traffic.target) : 'unknown'
                   }}
@@ -3881,16 +4013,25 @@
                   <p style="font-size: 14px; margin-left: 2px">{{ currentArticle.author }}</p>
                 </div>
               </div>
-              <small v-if="mainView !== 'social'">{{
-                getTimeDifferenceInMinutes(currentArticle.publish_date)
-              }}</small>
+              <small
+                v-if="
+                  mainView === 'web' ||
+                  mainView === 'news' ||
+                  (mainView === 'omni' && !currentArticle.hasOwnProperty('type'))
+                "
+                >{{ getTimeDifferenceInMinutes(currentArticle.publish_date) }}</small
+              >
               <small v-else>{{ getTimeDifferenceInMinutes(currentArticle.created_at) }}</small>
             </div>
 
             <div>
               <div class="elipsis-text" style="margin: 10px 0; font-size: 15px; line-height: 24px">
                 <a
-                  v-if="mainView !== 'social'"
+                  v-if="
+                    mainView === 'web' ||
+                    mainView === 'news' ||
+                    (mainView === 'omni' && !currentArticle.hasOwnProperty('type'))
+                  "
                   :href="currentArticle.link"
                   target="_blank"
                   class="bold-txt a-text"
@@ -3909,7 +4050,14 @@
               </div>
             </div>
 
-            <div v-if="mainView !== 'social'" class="space-between bottom-margin-m">
+            <div
+              v-if="
+                mainView === 'web' ||
+                mainView === 'news' ||
+                (mainView === 'omni' && !currentArticle.hasOwnProperty('type'))
+              "
+              class="space-between bottom-margin-m"
+            >
               <div class="row img-mar">
                 <img src="@/assets/images/users.svg" height="12px" alt="" />
                 <p style="font-size: 14px" class="bold-font">
@@ -4075,7 +4223,12 @@
             </div>
           </div>
 
-          <div v-if="mainView === 'social'">
+          <div
+            v-if="
+              mainView === 'social' ||
+              (mainView === 'omni' && currentArticle.hasOwnProperty('type'))
+            "
+          >
             <p class="bold-text">Description:</p>
             <div style="margin-top: 12px; font-size: 15px !important">
               <p>{{ currentArticle.text ? currentArticle.text : 'None' }}</p>
@@ -4117,7 +4270,9 @@
                 ? `Articles (${sidebarArticles.length})`
                 : mainView === 'social'
                 ? `Posts (${sidebarArticlesSocial.length})`
-                : `Results (${sidebarArticlesWeb.length})`
+                : mainView === 'web'
+                ? `Results (${sidebarArticlesWeb.length})`
+                : `Sources (${sidebarArticlesOmni.length})`
             }}
           </p>
 
@@ -4412,6 +4567,284 @@
             </div>
             <!-- <div ref="contentBottom"></div> -->
           </div>
+
+          <div v-else-if="mainView === 'omni'" class="cards-container">
+            <div v-for="(article, i) in sidebarArticlesOmni" :key="article.id" class="card">
+              <div v-if="article.hasOwnProperty('snippet')" style="width: 100%">
+                <div class="main-body">
+                  <div>
+                    <div style="margin: 0 0 4px -2px" class="row">
+                      <img
+                        :src="
+                          article.source && article.source_img
+                            ? article.source_img
+                            : globePlaceholder
+                        "
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <small>{{ article.source }}</small>
+                    </div>
+
+                    <p style="cursor: pointer" @click="goToArticle(article.link)">
+                      {{ article.title }}
+                    </p>
+                    <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
+                      <p class="thin-text">
+                        {{ article.snippet }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <img
+                      @click="goToArticle(article.link)"
+                      :src="article.image"
+                      @error="onImageError($event)"
+                      class="card-photo-header"
+                    />
+                  </div>
+                </div>
+                <div style="margin: -4px 0 0 10px">
+                  <p @click="selectJournalist(article, true)" class="turq-text">
+                    By <span>{{ article.author }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div v-else-if="article.hasOwnProperty('type')" style="width: 100%">
+                <div class="main-body">
+                  <div>
+                    <div style="margin: 0 0 4px -2px" class="row">
+                      <img
+                        v-if="article.type === 'youtube'"
+                        :src="youtubePlaceholder"
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <img
+                        v-else-if="article.type === 'bluesky'"
+                        :src="blueskyPlaceholder"
+                        height="14px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <img
+                        v-else-if="article.type === 'twitter'"
+                        :src="twitterPlaceholder"
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+
+                      <small v-if="article.type === 'twitter'">{{ article.user.username }}</small>
+                      <small v-else> {{ article.author }}</small>
+                    </div>
+
+                    <p
+                      v-if="article.type === 'twitter'"
+                      @click="openTweet(article.user.username, article.id)"
+                      style="cursor: pointer"
+                      class="thin-span"
+                    >
+                      <span>{{ getTimeDifferenceInMinutes(article.created_at) }} </span>
+                      -
+                      {{ article.text }}
+                    </p>
+
+                    <p
+                      class="thin-span"
+                      v-else
+                      @click="openTweetAlt(article.url)"
+                      style="cursor: pointer"
+                    >
+                      <span>{{ getTimeDifferenceInMinutes(article.created_at) }} </span>
+                      -
+                      {{ article.title ? article.title : article.text }}
+                    </p>
+                    <!-- <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
+                      <p class="thin-text">
+                        {{ tweet.text }}
+                      </p>
+                    </div> -->
+                  </div>
+
+                  <div
+                    v-if="article.type === 'twitter'"
+                    @click="openTweet(article.user.username, article.id)"
+                  >
+                    <img :src="article.user.profile_image_url" class="card-photo-header" />
+                  </div>
+
+                  <div v-else @click="openTweetAlt(article.url)">
+                    <img
+                      v-if="article.type === 'youtube'"
+                      :src="article.image_url"
+                      class="card-photo-header"
+                    />
+                    <img
+                      v-else
+                      :src="article.image_url ? article.image_url : blueskyPlaceholder"
+                      @error="onImageErrorAlt($event)"
+                      class="card-photo-header"
+                    />
+                  </div>
+                </div>
+                <div class="row" style="margin: -4px 0 0 10px">
+                  <p
+                    v-if="article.type === 'twitter'"
+                    @click="selectJournalist(article)"
+                    class="turq-text"
+                  >
+                    @ <span>{{ article.user.username }}</span>
+                  </p>
+
+                  <p v-else class="turq-text" @click="selectJournalist(article)">
+                    <span>{{ article.author }}</span>
+                  </p>
+
+                  <div
+                    v-if="article.type === 'twitter'"
+                    class="row"
+                    style="margin-left: 12px; font-size: 12px"
+                  >
+                    <img src="@/assets/images/users.svg" height="11px" alt="" />
+                    <p style="margin-left: 2px; font-size: 13px">
+                      {{ formatNumber(article.user.public_metrics.followers_count) }}
+                    </p>
+                  </div>
+
+                  <button
+                    v-else
+                    @click="analyzeVideo(article.id, article)"
+                    style="margin-left: auto"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
+                </div>
+              </div>
+
+              <div v-else style="width: 100%">
+                <div class="main-body">
+                  <div>
+                    <div style="margin: 0 0 4px -2px" class="row">
+                      <!-- src="@/assets/images/iconlogo.png" -->
+                      <img
+                        :src="
+                          article.source && article.source.icon
+                            ? article.source.icon
+                            : globePlaceholder
+                        "
+                        height="12px"
+                        alt=""
+                        style="margin: 0 4px 0 1px"
+                      />
+                      <small>{{
+                        mainView === 'trending'
+                          ? article.source
+                              .replace(/^https?:\/\//, '')
+                              .replace(/^www\./, '')
+                              .replace('.com', '')
+                          : article.source.name
+                      }}</small>
+                    </div>
+
+                    <p
+                      style="cursor: pointer"
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                    >
+                      {{ article.title }}
+                    </p>
+                    <div style="border-bottom: none; font-size: 14px; color: #484a6e" class="row">
+                      <p class="thin-text">
+                        <span
+                          >{{
+                            getTimeDifferenceInMinutes(
+                              mainView === 'trending' ? article.date : article.publish_date,
+                            )
+                          }}
+                        </span>
+                        -
+                        {{ article.description }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <img
+                      @click="goToArticle(mainView === 'trending' ? article.url : article.link)"
+                      :src="mainView === 'trending' ? article.image : article.image_url"
+                      @error="onImageError($event)"
+                      class="card-photo-header"
+                    />
+                  </div>
+                </div>
+                <div class="space-between" style="margin: -4px 0 0 10px">
+                  <p @click="selectJournalist(article)" class="turq-text">
+                    By <span>{{ extractJournalist(article.author) }}</span>
+                  </p>
+
+                  <button
+                    @click="getTrafficData(article.url ? article.url : article.link, article)"
+                    style="margin-right: 16px"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
+                </div>
+                <!-- <div v-if="articlesShowingDetails.includes(i)" style="margin: 8px" class="row">
+                  <button
+                    @click="selectJournalist(article)"
+                    style="font-size: 10px; margin-right: 8px"
+                    class="secondary-button-white"
+                  >
+                    Journalist Bio
+                  </button>
+                  <button
+                    @click="getArticleSummary(article.link)"
+                    style="font-size: 10px"
+                    class="secondary-button-white"
+                  >
+                    Article Insights
+                  </button>
+                </div>
+
+                <div
+                  v-else
+                  @click="toggleArticleActions(i)"
+                  style="margin: 4px 0 0 8px; cursor: pointer; width: fit-content"
+                >
+                  <img
+                    src="@/assets/images/more_horizontal.svg"
+                    height="auto"
+                    width="22px"
+                    alt=""
+                  />
+                </div> -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -4437,6 +4870,15 @@ export default {
   },
   data() {
     return {
+      webIndexStart: 0,
+      altWebIndexStart: 0,
+      omniResults: [],
+      omniNews: [],
+      omniSocial: [],
+      omniWeb: [],
+      altOmniNews: [],
+      altOmniSocial: [],
+      altOmniWeb: [],
       threadCopy: {},
       selectedThread: null,
       followupShares: {},
@@ -4722,7 +5164,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       sourceSummary: null,
       buttonText: 'Article Summary',
       AllUserTweets: {},
-      mainView: 'news',
+      mainView: 'omni',
       savedSearch: {},
       tweets: [],
       filteredArticles: [],
@@ -4783,6 +5225,20 @@ Your goal is to create content that resonates deeply, connects authentically, an
         {
           name: `Write a social post...`,
           value: `Draft a LinkedIn post about {Topic}`,
+        },
+      ],
+      omniExamples: [
+        {
+          name: `Top storylines...`,
+          value: `Top storylines, influential journalists, and sentiment covering {Topic}`,
+        },
+        {
+          name: ` Tell me about...`,
+          value: `Tell me about {Journalist Name, Article Headline, URL, etc.}`,
+        },
+        {
+          name: `Who's covering...`,
+          value: `Who’s covering {Topic} ? List the 5 most influential, recognizable journalists.`,
         },
       ],
       newsExamples: [
@@ -5296,6 +5752,19 @@ Your goal is to create content that resonates deeply, connects authentically, an
             }
           })
         })
+      } else if (this.mainView === 'omni') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            try {
+              const citation = this.omniResults[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
       }
     }
 
@@ -5351,6 +5820,24 @@ Your goal is to create content that resonates deeply, connects authentically, an
                 this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
                   ? this.summaries[summaryIndex].clips[citationIndex]
                   : this.tweets[citationIndex]
+              this.selectJournalist(citation)
+            } catch (error) {
+              console.error('Failed to parse citation JSON:', error)
+              console.error('Error:', error)
+            }
+          })
+        })
+      } else if (this.mainView === 'omni') {
+        journalistElements.forEach((element) => {
+          element.addEventListener('click', (event) => {
+            const citationIndex = event.target.getAttribute('data-citation')
+            const summaryIndex = event.target.getAttribute('summary-index')
+
+            try {
+              const citation =
+                this.summaries[summaryIndex] && this.summaries[summaryIndex].clips.length
+                  ? this.summaries[summaryIndex].clips[citationIndex]
+                  : this.omniResults[citationIndex]
               this.selectJournalist(citation)
             } catch (error) {
               console.error('Failed to parse citation JSON:', error)
@@ -5442,6 +5929,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
             totalShares: this.totalShares,
             boolean: this.booleanString,
             project: this.selectedOrg,
+            omniNews: this.omniNews,
+            omniResults: this.omniResults,
+            omniSocial: this.omniSocial,
+            omniWeb: this.omniWeb,
+            altOmniNews: this.altOmniNews,
+            altOmniSocial: this.altOmniSocial,
+            altOmniWeb: this.altOmniWeb,
           },
         })
 
@@ -5467,6 +5961,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
             totalShares: this.totalShares,
             boolean: this.booleanString,
             project: this.selectedOrg,
+            omniNews: this.omniNews,
+            omniResults: this.omniResults,
+            omniSocial: this.omniSocial,
+            omniWeb: this.omniWeb,
+            altOmniNews: this.altOmniNews,
+            altOmniSocial: this.altOmniSocial,
+            altOmniWeb: this.altOmniWeb,
           },
         }
         this.savedSearch = res
@@ -5494,9 +5995,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     removeDomain(url) {
-      const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
+      if (url) {
+        const domainRegex = /\.(com|net|org|gov|edu|co|io|biz|info|us)$/i
 
-      return url.replace(domainRegex, '')
+        return url.replace(domainRegex, '')
+      } else {
+        return 'Unknown'
+      }
     },
     async analyzeVideo(id, tweet) {
       this.loadingAnalytics = true
@@ -5509,14 +6014,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
             id: id,
           })
 
-          console.log(res)
           this.currentArticle.traffic = res
         } else {
           const res = await Comms.api.analyzeVideo({
             video_id: id,
           })
 
-          console.log(res)
           this.currentArticle.traffic = res
         }
 
@@ -5526,6 +6029,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async getTrafficData(url, article) {
+      console.log('coming here')
       this.loadingAnalytics = true
       this.showingAnalytics = true
 
@@ -5684,6 +6188,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     setTooltips() {
       const citationWrappers = document.querySelectorAll('.citation-wrapper')
       if (citationWrappers.length === 0) {
+        console.log('no wrappers')
         return
       } else {
         this.citationsMounted = true
@@ -6022,7 +6527,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.$store.dispatch('getDiscoveries')
     },
     async discoverJournalists(discover = false) {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -6574,6 +7079,340 @@ Your goal is to create content that resonates deeply, connects authentically, an
         return match
       })
     },
+    insertAltOmniCitations(text, i) {
+      return text.replace(/\[(\d+)\]/g, (match, p1) => {
+        const citationIndex = parseInt(p1)
+
+        const citation = this.summaries[i].clips.length
+          ? this.summaries[i].clips[citationIndex]
+          : this.omniResults[citationIndex]
+
+        if (citation) {
+          if (citation.hasOwnProperty('type')) {
+            if (citation.type !== 'twitter') {
+              return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+
+            <span class="span-row">
+            <img height="16px" width="16px" src="${
+              citation.type === 'youtube'
+                ? `${this.youtubePlaceholder}`
+                : `${this.blueskyPlaceholder}`
+            }" alt="">
+               <span class="c-elip">
+                ${citation.author}      
+              </span>
+            </span>
+             
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-blue c-elip" href="${citation.url}" target="_blank" >${
+                citation.text ? citation.text : citation.title
+              }</a>
+              
+                </span>
+               <img src="${
+                 citation.image_url ? citation.image_url : this.blueskyPlaceholder
+               }" height="40px" width="40px" alt="">
+              </span>      
+            
+            
+             
+            </span>
+          </span>
+        </sup>
+      `
+            } else {
+              return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+
+            <span class="span-row">
+              <img height="16px" width="16px" src="${this.twitterPlaceholder}" alt="">
+               <span class="c-elip">
+                ${citation.user.username}      
+              </span>
+            </span>
+             
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              
+                </span>
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
+              </span>      
+            
+              <span class="c-elip-small cursor select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              By ${citation.user.username}
+              </span>
+             
+            </span>
+          </span>
+        </sup>
+      `
+            }
+          } else if (citation.hasOwnProperty('snippet')) {
+            return `
+        <sup>
+
+         <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+               <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
+
+            
+
+
+                </span>
+               <img src="${citation.image}" height="40px" width="40px" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
+            </span>
+          </span>
+
+         
+        </sup>
+      `
+          } else {
+            return `
+        <sup>
+          <span class="citation-wrapper-alt" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source.name ? citation.source.name : citation.source}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+                
+                <a class="inline-link c-elip c-blue" href="${
+                  citation.url ? citation.url : citation.link
+                }" target="_blank" >${citation.title}</a>
+
+              
+
+                </span>
+
+
+                <img src="${
+                  citation.image ? citation.image : citation.image_url
+                }" height="40px" width="40px" alt="">
+
+                </span>
+              
+              
+            
+              <span class="c-elip-small select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
+            </span>
+          </span>
+        </sup>
+      `
+          }
+        }
+        return match
+      })
+    },
+
+    insertOmniCitations(text) {
+      return text.replace(/\[(\d+)\]/g, (match, p1) => {
+        const citationIndex = parseInt(p1)
+
+        const citation = this.omniResults[citationIndex]
+
+        if (citation) {
+          if (citation.hasOwnProperty('type')) {
+            if (citation.type !== 'twitter') {
+              return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+
+            <span class="span-row">
+            <img height="16px" width="16px" src="${
+              citation.type === 'youtube'
+                ? `${this.youtubePlaceholder}`
+                : `${this.blueskyPlaceholder}`
+            }" alt="">
+               <span class="c-elip">
+                ${citation.author}      
+              </span>
+            </span>
+             
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-blue c-elip" href="${citation.url}" target="_blank" >${
+                citation.text ? citation.text : citation.title
+              }</a>
+              
+                </span>
+               <img src="${
+                 citation.image_url ? citation.image_url : this.blueskyPlaceholder
+               }" height="40px" width="40px" alt="">
+              </span>      
+            
+            
+             
+            </span>
+          </span>
+        </sup>
+      `
+            } else {
+              return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+
+            <span class="span-row">
+              <img height="16px" width="16px" src="${this.twitterPlaceholder}" alt="">
+               <span class="c-elip">
+                ${citation.user.username}      
+              </span>
+            </span>
+             
+
+              <span class="row">
+                <span class="col">
+               
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              
+                </span>
+               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
+              </span>      
+            
+              <span class="c-elip-small cursor select-journalist" data-citation='${citationIndex}'>
+              By ${citation.user.username}
+              </span>
+             
+            </span>
+          </span>
+        </sup>
+      `
+            }
+          } else if (citation.hasOwnProperty('snippet')) {
+            return `
+        <sup>
+
+         <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+               
+               <a class="inline-link c-elip c-blue" href="${citation.link}" target="_blank" >${citation.title}</a>
+
+            
+
+
+                </span>
+               <img src="${citation.image}" height="40px" width="40px" alt="">
+              </span>
+              
+              
+            
+              <span class="c-elip-small  select-journalist" data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
+            </span>
+          </span>
+
+         
+        </sup>
+      `
+          } else {
+            return `
+        <sup>
+          <span class="citation-wrapper" >
+            <a  class="citation-link citation-link-alt">
+            <img class="inline-svg" src="${this.citationSvg}" alt="">
+            </a>
+            <span class="citation-tooltip">
+              <span class="c-elip">
+                ${citation.source.name ? citation.source.name : citation.source}      
+              </span>
+
+              <span class="row">
+                <span class="col">
+                
+                <a class="inline-link c-elip c-blue" href="${
+                  citation.url ? citation.url : citation.link
+                }" target="_blank" >${citation.title}</a>
+
+              
+
+                </span>
+
+
+                <img src="${
+                  citation.image ? citation.image : citation.image_url
+                }" height="40px" width="40px" alt="">
+
+                </span>
+              
+              
+            
+              <span class="c-elip-small select-journalist" data-citation='${citationIndex}'>
+              By ${citation.author}
+              </span>
+             
+            </span>
+          </span>
+        </sup>
+      `
+          }
+        }
+        return match
+      })
+    },
+
     insertAltNewsCitations(text, i) {
       return text.replace(/\[(\d+)\]/g, (match, p1) => {
         const citationIndex = parseInt(p1)
@@ -7034,7 +7873,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
 
     async saveContact() {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -7087,7 +7926,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
 
     async getJournalistBioDiscover() {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -7377,7 +8216,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     grabJournalist(name, pub) {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -7446,6 +8285,67 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.currentDate = date
           this.getJournalistBio()
           // this.draftPitch(author, outlet, headline, description, date)
+        } else if (this.mainView === 'omni') {
+          if (article.hasOwnProperty('snippet')) {
+            const author = article.author
+            const outlet = article.source
+            const headline = article.title
+            const description = article.snippet
+            const rawDate = new Date()
+            const date = this.getTimeDifferenceInMinutes(rawDate)
+
+            this.currentHeadline = headline
+            this.currentDescription = description
+            this.currentJournalist = author
+            this.currentPublication = outlet
+            this.currentDate = date
+
+            this.googleModalOpen = true
+            this.getJournalistBio()
+          } else if (article.hasOwnProperty('type')) {
+            const author =
+              article.type !== 'twitter'
+                ? article.author
+                : article.user.name + ' ' + '@' + article.user.username
+            const outlet =
+              article.type === 'youtube'
+                ? 'YouTube'
+                : article.type === 'bluesky'
+                ? 'Bluesky social media page'
+                : 'not available'
+            const headline =
+              article.type === 'youtube'
+                ? 'Youtube Channel'
+                : article.type === 'bluesky'
+                ? 'Bluesky User'
+                : 'X/Twitter User'
+            const description = article.text
+            const date = this.getTimeDifferenceInMinutes(article.created_at)
+            this.googleModalOpen = true
+            // this.emailJournalistModalOpen = true
+            this.currentHeadline = headline
+            this.currentDescription = description
+            this.currentJournalist = author
+            this.currentPublication = outlet
+            this.currentDate = date
+            this.getJournalistBio(true)
+          } else {
+            const author = this.extractJournalist(article.author)
+            const outlet = this.mainView === 'trending' ? article.source : article.source.name
+            const headline = article.title
+            const description = article.description
+            const date = this.getTimeDifferenceInMinutes(
+              this.mainView === 'trending' ? article.date : article.publish_date,
+            )
+            this.googleModalOpen = true
+            // this.emailJournalistModalOpen = true
+            this.currentHeadline = headline
+            this.currentDescription = description
+            this.currentJournalist = author
+            this.currentPublication = outlet
+            this.currentDate = date
+            this.getJournalistBio()
+          }
         } else {
           const author =
             article.type !== 'twitter'
@@ -8177,7 +9077,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async generatePitch() {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -8594,6 +9494,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showSaveName = !this.showSaveName
     },
     setSearch(search) {
+      this.omniNews = search.meta_data.omniNews
+      this.omniResults = search.meta_data.omniResults
+      this.omniWeb = search.meta_data.omniWeb
+      this.altOmniNews = search.meta_data.altOmniNews
+      this.altOmniSocial = search.meta_data.altOmniSocial
+      this.altOmniWeb = search.meta_data.altOmniWeb
+      this.omniSocial = search.meta_data.omniSocial
       this.citationsMounted = false
       this.altCitationsMounted = false
       this.savedSearch = search
@@ -8788,7 +9695,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       })
     },
     async generateChatSearch(event) {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -8902,7 +9809,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.relevantData = ''
       this.journalistData = ''
       this.relatedTopics = []
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -8922,6 +9829,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       } else if (this.mainView === 'web') {
         this.closeRegenModal()
         this.googleSearch()
+      } else if (this.mainView === 'omni') {
+        this.closeRegenModal()
+        this.omniSearch()
       } else if (this.mainView === 'trending') {
         if (!this.summary) {
           this.loading = true
@@ -9370,6 +10280,160 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
       }
     },
+    async getOmniSummary() {
+      let news = []
+      let tweets = []
+      let google = []
+
+      // news = this.getArticleDescriptions(this.omniNews)
+      // tweets = this.prepareTweetSummary(this.omniSocial)
+
+      news = this.getArticleDescriptions(this.omniResults)
+      tweets = this.prepareTweetSummary(this.omniResults)
+      google = this.omniWeb
+
+      this.citationsMounted = false
+
+      try {
+        const response = await Comms.api.omniSummary({
+          clips: news,
+          social_data: tweets,
+          web: google,
+          search: this.newSearch,
+          project: this.selectedOrg,
+        })
+
+        if (this.summary) {
+          if (response.summary.toLowerCase().includes('new search term')) {
+            this.newSearch = this.extractTerm(response.summary)
+            this.secondaryLoader = false
+            this.secondaryLoaderAlt = true
+            this.generateNewSearch(null, false)
+          } else {
+            this.summaries.push({
+              summary: response.summary
+                .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>'),
+              clips: this.latestArticles.length ? this.latestArticles : [],
+            })
+            this.secondaryLoader = false
+            this.secondaryLoaderAlt = false
+            setTimeout(() => {
+              this.altCitationsMounted = true
+            }, 5000)
+          }
+        } else {
+          this.summary = response.summary
+            .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
+        }
+
+        this.loading = false
+      } catch (e) {
+        console.log(e)
+      }
+    },
+
+    async omniSearch() {
+      let news = []
+      let tweets = []
+      let google = []
+
+      if (!this.summary) {
+        this.loading = true
+      } else {
+        this.scrollToBottom()
+      }
+
+      this.changeSearch({ search: this.newSearch, template: this.newTemplate })
+
+      try {
+        if (this.summary.length) {
+          this.showingArticles = false
+
+          const res = await Comms.api.getClips({
+            search: this.newSearch,
+            boolean: '',
+            user_id: this.user.id,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
+            project: this.selectedOrg,
+          })
+
+          this.altOmniNews = res.articles.slice(0, 30)
+
+          const socialRes = await Comms.api.getTweets({
+            search: this.newSearch,
+            user_id: this.user.id,
+            project: this.selectedOrg,
+            query: this.newSearch,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
+          })
+
+          this.altOmniSocial = socialRes.data.slice(0, 15)
+
+          const webRes = await Comms.api.googleSearch({
+            query: this.newSearch,
+            instructions: this.newTemplate,
+            project: this.selectedOrg,
+          })
+
+          this.altOmniWeb = webRes.results.slice(0, 5)
+          this.altWebIndexStart = this.altOmniNews.length + this.altOmniSocial.length
+          this.altOmniWeb = this.altOmniWeb.map((obj) => ({
+            ...obj,
+            citationIndex: obj.citationIndex + this.altWebIndexStart,
+          }))
+
+          this.latestArticles = this.altOmniNews.concat(this.altOmniSocial, this.altOmniWeb)
+        } else {
+          this.showingArticles = false
+          this.latestArticles = []
+
+          const res = await Comms.api.getClips({
+            search: this.newSearch,
+            boolean: '',
+            user_id: this.user.id,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
+            project: this.selectedOrg,
+          })
+
+          this.omniNews = res.articles.slice(0, 30)
+
+          const socialRes = await Comms.api.getTweets({
+            search: this.newSearch,
+            user_id: this.user.id,
+            project: this.selectedOrg,
+            query: this.newSearch,
+            date_from: this.dateStart,
+            date_to: this.dateEnd,
+          })
+
+          this.omniSocial = socialRes.data.slice(0, 15)
+
+          const webRes = await Comms.api.googleSearch({
+            query: this.newSearch,
+            instructions: this.newTemplate,
+            project: this.selectedOrg,
+          })
+
+          this.omniWeb = webRes.results.slice(0, 5)
+          this.webIndexStart = this.omniNews.length + this.omniSocial.length
+          this.omniWeb = this.omniWeb.map((obj) => ({
+            ...obj,
+            citationIndex: obj.citationIndex + this.webIndexStart,
+          }))
+
+          this.omniResults = this.omniNews.concat(this.omniSocial, this.omniWeb)
+        }
+
+        this.getOmniSummary()
+      } catch (e) {
+        console.log(e)
+      }
+    },
     async getTweets(saved = false) {
       // this.summary = null
 
@@ -9518,56 +10582,86 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     // prepareTweetSummary(tweets) {
+
     //   let tweetList = []
     //   for (let i = 0; i < tweets.length; i++) {
-    //     tweetList.push(
-    //       'Name :' +
-    //         tweets[i].user.name +
-    //         ' Tweet: ' +
-    //         tweets[i].text +
-    //         ' Follower count: ' +
-    //         tweets[i].user.public_metrics.followers_count +
-    //         ' Date: ' +
-    //         tweets[i].created_at,
-    //       'Link: ' + `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
-    //     )
+    //     if (tweets[i].type === 'twitter') {
+    //       tweetList.push({
+    //         citationIndex: i,
+    //         type: tweets[i].type,
+    //         name: tweets[i].user.name,
+    //         tweet: tweets[i].text,
+    //         followerCount: tweets[i].user.public_metrics.followers_count,
+    //         date: tweets[i].created_at,
+    //         link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+    //       })
+    //     } else if (tweets[i].type === 'youtube') {
+    //       tweetList.push({
+    //         citationIndex: i,
+    //         type: tweets[i].type,
+    //         name: tweets[i].author,
+    //         description: tweets[i].text ? tweets[i].text : tweets[i].title ? tweets[i].title : '',
+    //         date: tweets[i].created_at,
+    //         link: tweets[i].url,
+    //       })
+    //     } else {
+    //       tweetList.push({
+    //         citationIndex: i,
+    //         type: tweets[i].type,
+    //         name: tweets[i].author,
+    //         description: tweets[i].text ? tweets[i].text : '',
+    //         date: tweets[i].created_at,
+    //         link: tweets[i].url,
+    //         interactions: tweets[i].stats,
+    //       })
+    //     }
     //   }
+
     //   return tweetList
     // },
+
     prepareTweetSummary(tweets) {
       let tweetList = []
+
       for (let i = 0; i < tweets.length; i++) {
-        if (tweets[i].type === 'twitter') {
-          tweetList.push({
-            citationIndex: i,
-            name: tweets[i].user.name,
-            tweet: tweets[i].text,
-            followerCount: tweets[i].user.public_metrics.followers_count,
-            date: tweets[i].created_at,
-            link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
-          })
-        } else if (tweets[i].type === 'youtube') {
-          tweetList.push({
-            citationIndex: i,
-            name: tweets[i].author,
-            description: tweets[i].text ? tweets[i].text : tweets[i].title ? tweets[i].title : '',
-            date: tweets[i].created_at,
-            link: tweets[i].url,
-          })
-        } else {
-          tweetList.push({
-            citationIndex: i,
-            name: tweets[i].author,
-            description: tweets[i].text ? tweets[i].text : '',
-            date: tweets[i].created_at,
-            link: tweets[i].url,
-            interactions: tweets[i].stats,
-          })
+        if ('type' in tweets[i]) {
+          if (tweets[i].type === 'twitter') {
+            tweetList.push({
+              citationIndex: i,
+              type: tweets[i].type,
+              name: tweets[i].user.name,
+              tweet: tweets[i].text,
+              followerCount: tweets[i].user.public_metrics.followers_count,
+              date: tweets[i].created_at,
+              link: `https://twitter.com/${tweets[i].username}/status/${tweets[i].id}`,
+            })
+          } else if (tweets[i].type === 'youtube') {
+            tweetList.push({
+              citationIndex: i,
+              type: tweets[i].type,
+              name: tweets[i].author,
+              description: tweets[i].text ? tweets[i].text : tweets[i].title ? tweets[i].title : '',
+              date: tweets[i].created_at,
+              link: tweets[i].url,
+            })
+          } else {
+            tweetList.push({
+              citationIndex: i,
+              type: tweets[i].type,
+              name: tweets[i].author,
+              description: tweets[i].text ? tweets[i].text : '',
+              date: tweets[i].created_at,
+              link: tweets[i].url,
+              interactions: tweets[i].stats,
+            })
+          }
         }
+        // Objects without 'type' property are not included
       }
-      // console.log('TWEET LIST IS HERE ----- > :', tweetList)
+
       return tweetList
     },
+
     prepareIgSummary(posts) {
       let postList = []
       for (let i = 0; i < posts.length; i++) {
@@ -9593,15 +10687,96 @@ Your goal is to create content that resonates deeply, connects authentically, an
     //   )
     // },
     getArticleDescriptions(articles) {
-      return articles.map((a, index) => ({
-        citationIndex: index,
-        content: `Content: ${a.description}`,
-        date: `Date: ${a.publish_date}`,
-        source: `Source: ${a.source.name}`,
-        author: `Author: ${a.author}`,
-        link: `Link: ${a.link}`,
-        shares: `Total shares: ${a.shares ? a.shares : 0}`,
-      }))
+      if (this.mainView === 'omni') {
+        return articles
+          .map((a, index) => {
+            // Only process articles that DON'T have 'type' or 'snippet'
+            if (!('type' in a) && !('snippet' in a)) {
+              return {
+                citationIndex: index, // Based on the original list
+                content: `Content: ${a.description}`,
+                date: `Date: ${a.publish_date}`,
+                source: `Source: ${a.source.name}`,
+                author: `Author: ${a.author}`,
+                link: `Link: ${a.link}`,
+                shares: `Total shares: ${a.shares ? a.shares : 0}`,
+              }
+            }
+            return null
+          })
+          .filter(Boolean)
+      } else {
+        return articles.map((a, index) => ({
+          citationIndex: index,
+          content: `Content: ${a.description}`,
+          date: `Date: ${a.publish_date}`,
+          source: `Source: ${a.source.name}`,
+          author: `Author: ${a.author}`,
+          link: `Link: ${a.link}`,
+          shares: `Total shares: ${a.shares ? a.shares : 0}`,
+        }))
+      }
+    },
+    async regenerateOmniSummary(clips, instructions) {
+      let news = this.getArticleDescriptions(clips)
+      let tweets = this.prepareTweetSummary(clips)
+      let google = clips.filter((clip) => clip.hasOwnProperty('snippet'))
+
+      try {
+        const res = await Comms.api.omniSummary({
+          search: instructions,
+          original: this.summaries.length
+            ? this.summaries[this.summaries.length - 1].summary
+            : this.summary,
+          clips: news,
+          social_data: tweets,
+          web: google,
+          project: this.selectedOrg,
+          follow_up: true,
+        })
+
+        if (res.summary.toLowerCase().includes('new search term')) {
+          this.newSearch = this.extractTerm(res.summary)
+          this.secondaryLoader = false
+          this.secondaryLoaderAlt = true
+          this.generateNewSearch(null, false)
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
+        } else {
+          this.summaries.push({
+            summary: res.summary
+              .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+              .replace(/(?:<strong>\s*Email:\s*<\/strong>|email:\s*)([^<"]+)/i, ''),
+            clips: this.latestArticles.length ? this.latestArticles : [],
+          })
+          this.secondaryLoader = false
+          this.secondaryLoaderAlt = false
+
+          if (this.searchSaved) {
+            this.updateSearch()
+          }
+
+          this.$nextTick(() => {
+            this.scrollToSummariesTop()
+          })
+
+          setTimeout(() => {
+            this.altCitationsMounted = true
+          }, 5000)
+        }
+
+        this.secondaryLoader = false
+      } catch (e) {
+        console.log(e)
+        this.secondaryLoaderAlt = false
+
+        this.summaries.push({
+          summary: 'No results found. Try a different request',
+          clips: [],
+        })
+      } finally {
+      }
     },
     async regenerateTwitterSummary(clips, instructions) {
       try {
@@ -9769,6 +10944,13 @@ Your goal is to create content that resonates deeply, connects authentically, an
         return
       }
 
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       if (!this.summary) {
         this.newSearch = this.newTemplate
         if (this.mainView !== 'news' || this.mainView !== 'trending') {
@@ -9805,6 +10987,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.regenerateGoogleSearch(clips, instructions)
         } else if (this.mainView === 'discover') {
           this.discoverJournalists(false)
+        } else if (this.mainView === 'omni') {
+          let omniClips = []
+          omniClips = this.latestArticles.length ? this.latestArticles : this.omniResults
+          await this.regenerateOmniSummary(omniClips, instructions, true)
         }
       } catch (e) {
         console.log('error in getChatSummary', e)
@@ -10076,7 +11262,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
       } catch (e) {
         console.log('Error in getSummary', e)
-        this.laoding = false
+        this.loading = false
         this.summaryLoading = false
         this.secondaryLoader = false
         this.secondaryLoaderAlt = false
@@ -10213,6 +11399,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     sidebarArticlesWeb() {
       return this.alternateAricles.length ? this.alternateAricles : this.filteredResults
     },
+    sidebarArticlesOmni() {
+      return this.alternateAricles.length ? this.alternateAricles : this.omniResults
+    },
     sidebarArticlesSocial() {
       return this.alternateAricles.length ? this.alternateAricles : this.tweets
     },
@@ -10294,6 +11483,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
         return articles
       },
     },
+    // omniResults() {
+    //   let articles = this.omniNews.concat(this.omniSocial, this.omniWeb)
+
+    //   return articles
+    // },
     filteredResults: {
       get() {
         let articles = this.googleResults.filter((article) => {

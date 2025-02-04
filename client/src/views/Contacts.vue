@@ -2816,7 +2816,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showUsers = false
     },
     async getJournalistBio() {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
@@ -2921,7 +2921,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async updateContact(contact) {
-      if (!this.isPaid && this.searchesUsed >= 20) {
+      if (!this.isPaid && this.searchesUsed >= 10) {
         this.openPaidModal(
           'You have reached your usage limit for the month. Please upgrade your plan.',
         )
