@@ -134,6 +134,7 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
         "key": GOOGLE_SEARCH_KEY,
         "cx": GOOGLE_SEARCH_ID,
         "num": number_of_results,
+        "dateRestrict": "w[1]",
     }
     return params
 
@@ -1277,7 +1278,8 @@ def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project
     """
     return body
 
-def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, web, project ):
+
+def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, web, project):
     body = f"""
     User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the media coverage below (news coverage, social media coverage, and web data). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. 
     Cite your sources by enclosing the citationIndex of the coverage in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the coverage.
