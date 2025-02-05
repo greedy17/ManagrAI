@@ -3749,7 +3749,7 @@ def get_social_media_data(request):
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
     if errors:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+        print(f"ERROR IN SOCIAL MEDIA DATA: {errors}")
     return Response(status=status.HTTP_200_OK, data=return_data)
 
 
