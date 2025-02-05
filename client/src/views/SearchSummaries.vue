@@ -10288,9 +10288,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
       // news = this.getArticleDescriptions(this.omniNews)
       // tweets = this.prepareTweetSummary(this.omniSocial)
 
-      news = this.getArticleDescriptions(this.omniResults)
-      tweets = this.prepareTweetSummary(this.omniResults)
-      google = this.omniWeb
+      if (this.summary) {
+        news = this.getArticleDescriptions(this.latestArticles)
+        tweets = this.prepareTweetSummary(this.latestArticles)
+        google = this.altOmniWeb
+      } else {
+        news = this.getArticleDescriptions(this.omniResults)
+        tweets = this.prepareTweetSummary(this.omniResults)
+        google = this.omniWeb
+      }
 
       this.citationsMounted = false
 
@@ -10318,6 +10324,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
             })
             this.secondaryLoader = false
             this.secondaryLoaderAlt = false
+
+            this.$nextTick(() => {
+              this.scrollToSummariesTop()
+            })
+
             setTimeout(() => {
               this.altCitationsMounted = true
             }, 5000)
@@ -10329,6 +10340,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
         }
 
         this.loading = false
+        //  this.scrollToBottom()
       } catch (e) {
         console.log(e)
       }
