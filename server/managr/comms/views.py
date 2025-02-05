@@ -3840,12 +3840,10 @@ def get_omni_summary(request):
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
             if follow_up:
-                print('IM FOLLOWING UP !!!')
                 prompt = comms_consts.OPEN_AI_OMNI_FOLLOW_UP(
                     original, search, clips, tweets, vids, skeets, web, project
-            )
-            else:   
-                print('I AM NOT FOLLOWING UP !!!') 
+                )
+            else:
                 prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
                     date, search, clips, tweets, vids, skeets, web, project
                 )

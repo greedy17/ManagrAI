@@ -1703,9 +1703,27 @@
       <div style="height: 90vh" class="main center-content" v-if="loading || summaryLoading">
         <div style="padding: 16px 20vw; height: 100%; width: 100%" class="body">
           <div class="skeleton-loader">
-            <div style="margin-bottom: 24px" class="skeleton skeleton-title"></div>
+            <div
+              v-if="mainView !== 'omni'"
+              style="margin-bottom: 24px"
+              class="skeleton skeleton-title"
+            ></div>
 
-            <div v-if="!articlesFiltered.length" style="justify-content: space-between" class="row">
+            <div class="row" v-else>
+              <img
+                style="filter: invert(40%); margin-right: 10px"
+                src="@/assets/images/brain.svg"
+                height="20px"
+                alt=""
+              />
+              <p style="font-size: 20px" class="bold-text">Omni Search</p>
+            </div>
+
+            <div
+              v-if="!articlesFiltered.length && mainView !== 'omni'"
+              style="justify-content: space-between"
+              class="row"
+            >
               <div class="skeleton skeleton-img"></div>
               <div class="skeleton skeleton-img"></div>
               <div class="skeleton skeleton-img"></div>
@@ -1728,13 +1746,179 @@
               </div>
             </div>
 
-            <div style="margin-top: 24px" class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-large"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div class="skeleton skeleton-text"></div>
-            <div style="margin-top: 12px" class="skeleton skeleton-title"></div>
-            <div class="skeleton skeleton-text"></div>
+            <div style="margin-left: 3px" v-if="mainView === 'omni'">
+              <div :class="{ opaquer: searchingType !== 'news' }" class="omni-load">
+                <div :class="{ pulse: searchingType === 'news' }" class="row">
+                  <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                  <p class="bold-text">Searching thousands of news outlets</p>
+                </div>
+
+                <p
+                  class="bold-text fadein"
+                  style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                  v-if="searchingType === 'news'"
+                >
+                  Reading ...
+                </p>
+
+                <div style="margin-left: 24px" class="fadein row" v-if="omniNews.length">
+                  <button
+                    style="margin-right: 8px"
+                    class="secondary-button fadein"
+                    v-for="(article, i) in omniNews.slice(0, 4)"
+                    :key="i"
+                  >
+                    <img
+                      :src="article.image_url ? article.image_url : logoPlaceholder"
+                      height="12px"
+                      alt=""
+                      style="margin: 0 8px 0 1px"
+                    />
+
+                    {{ article.source.name }}
+                  </button>
+                </div>
+              </div>
+
+              <div :class="{ opaquer: searchingType !== 'social' }" class="omni-load">
+                <div :class="{ pulse: searchingType === 'social' }" class="row">
+                  <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                  <p class="bold-text">Sifting through top social media posts</p>
+                </div>
+
+                <p
+                  class="bold-text fadein"
+                  style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                  v-if="searchingType === 'social'"
+                >
+                  Reading ...
+                </p>
+
+                <div style="margin-left: 24px" class="fadein row" v-if="omniSocial.length">
+                  <button
+                    style="margin-right: 8px"
+                    class="secondary-button fadein"
+                    v-for="(article, i) in omniSocial.slice(0, 4)"
+                    :key="i"
+                  >
+                    <img
+                      v-if="article.type === 'youtube'"
+                      :src="youtubePlaceholder"
+                      height="12px"
+                      alt=""
+                      style="margin: 0 8px 0 1px"
+                    />
+                    <img
+                      v-else-if="article.type === 'bluesky'"
+                      :src="blueskyPlaceholder"
+                      height="14px"
+                      alt=""
+                      style="margin: 0 8px 0 1px"
+                    />
+                    <img
+                      v-else-if="article.type === 'twitter'"
+                      :src="twitterPlaceholder"
+                      height="12px"
+                      alt=""
+                      style="margin: 0 8px 0 1px"
+                    />
+
+                    <div v-if="article.type === 'twitter'">{{ article.user.username }}</div>
+                    <div v-else>{{ article.author }}</div>
+                  </button>
+                </div>
+              </div>
+
+              <div :class="{ opaquer: searchingType !== 'web' }" class="omni-load">
+                <div :class="{ pulse: searchingType === 'web' }" class="row">
+                  <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                  <p class="bold-text">Scouring the web</p>
+                </div>
+
+                <p
+                  class="bold-text fadein"
+                  style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                  v-if="searchingType === 'web'"
+                >
+                  Reading ...
+                </p>
+
+                <div style="margin-left: 24px" class="fadein row" v-if="omniWeb.length">
+                  <button
+                    style="margin-right: 8px"
+                    class="secondary-button fadein"
+                    v-for="(article, i) in omniWeb.slice(0, 4)"
+                    :key="i"
+                  >
+                    <img
+                      :src="
+                        article.source && article.source_img ? article.source_img : globePlaceholder
+                      "
+                      height="12px"
+                      alt=""
+                      style="margin: 0 8px 0 1px"
+                    />
+                    <small>{{ article.source }}</small>
+                  </button>
+                </div>
+              </div>
+
+              <div :class="{ opaquer: searchingType !== 'summary' }" class="omni-load">
+                <div :class="{ pulse: searchingType === 'summary' }" class="row">
+                  <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                  <p class="bold-text">Generating summary</p>
+                </div>
+
+                <!-- <p
+                  class="bold-text fadein"
+                  style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                  v-if="searchingType === 'summary'"
+                >
+                  Summarizing ...
+                </p> -->
+
+                <div style="padding: 8px 0 0 0; margin-left: 24px" class="skeleton-loader fadein">
+                  <div
+                    v-if="searchingType === 'summary'"
+                    style="margin-bottom: 16px"
+                    class="skeleton skeleton-title"
+                  ></div>
+
+                  <div v-if="searchingType === 'summary'" class="skeleton skeleton-text"></div>
+                  <div v-if="searchingType === 'summary'" class="skeleton skeleton-text"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div
+              style="width: 100%; justify-content: space-between; margin-top: 32px"
+              class="row fadein"
+              v-if="mainView === 'omni' && omniNews.length"
+            >
+              <div style="width: 24%" v-for="(article, i) in omniNews.slice(0, 4)" :key="i">
+                <img
+                  :src="article.image_url ? article.image_url : logoPlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+              </div>
+            </div> -->
+
+            <div
+              v-if="mainView !== 'omni'"
+              style="margin-top: 24px"
+              class="skeleton skeleton-text"
+            ></div>
+            <div v-if="mainView !== 'omni'" class="skeleton skeleton-text"></div>
+            <div v-if="mainView !== 'omni'" class="skeleton skeleton-large"></div>
+            <div v-if="mainView !== 'omni'" class="skeleton skeleton-text"></div>
+            <div v-if="mainView !== 'omni'" class="skeleton skeleton-text"></div>
+            <div
+              v-if="mainView !== 'omni'"
+              style="margin-top: 12px"
+              class="skeleton skeleton-title"
+            ></div>
+            <div v-if="mainView !== 'omni'" class="skeleton skeleton-text"></div>
           </div>
         </div>
 
@@ -2580,12 +2764,48 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
-              v-else-if="mainView === 'omni'"
+              v-else-if="mainView === 'omni' && omniNews.length"
             >
               <div style="width: 24%" v-for="(article, i) in omniNews.slice(0, 4)" :key="i">
                 <img
                   @click="setOriginalArticles"
                   :src="article.image_url ? article.image_url : logoPlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+              </div>
+            </div>
+
+            <div
+              style="width: 100%; justify-content: space-between"
+              class="row"
+              v-else-if="mainView === 'omni' && !omniNews.length"
+            >
+              <div style="width: 24%" v-for="(article, i) in omniSocial.slice(0, 4)" :key="i">
+                <img
+                  v-if="article.type === 'twitter'"
+                  @click="setOriginalArticles"
+                  :src="
+                    article.user.profile_image_url
+                      ? article.user.profile_image_url
+                      : twitterPlaceholder
+                  "
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+
+                <img
+                  v-else-if="article.type === 'youtube'"
+                  @click="setOriginalArticles"
+                  :src="article.image_url ? article.image_url : youtubePlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+
+                <img
+                  v-else
+                  @click="setOriginalArticles"
+                  :src="article.image_url ? article.image_url : blueskyPlaceholder"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
@@ -3341,11 +3561,164 @@
                   />
                 </div>
 
-                <div style="margin-top: 24px; justify-content: space-between" class="row">
+                <div
+                  v-if="mainView !== 'omni'"
+                  style="margin-top: 24px; justify-content: space-between"
+                  class="row"
+                >
                   <div style="width: 23.5%" class="skeleton skeleton-img"></div>
                   <div style="width: 23.5%" class="skeleton skeleton-img"></div>
                   <div style="width: 23.5%" class="skeleton skeleton-img"></div>
                   <div style="width: 23.5%" class="skeleton skeleton-img"></div>
+                </div>
+
+                <div style="margin-left: 3px" v-else>
+                  <div :class="{ opaquer: searchingType !== 'news' }" class="omni-load">
+                    <div :class="{ pulse: searchingType === 'news' }" class="row">
+                      <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                      <p class="bold-text">Searching thousands of news outlets</p>
+                    </div>
+
+                    <p
+                      class="bold-text fadein"
+                      style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                      v-if="searchingType === 'news'"
+                    >
+                      Reading ...
+                    </p>
+
+                    <div style="margin-left: 24px" class="fadein row" v-if="altOmniNews.length">
+                      <button
+                        style="margin-right: 8px"
+                        class="secondary-button fadein"
+                        v-for="(article, i) in altOmniNews.slice(0, 4)"
+                        :key="i"
+                      >
+                        <img
+                          :src="article.image_url ? article.image_url : logoPlaceholder"
+                          height="12px"
+                          alt=""
+                          style="margin: 0 8px 0 1px"
+                        />
+
+                        {{ article.source.name }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div :class="{ opaquer: searchingType !== 'social' }" class="omni-load">
+                    <div :class="{ pulse: searchingType === 'social' }" class="row">
+                      <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                      <p class="bold-text">Sifting through top social media posts</p>
+                    </div>
+
+                    <p
+                      class="bold-text fadein"
+                      style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                      v-if="searchingType === 'social'"
+                    >
+                      Reading ...
+                    </p>
+
+                    <div style="margin-left: 24px" class="fadein row" v-if="altOmniSocial.length">
+                      <button
+                        style="margin-right: 8px"
+                        class="secondary-button fadein"
+                        v-for="(article, i) in altOmniSocial.slice(0, 4)"
+                        :key="i"
+                      >
+                        <img
+                          v-if="article.type === 'youtube'"
+                          :src="youtubePlaceholder"
+                          height="12px"
+                          alt=""
+                          style="margin: 0 8px 0 1px"
+                        />
+                        <img
+                          v-else-if="article.type === 'bluesky'"
+                          :src="blueskyPlaceholder"
+                          height="14px"
+                          alt=""
+                          style="margin: 0 8px 0 1px"
+                        />
+                        <img
+                          v-else-if="article.type === 'twitter'"
+                          :src="twitterPlaceholder"
+                          height="12px"
+                          alt=""
+                          style="margin: 0 8px 0 1px"
+                        />
+
+                        <div v-if="article.type === 'twitter'">{{ article.user.username }}</div>
+                        <div v-else>{{ article.author }}</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div :class="{ opaquer: searchingType !== 'web' }" class="omni-load">
+                    <div :class="{ pulse: searchingType === 'web' }" class="row">
+                      <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                      <p class="bold-text">Scouring the web</p>
+                    </div>
+
+                    <p
+                      class="bold-text fadein"
+                      style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                      v-if="searchingType === 'web'"
+                    >
+                      Reading ...
+                    </p>
+
+                    <div style="margin-left: 24px" class="fadein row" v-if="altOmniWeb.length">
+                      <button
+                        style="margin-right: 8px"
+                        class="secondary-button fadein"
+                        v-for="(article, i) in altOmniWeb.slice(0, 4)"
+                        :key="i"
+                      >
+                        <img
+                          :src="
+                            article.source && article.source_img
+                              ? article.source_img
+                              : globePlaceholder
+                          "
+                          height="12px"
+                          alt=""
+                          style="margin: 0 8px 0 1px"
+                        />
+                        <small>{{ article.source }}</small>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div :class="{ opaquer: searchingType !== 'summary' }" class="omni-load">
+                    <div :class="{ pulse: searchingType === 'summary' }" class="row">
+                      <img class="pulse-dot" src="@/assets/images/dot.svg" height="14px" alt="" />
+                      <p class="bold-text">Generating summary</p>
+                    </div>
+
+                    <!-- <p
+                      class="bold-text fadein"
+                      style="margin: 0 0 16px 28px; color: #aaaaaa; font-size: 14px"
+                      v-if="searchingType === 'summary'"
+                    >
+                      Summarizing ...
+                    </p> -->
+
+                    <div
+                      style="padding: 8px 0 0 0; margin-left: 24px"
+                      class="skeleton-loader fadein"
+                    >
+                      <div
+                        v-if="searchingType === 'summary'"
+                        style="margin-bottom: 16px"
+                        class="skeleton skeleton-title"
+                      ></div>
+
+                      <div v-if="searchingType === 'summary'" class="skeleton skeleton-text"></div>
+                      <div v-if="searchingType === 'summary'" class="skeleton skeleton-text"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -4870,6 +5243,7 @@ export default {
   },
   data() {
     return {
+      searchingType: 'news',
       webIndexStart: 0,
       altWebIndexStart: 0,
       omniResults: [],
@@ -5229,8 +5603,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       omniExamples: [
         {
-          name: `Top storylines...`,
-          value: `Top storylines, influential journalists, and sentiment covering {Topic}`,
+          name: `Latest news on..`,
+          value: `Latest news on {Brand/Topic}`,
         },
         {
           name: ` Tell me about...`,
@@ -10340,6 +10714,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
         }
 
         this.loading = false
+        this.summaryLoading = false
+        this.searchingType = 'news'
         //  this.scrollToBottom()
       } catch (e) {
         console.log(e)
@@ -10374,6 +10750,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
           this.altOmniNews = res.articles.slice(0, 30)
 
+          //   this.summaryLoading = true
+          this.searchingType = 'social'
+
           const socialRes = await Comms.api.getTweets({
             search: this.newSearch,
             user_id: this.user.id,
@@ -10384,6 +10763,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
 
           this.altOmniSocial = socialRes.data.slice(0, 15)
+          this.searchingType = 'web'
 
           const webRes = await Comms.api.googleSearch({
             query: this.newSearch,
@@ -10399,6 +10779,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           }))
 
           this.latestArticles = this.altOmniNews.concat(this.altOmniSocial, this.altOmniWeb)
+          this.searchingType = 'summary'
         } else {
           this.showingArticles = false
           this.latestArticles = []
@@ -10414,6 +10795,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
           this.omniNews = res.articles.slice(0, 30)
 
+          this.loading = false
+          this.summaryLoading = true
+          this.searchingType = 'social'
+
           const socialRes = await Comms.api.getTweets({
             search: this.newSearch,
             user_id: this.user.id,
@@ -10424,6 +10809,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
 
           this.omniSocial = socialRes.data.slice(0, 15)
+          this.searchingType = 'web'
 
           const webRes = await Comms.api.googleSearch({
             query: this.newSearch,
@@ -10439,6 +10825,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           }))
 
           this.omniResults = this.omniNews.concat(this.omniSocial, this.omniWeb)
+          this.searchingType = 'summary'
         }
 
         this.getOmniSummary()
@@ -17518,7 +17905,50 @@ select {
   background-color: $pinky !important;
   margin: 0;
 }
+
 .widetip {
   width: 200px !important;
 }
+
+.pulse-dot {
+  margin-right: 14px;
+}
+
+.omni-load {
+  display: flex;
+  flex-direction: column;
+}
+
+.pulse {
+  color: $lite-blue;
+  img {
+    filter: invert(45%) sepia(52%) saturate(1248%) hue-rotate(196deg) brightness(97%) contrast(90%) !important;
+    box-shadow: 0 0 0 0 $lite-blue;
+    transform: scale(1);
+    animation: pulsate 1.25s infinite;
+    border-radius: 100%;
+  }
+}
+
+@keyframes pulsate {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 $dark-green;
+  }
+
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+// .pulser {
+//   box-shadow: 0 0 0 0 $dark-green;
+//   transform: scale(1);
+//   animation: pulsate 1.25s infinite;
+// }
 </style>
