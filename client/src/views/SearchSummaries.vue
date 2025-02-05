@@ -2764,12 +2764,48 @@
             <div
               style="width: 100%; justify-content: space-between"
               class="row"
-              v-else-if="mainView === 'omni'"
+              v-else-if="mainView === 'omni' && omniNews.length"
             >
               <div style="width: 24%" v-for="(article, i) in omniNews.slice(0, 4)" :key="i">
                 <img
                   @click="setOriginalArticles"
                   :src="article.image_url ? article.image_url : logoPlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+              </div>
+            </div>
+
+            <div
+              style="width: 100%; justify-content: space-between"
+              class="row"
+              v-else-if="mainView === 'omni' && !omniNews.length"
+            >
+              <div style="width: 24%" v-for="(article, i) in omniSocial.slice(0, 4)" :key="i">
+                <img
+                  v-if="article.type === 'twitter'"
+                  @click="setOriginalArticles"
+                  :src="
+                    article.user.profile_image_url
+                      ? article.user.profile_image_url
+                      : twitterPlaceholder
+                  "
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+
+                <img
+                  v-else-if="article.type === 'youtube'"
+                  @click="setOriginalArticles"
+                  :src="article.image_url ? article.image_url : youtubePlaceholder"
+                  @error="onImageError($event)"
+                  class="card-photo-header-small"
+                />
+
+                <img
+                  v-else
+                  @click="setOriginalArticles"
+                  :src="article.image_url ? article.image_url : blueskyPlaceholder"
                   @error="onImageError($event)"
                   class="card-photo-header-small"
                 />
