@@ -1253,7 +1253,7 @@ def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project
     just provide a brief summary of the the coverage as it pertains to their search term. 
     For additional context, user may provide their Project details (custom prompt instructions, media pitch, company details, etc).
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
 
     Input Format:
     User Request: {search}
@@ -1281,7 +1281,7 @@ def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, w
     body = f"""
     User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the media coverage below (news coverage, social media coverage, and web data). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. 
     Cite your sources by enclosing the citationIndex of the coverage in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. 
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never refer to X as twitter, only X.
     
     1. The user is most likely asking a follow up question (query) based on the previous response and the media coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
     2. If the answer can not be provided using the previous response or media coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
