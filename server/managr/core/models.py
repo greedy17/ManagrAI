@@ -2,6 +2,7 @@ import uuid
 import json
 import logging
 import re
+import math
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -1453,15 +1454,17 @@ class UserInteraction(TimeStampModel):
             stat_dict["percentages"][t] = len(t_int) / len(interactions) * 100
         if print_results:
             print("=================================")
-            print(f"={user.email} Interaction Stats=")
+            print(f"{user.email} Interaction Stats")
             print("=================================")
-            print(f"TOTAL: {stat_dict['total']}")
+            print(f"TOTAL:    {stat_dict['total']}")
             for k in stat_dict.keys():
-                "----------------"
-                if k == "total":
+                if k in ["total", "percentages"]:
                     continue
-                percentage = stat_dict[k] / stat_dict["total"] * 100
-                print(f"{k}: {stat_dict[k]} {percentage}%")
+                print("------------------")
+                percentage = round((stat_dict[k] / stat_dict["total"] * 100), 2)
+                print(
+                    "{}:{}{} ({}%)".format(k.upper(), " " * (9 - len(k)), stat_dict[k], percentage)
+                )
         return stat_dict
 
 
