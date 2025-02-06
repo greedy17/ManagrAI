@@ -412,7 +412,7 @@
           </div>
 
           <div v-if="!isPaid && $route.name !== 'Reports'" class="row wrapper-count">
-            <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>
+            <p class="searches-used-text">{{ 10 - searchesUsed }} / 10</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
 
