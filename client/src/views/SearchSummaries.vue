@@ -6403,7 +6403,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     async getTrafficData(url, article) {
-      console.log('coming here')
       this.loadingAnalytics = true
       this.showingAnalytics = true
 
@@ -9791,6 +9790,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
     resetAll() {
       this.clearNewSearch()
+      this.omniNews = []
+      this.altOmniNews = []
+      this.omniSocial = []
+      this.altOmniSocial = []
+      this.omniWeb = []
+      this.altOmniWeb = []
+      this.searchingType = 'news'
+      this.booleanString = null
       this.chatting = false
       this.userResponse = null
       this.journalistInfo = ''
@@ -10716,6 +10723,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.loading = false
         this.summaryLoading = false
         this.searchingType = 'news'
+        this.altOmniNews = []
+        this.altOmniSocial = []
+        this.altOmniWeb = []
         //  this.scrollToBottom()
       } catch (e) {
         console.log(e)
@@ -10749,6 +10759,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
 
           this.altOmniNews = res.articles.slice(0, 30)
+          this.booleanString = res.string
 
           //   this.summaryLoading = true
           this.searchingType = 'social'
@@ -10794,6 +10805,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           })
 
           this.omniNews = res.articles.slice(0, 30)
+          this.booleanString = res.string
 
           this.loading = false
           this.summaryLoading = true
@@ -11827,7 +11839,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       return 'https://managr.ai/contact'
     },
     onboardingLink() {
-      return 'https://www.loom.com/share/1011e37bb1324b09a3fc08623e480580?sid=8c47d7f1-7e2a-4ec9-a09a-8304059a1bee'
+      return 'https://www.loom.com/share/c5aaab7f524c4cf4a8c68d478541c354?sid=8ecaa01e-7fb6-4172-8f6f-527c62616bc7'
     },
     placeHolderText() {
       let text = ''
