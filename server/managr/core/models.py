@@ -1427,6 +1427,20 @@ class UserInteraction(TimeStampModel):
             print("FAILURE CREATING INTERACTION TYPE ON {self.id}, DATA:{data}")
         return
 
+    @property
+    def interaction_fields(self):
+        if hasattr(self, "search"):
+            int = self.search
+        elif hasattr(self, "link"):
+            int = self.link
+        elif hasattr(self, "followup"):
+            int = self.followup
+        elif hasattr(self, "saved"):
+            int = self.saved
+        else:
+            return {}
+        return int.as_dict()
+
     @classmethod
     def interaction_stats(cls, user, print_results=False):
         stat_dict = {"percentages": {}}
@@ -1461,29 +1475,41 @@ class SearchInteraction(models.Model):
         ("contacts", "CONTACTS"),
     ]
     interaction = models.OneToOneField(
-        UserInteraction, on_delete=models.CASCADE, related_name="searches"
+        UserInteraction, on_delete=models.CASCADE, related_name="search"
     )
     search_type = models.CharField(max_length=20, choices=SEARCH_TYPES)
     query = models.TextField()
 
+    def as_dict(self):
+        return {"search_type": self.search_type, "query": self.query}
+
 
 class LinkInteraction(models.Model):
     interaction = models.OneToOneField(
-        UserInteraction, on_delete=models.CASCADE, related_name="links"
+        UserInteraction, on_delete=models.CASCADE, related_name="link"
     )
     article_link = models.TextField()
+
+    def as_dict(self):
+        return {"article_link": self.article_link}
 
 
 class SaveInteraction(models.Model):
     interaction = models.OneToOneField(
-        UserInteraction, on_delete=models.CASCADE, related_name="saves"
+        UserInteraction, on_delete=models.CASCADE, related_name="saved"
     )
     search_id = models.CharField(max_length=255)
+
+    def as_dict(self):
+        return {"search_id": self.search_id}
 
 
 class FollowupInteraction(models.Model):
     interaction = models.OneToOneField(
-        UserInteraction, on_delete=models.CASCADE, related_name="followups"
+        UserInteraction, on_delete=models.CASCADE, related_name="followup"
     )
     query = models.TextField()
     previous = models.TextField(blank=True, null=True)
+
+    def as_dict(self):
+        return {"previous": self.previous, "query": self.query}

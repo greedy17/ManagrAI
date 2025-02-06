@@ -16,6 +16,7 @@ from .models import (
     GoogleAccount,
     MicrosoftAccount,
     TaskResults,
+    UserInteraction,
 )
 
 TRUE_FALSE_CHOICES = (
@@ -240,6 +241,23 @@ class TaskResultsReportAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
+class UserInteractionInline(admin.StackedInline):
+    model = ZoomAuthAccount
+
+
+class UserInteractionAdmin(admin.ModelAdmin):
+    model = UserInteraction
+    list_display = ("datetime_created", "user", "interaction_type")
+    readonly_fields = ["interaction_data"]
+    ordering = ("-datetime_created",)
+    list_filter = ("interaction_type", "user")
+
+    def interaction_data(self, obj):
+        int = obj.interaction_fields
+        str_fields = [f"{k}:   {v}" for k, v in int.items()]
+        return "\n".join(str_fields)
+
+
 admin.site.register(User, CustomUserAdmin)
 # admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
 admin.site.register(NoteTemplate, CustomNoteTemplate)
@@ -248,3 +266,4 @@ admin.site.register(GoogleAccount)
 admin.site.register(MicrosoftAccount)
 admin.site.register(TaskResults, TaskResultsReportAdmin)
 admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)
+admin.site.register(UserInteraction, UserInteractionAdmin)
