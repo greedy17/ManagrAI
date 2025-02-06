@@ -12,7 +12,7 @@ from managr.utils.sites import get_site_url
 from requests.exceptions import HTTPError
 from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
-from background_task.models import Task, CompletedTask
+from background_task.models import Task
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
 from django.contrib.auth import login
@@ -1399,3 +1399,68 @@ class TaskResults(TimeStampModel):
             return self.json_result
         else:
             return self.text_result
+
+
+class UserInteraction(TimeStampModel):
+    INTERACTION_TYPES = [
+        ("link", "LINK"),
+        ("search", "SEARCH"),
+        ("followup", "FOLLOWUP"),
+        ("save", "SAVE"),
+    ]
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="interactions")
+    interaction_type = models.CharField(max_length=20, choices=INTERACTION_TYPES)
+
+    def add_interaction(self, data):
+        model_switcher = {
+            "search": SearchInteraction,
+            "link": LinkInteraction,
+            "followup": FollowupInteraction,
+            "save": SaveInteraction,
+        }
+        type = data.pop("type")
+        interaction_model = model_switcher[type]
+        data["interaction"] = self
+        try:
+            interaction = interaction_model.objects.create(**data)
+        except Exception as e:
+            print("FAILURE CREATING INTERACTION TYPE ON {self.id}, DATA:{data}")
+        return
+
+
+class SearchInteraction(models.Model):
+    SEARCH_TYPES = [
+        ("news", "NEWS"),
+        ("social", "SOCIAL"),
+        ("web", "WEB"),
+        ("omni", "OMNI"),
+        ("write", "WRITE"),
+        ("contacts", "CONTACTS"),
+    ]
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="searches"
+    )
+    search_type = models.CharField(max_length=20, choices=SEARCH_TYPES)
+    query = models.TextField()
+
+
+class LinkInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="links"
+    )
+    article_link = models.TextField()
+
+
+class SaveInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="saves"
+    )
+    search_id = models.CharField(max_length=255)
+
+
+class FollowupInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="followups"
+    )
+    query = models.TextField()
+    previous = models.TextField(blank=True, null=True)
