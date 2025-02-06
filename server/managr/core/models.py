@@ -1429,13 +1429,14 @@ class UserInteraction(TimeStampModel):
 
     @classmethod
     def interaction_stats(cls, user, print_results=False):
-        stat_dict = {}
+        stat_dict = {"percentages": {}}
         interactions = user.interactions.all()
         stat_dict["total"] = len(interactions)
         int_types = list(interactions.values_list("interaction_type", flat=True))
         for t in int_types:
             t_int = interactions.filter(interaction_type=t)
             stat_dict[t] = len(t_int)
+            stat_dict["percentages"][t] = len(t_int) / len(interactions) * 100
         if print_results:
             print("=================================")
             print(f"={user.email} Interaction Stats=")
