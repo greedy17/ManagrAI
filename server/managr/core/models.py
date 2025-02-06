@@ -1427,6 +1427,28 @@ class UserInteraction(TimeStampModel):
             print("FAILURE CREATING INTERACTION TYPE ON {self.id}, DATA:{data}")
         return
 
+    @classmethod
+    def interaction_stats(cls, user, print_results=False):
+        stat_dict = {}
+        interactions = user.interactions.all()
+        stat_dict["total"] = len(interactions)
+        int_types = list(interactions.values_list("interaction_type", flat=True))
+        for t in int_types:
+            t_int = interactions.filter(interaction_type=t)
+            stat_dict[t] = len(t_int)
+        if print_results:
+            print("=================================")
+            print(f"={user.email} Interaction Stats=")
+            print("=================================")
+            print(f"TOTAL: {stat_dict['total']}")
+            for k in stat_dict.keys():
+                "----------------"
+                if k == "total":
+                    continue
+                percentage = stat_dict[k] / stat_dict["total"] * 100
+                print(f"{k}: {stat_dict[k]} {percentage}%")
+        return stat_dict
+
 
 class SearchInteraction(models.Model):
     SEARCH_TYPES = [
