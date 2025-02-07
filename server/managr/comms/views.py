@@ -46,7 +46,7 @@ from .models import (
 )
 from .models import Article as InternalArticle
 from .models import WritingStyle, AssistAlert, JournalistContact
-from managr.core.models import User
+from managr.core.models import User, UserInteraction
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
     emit_process_website_domain,
@@ -252,6 +252,26 @@ class PRSearchViewSet(
         is_follow_up = request.data.get("followUp", False)
         trending = request.data.get("trending", False)
         company = request.data.get("company")
+        if is_follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": previous,
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
+
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
@@ -274,7 +294,6 @@ class PRSearchViewSet(
                     True,
                 )
                 message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                print(message)
                 user.add_meta_data("news_summaries")
                 break
             except open_ai_exceptions.StopReasonLength:
@@ -649,6 +668,14 @@ class PRSearchViewSet(
         has_error = False
         search = request.GET.get("search")
         project = request.GET.get("project", None)
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "interaction_type": "SEARCH",
+                "query": search,
+                "search_type": "SOCIAL",
+            }
+        )
         query_input = None
         next_token = False
         tweet_list = []
@@ -749,6 +776,25 @@ class PRSearchViewSet(
         previous = request.data.get("previous", None)
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
+        if follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": previous,
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
         has_error = False
         attempts = 1
         token_amount = 2000
@@ -3217,6 +3263,14 @@ def get_google_summary(request):
     project = request.data.get("project", None)
     text = ""
     elma = core_consts.ELMA
+    UserInteraction.add_instance(
+        data={
+            "user": user,
+            "type": "SEARCH",
+            "query": query,
+            "search_type": "WEB",
+        }
+    )
     if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:
@@ -3823,7 +3877,6 @@ def get_omni_summary(request):
     clips = request.data.get("clips", [])
     social_data = request.data.get("social_data", [])
     web = request.data.get("web", [])
-    summary = "<h2>Tesla: Current News and Developments</h2>\n<strong>Stock Performance and Financial Outlook</strong>\n<ul>\n<li><p>Tesla's stock has experienced a significant rally, more than doubling over the past year, largely attributed to the election of President Donald Trump, which is perceived as favorable for Tesla's regulatory environment[7].</p></li>\n<li><p>The company's fourth-quarter earnings report is anticipated, with analysts focusing on self-driving technology and robotaxis[22].</p></li>\n</ul>\n<strong>Product Challenges and Public Perception</strong>\n<ul>\n<li><p>The Tesla Cybertruck has faced numerous recalls and has not met sales expectations, leading to negative press since its release in 2023[4].</p></li>\n</ul>\n<strong>Political and Social Context</strong>\n<ul>\n<li><p>Elon Musk's political activities, including his support for Germany's far-right Alternative for Germany party, have sparked controversy and criticism from figures like German Chancellor Olaf Scholz[11][9].</p></li>\n<li><p>Musk's involvement in U.S. politics, particularly his close ties with President Trump, has raised questions among Tesla shareholders about potential distractions from his role as CEO[41].</p></li>\n</ul>"
     has_error = False
     tweets = [t for t in social_data if t["type"] == "twitter"]
     vids = [v for v in social_data if v["type"] == "youtube"]
@@ -3832,6 +3885,25 @@ def get_omni_summary(request):
     project = request.data.get("project")
     follow_up = request.data.get("follow_up", False)
     original = request.data.get("original", None)
+    if follow_up:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "FOLLOWUP",
+                "previous": original,
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
+    else:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
     attempts = 1
     token_amount = 1000
     timeout = 60.0

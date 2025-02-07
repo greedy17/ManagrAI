@@ -72,7 +72,7 @@ def load_interactions(user):
         if random.choice([True, False]):
             s = random.choice(searches)
             si = UserInteraction.objects.create(user=user, interaction_type="SEARCH")
-            s_type = random.choice(SearchInteraction.SEARCH_TYPES)
+            s_type = random.choice(SearchInteraction.SEARCH1_TYPES)
             si.add_interaction(
                 data={"interaction": si, "search_type": s_type[0], "query": s, "type": "search"}
             )

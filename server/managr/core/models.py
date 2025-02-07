@@ -1415,18 +1415,18 @@ class UserInteraction(TimeStampModel):
     @classmethod
     def add_instance(cls, data):
         try:
-            instance = cls.objects.create(user=data.get("user"), interaction_type=data.get("type"))
-            instance.add_interaction(**data)
+            instance = cls.objects.create(user=data.pop("user"), interaction_type=data.get("type"))
+            instance.add_interaction(data=data)
         except Exception as e:
             print("ERROR CREATING INTERACTION INSTANCE: {}".format(str(e)))
         return
 
     def add_interaction(self, data):
         model_switcher = {
-            "search": SearchInteraction,
-            "link": LinkInteraction,
-            "followup": FollowupInteraction,
-            "save": SaveInteraction,
+            "SEARCH": SearchInteraction,
+            "LINK": LinkInteraction,
+            "FOLLOWUP": FollowupInteraction,
+            "SAVE": SaveInteraction,
         }
         type = data.pop("type")
         interaction_model = model_switcher[type]
@@ -1434,7 +1434,7 @@ class UserInteraction(TimeStampModel):
         try:
             interaction = interaction_model.objects.create(**data)
         except Exception as e:
-            print("FAILURE CREATING INTERACTION TYPE ON {self.id}, DATA:{data}")
+            print(f"FAILURE CREATING INTERACTION TYPE ON {self.id} {e}, DATA:{data}")
         return
 
     @property
