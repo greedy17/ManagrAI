@@ -1404,13 +1404,22 @@ class TaskResults(TimeStampModel):
 
 class UserInteraction(TimeStampModel):
     INTERACTION_TYPES = [
-        ("link", "LINK"),
-        ("search", "SEARCH"),
-        ("followup", "FOLLOWUP"),
-        ("save", "SAVE"),
+        ("LINK", "link"),
+        ("SEARCH", "search"),
+        ("FOLLOWUP", "followup"),
+        ("SAVE", "save"),
     ]
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="interactions")
     interaction_type = models.CharField(max_length=20, choices=INTERACTION_TYPES)
+
+    @classmethod
+    def add_instance(cls, data):
+        try:
+            instance = cls.objects.create(user=data.get("user"), interaction_type=data.get("type"))
+            instance.add_interaction(**data)
+        except Exception as e:
+            print("ERROR CREATING INTERACTION INSTANCE: {}".format(str(e)))
+        return
 
     def add_interaction(self, data):
         model_switcher = {
@@ -1470,12 +1479,12 @@ class UserInteraction(TimeStampModel):
 
 class SearchInteraction(models.Model):
     SEARCH_TYPES = [
-        ("news", "NEWS"),
-        ("social", "SOCIAL"),
-        ("web", "WEB"),
-        ("omni", "OMNI"),
-        ("write", "WRITE"),
-        ("contacts", "CONTACTS"),
+        ("NEWS", "news"),
+        ("SOCIAL", "social"),
+        ("WEB", "web"),
+        ("OMNI", "omni"),
+        ("WRITE", "write"),
+        ("CONTACTS", "contacts"),
     ]
     interaction = models.OneToOneField(
         UserInteraction, on_delete=models.CASCADE, related_name="search"

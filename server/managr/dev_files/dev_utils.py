@@ -68,17 +68,22 @@ def load_interactions(user):
         data = json.load(f)
     searches = data["interactions"]
     urls = data["links"]
-    for num in range(1, 11):
-        s = random.choice(searches)
-        f = random.choice(searches)
-        l = random.choice(urls)
-        s_type = random.choice(SearchInteraction.SEARCH_TYPES)
-        si = UserInteraction.objects.create(user=user, interaction_type="search")
-        fi = UserInteraction.objects.create(user=user, interaction_type="followup")
-        li = UserInteraction.objects.create(user=user, interaction_type="link")
-        si.add_interaction(
-            data={"interaction": si, "search_type": s_type[1], "query": s, "type": "search"}
-        )
-        fi.add_interaction(data={"interaction": fi, "query": f, "previous": s, "type": "followup"})
-        li.add_interaction(data={"interaction": li, "article_link": l, "type": "link"})
+    for num in range(1, 31):
+        if random.choice([True, False]):
+            s = random.choice(searches)
+            si = UserInteraction.objects.create(user=user, interaction_type="SEARCH")
+            s_type = random.choice(SearchInteraction.SEARCH_TYPES)
+            si.add_interaction(
+                data={"interaction": si, "search_type": s_type[0], "query": s, "type": "search"}
+            )
+            if random.choice([True, False]):
+                f = random.choice(searches)
+                fi = UserInteraction.objects.create(user=user, interaction_type="FOLLOWUP")
+                fi.add_interaction(
+                    data={"interaction": fi, "query": f, "previous": s, "type": "followup"}
+                )
+        if random.choice([True, False]):
+            l = random.choice(urls)
+            li = UserInteraction.objects.create(user=user, interaction_type="LINK")
+            li.add_interaction(data={"interaction": li, "article_link": l, "type": "link"})
     return
