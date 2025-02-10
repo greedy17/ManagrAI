@@ -2052,13 +2052,13 @@
                 </div>
               </div>
 
-              <div
+              <button
                 v-if="!isViewOnly"
                 @click.stop="showShare"
                 class="img-container-button s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
                 :disabled="!searchSaved"
-                style="border: 1px solid rgba(0, 0, 0, 0.2); padding: 6px 7px 3px 7px"
+                style="border: 1px solid rgba(0, 0, 0, 0.2) !important; padding: 6px 7px 3px 7px"
               >
                 <img class="invert" src="@/assets/images/share.svg" height="13px" alt="" />
                 <div v-if="!searchSaved && !isViewOnly" style="width: 150px" class="s-tooltip">
@@ -2066,7 +2066,7 @@
                 </div>
                 <div v-else-if="isViewOnly" class="s-tooltip">Locked</div>
                 <div v-else class="s-tooltip">Share thread</div>
-              </div>
+              </button>
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
                 <div>{{ copyTip }}</div>
