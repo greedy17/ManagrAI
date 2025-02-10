@@ -3885,6 +3885,7 @@ def get_omni_summary(request):
     project = request.data.get("project")
     follow_up = request.data.get("follow_up", False)
     original = request.data.get("original", None)
+    user.add_meta_data("omni")
     if follow_up:
         UserInteraction.add_instance(
             data={
