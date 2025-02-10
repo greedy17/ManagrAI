@@ -662,7 +662,7 @@
           </div>
 
           <div class="row">
-            <button
+            <!-- <button
               :disabled="
                 loadingPitch || !subject || !targetEmail || sendingEmail || verifying || drafting
               "
@@ -678,7 +678,7 @@
                 alt=""
               />
               {{ isMobile ? 'Save' : 'Save Draft' }}
-            </button>
+            </button> -->
 
             <div v-if="sendingEmail" style="margin: 0 12px" class="loading-small">
               <div class="dot"></div>
@@ -724,7 +724,7 @@
               <div class="dot"></div>
             </div>
 
-            <button
+            <!-- <button
               v-else
               @click="saveContact"
               class="s-wrapper img-container-button borderless clicked"
@@ -732,7 +732,7 @@
             >
               <img class="invert" src="@/assets/images/disk.svg" height="16px" alt="" />
               <div style="right: 120%" class="s-tooltip-below">Save to contacts</div>
-            </button>
+            </button> -->
           </div>
         </header>
 
@@ -1050,7 +1050,9 @@
         <div class="small-container letter-spacing">
           <div>
             <div class="centered">
-              <h1>What would you like to search ?</h1>
+              <h1 style="color: #2f4656; font-size: 30px" class="bold-text">
+                What would you like to search ?
+              </h1>
             </div>
           </div>
 
@@ -2021,15 +2023,44 @@
                   Company Details: for pitching tips
                 </div>
               </div> -->
+              <div
+                v-if="mainView !== 'omni'"
+                @click.stop="openReportModal"
+                :class="{ 'soft-gray-bg': showDateSelection }"
+                class="img-container-button s-wrapper"
+                style="
+                  margin-right: 8px;
+                  border: 1px solid rgba(0, 0, 0, 0.2);
+                  padding: 6px 7px 3px 7px;
+                "
+              >
+                <img class="invert" src="@/assets/images/chart.svg" height="13px" alt="" />
+
+                <div
+                  :class="{ widetip: (!searchSaved && !isViewOnly) || reportCredits < 1 }"
+                  class="s-tooltip"
+                >
+                  {{
+                    isViewOnly
+                      ? 'Locked'
+                      : reportCredits < 1
+                      ? 'Upgrade to PRO'
+                      : searchSaved
+                      ? 'Generate Report'
+                      : 'Save Thread to enable report'
+                  }}
+                </div>
+              </div>
 
               <button
                 v-if="!isViewOnly"
                 @click.stop="showShare"
-                class="secondary-button s-wrapper"
+                class="img-container-button s-wrapper"
                 :class="{ 'soft-gray-bg': showingShare }"
                 :disabled="!searchSaved"
+                style="border: 1px solid rgba(0, 0, 0, 0.2) !important; padding: 6px 7px 3px 7px"
               >
-                Share
+                <img class="invert" src="@/assets/images/share.svg" height="13px" alt="" />
                 <div v-if="!searchSaved && !isViewOnly" style="width: 150px" class="s-tooltip">
                   Save to enable sharing
                 </div>
@@ -4258,31 +4289,6 @@
                   />
                 </div>
               </div>
-
-              <div
-                v-if="mainView !== 'omni'"
-                @click.stop="openReportModal"
-                :class="{ 'soft-gray-bg': showDateSelection }"
-                class="image-container s-wrapper"
-                style="margin-left: 8px"
-              >
-                <img class="invert" src="@/assets/images/chart.svg" height="15px" alt="" />
-
-                <div
-                  :class="{ widetip: (!searchSaved && !isViewOnly) || reportCredits < 1 }"
-                  class="s-tooltip"
-                >
-                  {{
-                    isViewOnly
-                      ? 'Locked'
-                      : reportCredits < 1
-                      ? 'Upgrade to PRO'
-                      : searchSaved
-                      ? 'Generate Report'
-                      : 'Save Thread to enable report'
-                  }}
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -6240,6 +6246,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
     this.abortFunctions()
   },
   methods: {
+    async addLinkInteraction(url) {
+      try {
+        const res = await User.api.addInteraction({
+          type: 'link',
+          article_link: url,
+        })
+      } catch (e) {
+        console.log(e)
+      }
+    },
     goToReports() {
       let data = {}
 
@@ -6561,7 +6577,6 @@ Your goal is to create content that resonates deeply, connects authentically, an
     setTooltips() {
       const citationWrappers = document.querySelectorAll('.citation-wrapper')
       if (citationWrappers.length === 0) {
-        console.log('no wrappers')
         return
       } else {
         this.citationsMounted = true
@@ -11387,7 +11402,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           await this.getSummary(
             clips,
             instructions,
-            this.summaries.length ? this.summaries[this.summaries.length - 1].summary : null,
+            this.summaries.length
+              ? this.summaries[this.summaries.length - 1].summary
+              : this.summary,
             false,
             null,
             true,
@@ -11771,6 +11788,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.$store.dispatch('updateSelectedArticle', article)
     },
     goToArticle(link) {
+      this.addLinkInteraction(link)
       window.open(link, '_blank')
     },
     refreshUser() {

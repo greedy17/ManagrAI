@@ -2022,16 +2022,17 @@
                   <div style="width: 10%">Days Actv</div>
                   <div style="width: 10%">Total Usage</div>
                   <div style="width: 10%">Usage / Day</div>
+                  <div style="width: 10%">Omni</div>
                   <div style="width: 10%">Bio's Created</div>
-                  <div style="width: 10%">Saved Contacts</div>
-                  <div style="width: 12%">News Summaries</div>
+                  <!-- <div style="width: 10%">Saved Contacts</div>
+                  <div style="width: 12%">News Summaries</div> -->
                   <div style="width: 12%">Analyze</div>
                   <div style="width: 10%">Saved Alerts</div>
                   <div style="width: 10%">Sent Alerts</div>
-                  <div style="width: 10%">Pitches</div>
+                  <!-- <div style="width: 10%">Pitches</div>
                   <div style="width: 10%">Emails Sent</div>
                   <div style="width: 10%">Emails Drafted</div>
-                  <div style="width: 10%">Saved Threads</div>
+                  <div style="width: 10%">Saved Threads</div> -->
                   <div style="width: 10%">Saved Reports</div>
 
                   <!-- <div style="width: 10%">Shared Threads</div> -->
@@ -2048,15 +2049,18 @@
                     <div style="width: 10%">{{ getTotalUsage(user) }}</div>
                     <div style="width: 10%">{{ getUsageDay(user) }}</div>
                     <div style="width: 10%">
-                      {{ user.meta_data.bio ? user.meta_data.bio.total : 0 }}
+                      {{ user.meta_data.omni ? user.meta_data.omni.total : 0 }}
                     </div>
                     <div style="width: 10%">
+                      {{ user.meta_data.bio ? user.meta_data.bio.total : 0 }}
+                    </div>
+                    <!-- <div style="width: 10%">
                       {{ user.meta_data.contacts ? user.meta_data.contacts.total : 0 }}
                     </div>
 
                     <div style="width: 12%">
                       {{ user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0 }}
-                    </div>
+                    </div> -->
                     <!-- <div style="width: 10%">
                       {{
                         user.meta_data.news_summaries_slack
@@ -2077,16 +2081,16 @@
                         allEmailAlerts[user.id] ? calculateSentCountSum(allEmailAlerts[user.id]) : 0
                       }}
                     </div>
-                    <div style="width: 10%">
+                    <!-- <div style="width: 10%">
                       {{ user.meta_data.pitches ? user.meta_data.pitches.total : 0 }}
-                    </div>
+                    </div> -->
                     <!-- <div style="width: 10%">
                       {{ user.meta_data.discovery ? user.meta_data.discovery.total : 0 }}
                     </div> -->
                     <!-- <div style="width: 12%">
                       {{ user.meta_data.verify ? user.meta_data.verify.total : 0 }}
                     </div> -->
-                    <div style="width: 10%">
+                    <!-- <div style="width: 10%">
                       {{ user.meta_data.emailSent ? user.meta_data.emailSent.total : 0 }}
                     </div>
                     <div style="width: 10%">
@@ -2094,7 +2098,7 @@
                     </div>
                     <div style="width: 10%">
                       {{ user.meta_data.thread_saved ? user.meta_data.thread_saved.total : 0 }}
-                    </div>
+                    </div> -->
 
                     <div style="width: 10%">
                       {{ user.meta_data.reports ? user.meta_data.reports.total : 0 }}
@@ -2627,17 +2631,16 @@ export default {
         daysActive: user.days_active,
         totalUsage: this.getTotalUsage(user),
         usagePerDay: this.getUsageDay(user),
-        newsSummaries: user.meta_data.news_summaries ? user.meta_data.news_summaries.total : 0,
+        omni: user.meta_data.omni ? user.meta_data.omni.total : 0,
+        bios: user.meta_data.bio ? user.meta_data.bio.total : 0,
         analyze: user.meta_data.analyzed_article ? user.meta_data.analyzed_article.total : 0,
         savedAlerts: this.allEmailAlerts[user.id] ? this.allEmailAlerts[user.id].length : 0,
         sentAlerts: this.allEmailAlerts[user.id]
           ? this.calculateSentCountSum(this.allEmailAlerts[user.id])
           : 0,
-        pitches: user.meta_data.pitches ? user.meta_data.pitches.total : 0,
-        bios: user.meta_data.bio ? user.meta_data.bio.total : 0,
-        emailsSent: user.meta_data.emailSent ? user.meta_data.emailSent.total : 0,
-        emailsDrafted: user.meta_data.emailDraft ? user.meta_data.emailDraft.total : 0,
-        savedThreads: user.meta_data.thread_saved ? user.meta_data.thread_saved : 0,
+        // emailsSent: user.meta_data.emailSent ? user.meta_data.emailSent.total : 0,
+        // emailsDrafted: user.meta_data.emailDraft ? user.meta_data.emailDraft.total : 0,
+        // savedThreads: user.meta_data.thread_saved ? user.meta_data.thread_saved : 0,
         savedReports: user.meta_data.reports ? user.meta_data.reports : 0,
         // sharedThreads: user.meta_data.shared_thread ? user.meta_data.shared_thread.total : 0,
       }))
