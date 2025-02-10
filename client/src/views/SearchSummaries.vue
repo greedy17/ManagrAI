@@ -10795,6 +10795,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             query: this.newSearch,
             instructions: this.newTemplate,
             project: this.selectedOrg,
+            omni: true,
           })
 
           this.altOmniWeb = webRes.results.slice(0, 5)
@@ -10842,6 +10843,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             query: this.newSearch,
             instructions: this.newTemplate,
             project: this.selectedOrg,
+            omni: true,
           })
 
           this.omniWeb = webRes.results.slice(0, 5)

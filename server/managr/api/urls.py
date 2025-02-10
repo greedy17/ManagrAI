@@ -626,5 +626,5 @@ router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 router.register("company-details", comms_views.CompanyDetailsViewSet, "company-details")
 router.register("tracker", comms_views.EmailTrackerViewSet, "tracker")
 router.register("threads", comms_views.ThreadViewSet, "threads")
-router.register("interactions", core_views.UserInteractionViewSet, "ints")
+router.register("ints", core_views.UserInteractionViewSet, "ints")
 urlpatterns += router.urls

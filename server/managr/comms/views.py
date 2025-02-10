@@ -3261,16 +3261,18 @@ def get_google_summary(request):
     summary = request.data.get("summary", None)
     results = request.data.get("results", None)
     project = request.data.get("project", None)
+    for_omni = request.data.get("omni", False)
     text = ""
     elma = core_consts.ELMA
-    UserInteraction.add_instance(
-        data={
-            "user": user,
-            "type": "SEARCH",
-            "query": query,
-            "search_type": "WEB",
-        }
-    )
+    if not for_omni:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": query,
+                "search_type": "WEB",
+            }
+        )
     if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:

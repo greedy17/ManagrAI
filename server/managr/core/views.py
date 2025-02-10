@@ -2351,14 +2351,16 @@ class UserInteractionViewSet(
     viewsets.GenericViewSet,
     mixins.CreateModelMixin,
 ):
-    authentication_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         user = request.user
         data = request.data
         type = data.get("type")
+        data["type"] = type.upper()
         try:
-            interaction = UserInteraction.objects.create(user=user, interaction_type=type)
+            interaction = UserInteraction.objects.create(user=user, interaction_type=type.upper())
+
             interaction.add_interaction(data)
         except Exception as e:
             print(f"INTERACTION CREATE FAILED FOR {user.email}: ({e}) DATA: {data}")

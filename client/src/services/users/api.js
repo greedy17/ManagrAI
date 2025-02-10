@@ -73,7 +73,7 @@ const GOOGLE_REVOKE = '/users/google/revoke-token/'
 const MICROSOFT_AUTH_TOKEN = 'users/microsoft/authorization'
 const MICROSOFT_AUTHENTICATION = 'users/microsoft/authenticate'
 const MICROSOFT_REVOKE = "users/microsoft/revoke-token"
-const INTERACTIONS = "api/ints/"
+const INTERACTIONS = "ints/"
 
 export default class UserAPI {
   get client() {

@@ -1078,7 +1078,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
     while True:
         try:
-            if attempts >= 10:
+            if attempts >= 5:
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
