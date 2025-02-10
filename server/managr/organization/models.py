@@ -124,8 +124,6 @@ class Organization(TimeStampModel):
     def create_initial_team(self):
         admin = self.users.filter(is_admin=True).first()
         team = Team.objects.create(name=self.name, organization=self, team_lead=admin)
-        forms = self.custom_slack_forms
-        forms.update(team=team)
         users = self.users
         users.update(team=team)
 

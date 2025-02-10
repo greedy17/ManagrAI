@@ -97,7 +97,7 @@ function homepageRedirect(to, from, next) {
       })
     } else {
       next({
-        name: 'Home',
+        name: 'PRSummaries',
       })
     }
   }
