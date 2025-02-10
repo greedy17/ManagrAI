@@ -73,6 +73,7 @@ const GOOGLE_REVOKE = '/users/google/revoke-token/'
 const MICROSOFT_AUTH_TOKEN = 'users/microsoft/authorization'
 const MICROSOFT_AUTHENTICATION = 'users/microsoft/authenticate'
 const MICROSOFT_REVOKE = "users/microsoft/revoke-token"
+const INTERACTIONS = "ints/"
 
 export default class UserAPI {
   get client() {
@@ -868,6 +869,15 @@ export default class UserAPI {
       return res.data
     } catch (e) {
       apiErrorHandler({ apiName: 'User.revokeMicrosoft' })
+    }
+  }
+
+  async addInteraction(data) {
+    try {
+      const res = await this.client.post(INTERACTIONS, data)
+      return res.data
+    } catch (e) {
+      apiErrorHandler({ apiName: 'User.Interactions' })
     }
   }
   // async getEmailAuthorization(data) {

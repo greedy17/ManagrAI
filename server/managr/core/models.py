@@ -2,6 +2,7 @@ import uuid
 import json
 import logging
 import re
+import math
 from managr.utils.sites import get_site_url
 from urllib.parse import urlencode
 from datetime import datetime
@@ -12,7 +13,7 @@ from managr.utils.sites import get_site_url
 from requests.exceptions import HTTPError
 from managr.utils.misc import encrypt_dict
 from django.db import models, IntegrityError
-from background_task.models import Task, CompletedTask
+from background_task.models import Task
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AnonymousUser
 from django.db.models import Q
 from django.contrib.auth import login
@@ -127,6 +128,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_superuser"] = False
         extra_fields["is_active"] = True
         extra_fields["is_admin"] = False
+        extra_fields["role"] = "PR"
         return self._create_user(email, password, **extra_fields)
 
     def create_admin_user(self, email, password=None, **extra_fields):
@@ -136,6 +138,7 @@ class UserManager(BaseUserManager.from_queryset(UserQuerySet)):
         extra_fields["is_active"] = False
         extra_fields["is_admin"] = True
         extra_fields["user_level"] = core_consts.USER_LEVEL_REP
+        extra_fields["role"] = "PR"
         return self._create_user(email, password, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
@@ -1399,3 +1402,128 @@ class TaskResults(TimeStampModel):
             return self.json_result
         else:
             return self.text_result
+
+
+class UserInteraction(TimeStampModel):
+    INTERACTION_TYPES = [
+        ("LINK", "link"),
+        ("SEARCH", "search"),
+        ("FOLLOWUP", "followup"),
+        ("SAVE", "save"),
+    ]
+    user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="interactions")
+    interaction_type = models.CharField(max_length=20, choices=INTERACTION_TYPES)
+
+    @classmethod
+    def add_instance(cls, data):
+        try:
+            instance = cls.objects.create(user=data.pop("user"), interaction_type=data.get("type"))
+            instance.add_interaction(data=data)
+        except Exception as e:
+            print("ERROR CREATING INTERACTION INSTANCE: {}".format(str(e)))
+        return
+
+    def add_interaction(self, data):
+        model_switcher = {
+            "SEARCH": SearchInteraction,
+            "LINK": LinkInteraction,
+            "FOLLOWUP": FollowupInteraction,
+            "SAVE": SaveInteraction,
+        }
+        type = data.pop("type")
+        interaction_model = model_switcher[type]
+        data["interaction"] = self
+        try:
+            interaction = interaction_model.objects.create(**data)
+        except Exception as e:
+            print(f"FAILURE CREATING INTERACTION TYPE ON {self.id} {e}, DATA:{data}")
+        return
+
+    @property
+    def interaction_fields(self):
+        if hasattr(self, "search"):
+            int = self.search
+        elif hasattr(self, "link"):
+            int = self.link
+        elif hasattr(self, "followup"):
+            int = self.followup
+        elif hasattr(self, "saved"):
+            int = self.saved
+        else:
+            return {}
+        return int.as_dict()
+
+    @classmethod
+    def interaction_stats(cls, user, print_results=False):
+        stat_dict = {"percentages": {}}
+        interactions = user.interactions.all()
+        stat_dict["total"] = len(interactions)
+        int_types = list(interactions.values_list("interaction_type", flat=True))
+        for t in int_types:
+            t_int = interactions.filter(interaction_type=t)
+            stat_dict[t] = len(t_int)
+            stat_dict["percentages"][t] = len(t_int) / len(interactions) * 100
+        if print_results:
+            print("=================================")
+            print(f"{user.email} Interaction Stats")
+            print("=================================")
+            print(f"TOTAL:    {stat_dict['total']}")
+            for k in stat_dict.keys():
+                if k in ["total", "percentages"]:
+                    continue
+                print("------------------")
+                percentage = round((stat_dict[k] / stat_dict["total"] * 100), 2)
+                print(
+                    "{}:{}{} ({}%)".format(k.upper(), " " * (9 - len(k)), stat_dict[k], percentage)
+                )
+        return stat_dict
+
+
+class SearchInteraction(models.Model):
+    SEARCH_TYPES = [
+        ("NEWS", "news"),
+        ("SOCIAL", "social"),
+        ("WEB", "web"),
+        ("OMNI", "omni"),
+        ("WRITE", "write"),
+        ("CONTACTS", "contacts"),
+    ]
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="search"
+    )
+    search_type = models.CharField(max_length=20, choices=SEARCH_TYPES)
+    query = models.TextField()
+
+    def as_dict(self):
+        return {"search_type": self.search_type, "query": self.query}
+
+
+class LinkInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="link"
+    )
+    article_link = models.TextField()
+
+    def as_dict(self):
+        return {"article_link": self.article_link}
+
+
+class SaveInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="saved"
+    )
+    search_id = models.CharField(max_length=255)
+
+    def as_dict(self):
+        return {"search_id": self.search_id}
+
+
+class FollowupInteraction(models.Model):
+    interaction = models.OneToOneField(
+        UserInteraction, on_delete=models.CASCADE, related_name="followup"
+    )
+    query = models.TextField()
+    previous = models.TextField(blank=True, null=True)
+
+    def as_dict(self):
+        return {"previous": self.previous, "query": self.query}

@@ -236,13 +236,15 @@
         >
           <p>Threads</p>
         </router-link>
-        <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
+
+        <!-- <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
           <p>Contacts</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
           <p>Emails</p>
-        </router-link>
+        </router-link> -->
+
         <router-link active-class="active-mobile" :to="{ name: 'PRSettings' }" id="router-pitch">
           <p>Settings</p>
         </router-link>
@@ -375,7 +377,7 @@
           <p>Threads</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           v-if="!isViewOnly"
           active-class="active"
           :to="{ name: 'Contacts' }"
@@ -391,7 +393,7 @@
           id="router-pitch"
         >
           <p>Emails</p>
-        </router-link>
+        </router-link> -->
 
         <router-link
           v-if="!isViewOnly"

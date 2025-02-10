@@ -61,6 +61,8 @@ def add_user_to_admin_team(sender, instance, created, **kwargs):
     if created:
         if instance.is_admin:
             instance.organization.create_initial_team()
+        else:
+            instance.organization.add_to_admin_team(instance.email)
 
 
 @receiver(pre_delete, sender=Task)

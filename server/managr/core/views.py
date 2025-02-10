@@ -58,6 +58,7 @@ from .models import (
     GoogleAccount,
     MicrosoftAccount,
     TaskResults,
+    UserInteraction,
 )
 from .serializers import (
     UserSerializer,
@@ -2165,7 +2166,7 @@ class ReportViewSet(
                 serializer.save()
                 org.meta_data["report_credits"] -= 1
                 org.save()
-                user.add_meta_data("reports")  
+                user.add_meta_data("reports")
             else:
                 return Response(
                     status=status.HTTP_426_UPGRADE_REQUIRED,
@@ -2344,3 +2345,23 @@ def revoke_microsoft_account(request):
     microsoft_account = user.microsoft_account
     microsoft_account.delete()
     return Response(data={"success": True})
+
+
+class UserInteractionViewSet(
+    viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+        type = data.get("type")
+        data["type"] = type.upper()
+        try:
+            interaction = UserInteraction.objects.create(user=user, interaction_type=type.upper())
+
+            interaction.add_interaction(data)
+        except Exception as e:
+            print(f"INTERACTION CREATE FAILED FOR {user.email}: ({e}) DATA: {data}")
+        return Response(status=status.HTTP_201_CREATED)

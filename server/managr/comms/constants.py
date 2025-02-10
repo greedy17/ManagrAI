@@ -134,7 +134,7 @@ def GOOGLE_SEARCH_PARAMS(query, number_of_results):
         "key": GOOGLE_SEARCH_KEY,
         "cx": GOOGLE_SEARCH_ID,
         "num": number_of_results,
-        "dateRestrict": "w[1]",
+        "dateRestrict": "w1",
     }
     return params
 
