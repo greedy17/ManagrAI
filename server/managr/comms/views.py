@@ -259,7 +259,6 @@ class PRSearchViewSet(
                     "type": "FOLLOWUP",
                     "previous": previous,
                     "query": search,
-                    "search_type": "NEWS",
                 }
             )
 
