@@ -697,24 +697,32 @@ def alternate_google_search(query, number_of_results=10):
             res = res.json()
             results = res["items"]
             for index, item in enumerate(results):
-                metatags = item["pagemap"]["metatags"][0]
-                metatags_cse = item["pagemap"].get("cse_image", [])
-                cse_img = metatags_cse[0] if metatags_cse else {}
-                author = (
-                    metatags.get("article:author")
-                    if "article:author" in metatags
-                    else metatags.get("author", "Unknown")
-                )
+                if "pagemap" in item.keys():
+                    metatags = item["pagemap"]["metatags"][0]
+                    metatags_cse = item["pagemap"].get("cse_image", [])
+                    cse_img = metatags_cse[0] if metatags_cse else {}
+                    author = (
+                        metatags.get("article:author")
+                        if "article:author" in metatags
+                        else metatags.get("author", "Unknown")
+                    )
+                    source = metatags.get("og:site_name", "unknown")
+                    source_img = metatags.get("og:image", "")
+                    image = cse_img.get("src", "")
+                else:
+                    source = "N/A"
+                    source_img = ""
+                    image = ""
+                    author = "N/A"
                 result_data = {
                     "citationIndex": index,
                     "id": index + 1,
                     "title": item["title"],
                     "snippet": item["snippet"],
                     "link": item["link"],
-                    "source": metatags.get("og:site_name", "unknown"),
-                    "source_img": metatags.get("og:image", ""),
-                    # "description": metatags.get("og:description", ''),
-                    "image": cse_img.get("src", ""),
+                    "source": source,
+                    "source_img": source_img,
+                    "image": image,
                     "author": author,
                 }
                 results_list.append(result_data)
