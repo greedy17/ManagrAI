@@ -108,7 +108,10 @@ class CustomNewsSource(admin.ModelAdmin):
     actions = [update_crawling, update_active_status, update_stopped]
 
     def get_last_scraped(self, obj):
-        return timesince(obj.last_scraped)
+        if obj.last_scraped:
+            return timesince(obj.last_scraped)
+        else:
+            return obj.last_scraped
 
     get_last_scraped.short_description = "Last Scrape"
 
