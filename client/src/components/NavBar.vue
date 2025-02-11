@@ -236,13 +236,15 @@
         >
           <p>Threads</p>
         </router-link>
-        <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
+
+        <!-- <router-link active-class="active-mobile" :to="{ name: 'Contacts' }" id="router-pitch">
           <p>Contacts</p>
         </router-link>
 
         <router-link active-class="active-mobile" :to="{ name: 'EmailTracking' }" id="router-pitch">
           <p>Emails</p>
-        </router-link>
+        </router-link> -->
+
         <router-link active-class="active-mobile" :to="{ name: 'PRSettings' }" id="router-pitch">
           <p>Settings</p>
         </router-link>
@@ -375,7 +377,7 @@
           <p>Threads</p>
         </router-link>
 
-        <router-link
+        <!-- <router-link
           v-if="!isViewOnly"
           active-class="active"
           :to="{ name: 'Contacts' }"
@@ -391,7 +393,7 @@
           id="router-pitch"
         >
           <p>Emails</p>
-        </router-link>
+        </router-link> -->
 
         <router-link
           v-if="!isViewOnly"
@@ -412,7 +414,7 @@
           </div>
 
           <div v-if="!isPaid && $route.name !== 'Reports'" class="row wrapper-count">
-            <p class="searches-used-text">{{ 20 - searchesUsed }} / 20</p>
+            <p class="searches-used-text">{{ 10 - searchesUsed }} / 10</p>
             <div style="margin-left: -40px" class="tooltip-count">Remaining monthly credits</div>
           </div>
 
@@ -579,7 +581,7 @@
                   <img
                     class="search-icon"
                     v-else-if="search.meta_data.type === 'write'"
-                    src="@/assets/images/brain.svg"
+                    src="@/assets/images/edit.svg"
                     height="12px"
                     alt=""
                     @click="selectSearch(search)"
@@ -592,6 +594,16 @@
                     alt=""
                     @click="selectSearch(search)"
                   />
+
+                  <img
+                    class="search-icon"
+                    v-else-if="search.meta_data.type === 'omni'"
+                    src="@/assets/images/brain.svg"
+                    height="12px"
+                    alt=""
+                    @click="selectSearch(search)"
+                  />
+
                   <p style="margin-left: 0" :title="search.title" @click="selectSearch(search)">
                     {{ search.title }}
                   </p>

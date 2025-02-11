@@ -46,7 +46,7 @@ from .models import (
 )
 from .models import Article as InternalArticle
 from .models import WritingStyle, AssistAlert, JournalistContact
-from managr.core.models import User
+from managr.core.models import User, UserInteraction
 from managr.comms import exceptions as comms_exceptions
 from .tasks import (
     emit_process_website_domain,
@@ -252,11 +252,31 @@ class PRSearchViewSet(
         is_follow_up = request.data.get("followUp", False)
         trending = request.data.get("trending", False)
         company = request.data.get("company")
+        if is_follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": previous,
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
+
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
-        token_amount = 2000
+        token_amount = 3000
         timeout = 60.0
         while True:
             try:
@@ -648,6 +668,14 @@ class PRSearchViewSet(
         has_error = False
         search = request.GET.get("search")
         project = request.GET.get("project", None)
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "interaction_type": "SEARCH",
+                "query": search,
+                "search_type": "SOCIAL",
+            }
+        )
         query_input = None
         next_token = False
         tweet_list = []
@@ -748,9 +776,28 @@ class PRSearchViewSet(
         previous = request.data.get("previous", None)
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
+        if follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": previous,
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
@@ -1207,7 +1254,9 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
+        UserInteraction.add_instance(
+            {"user": user, "type": "SEARCH", "query": type, "search_type": "WRITE"}
+        )
         while True:
             try:
                 res = Pitch.generate_pitch(user, type, instructions, style, token_amount, timeout)
@@ -1268,7 +1317,15 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "FOLLOWUP",
+                "previous": details,
+                "query": instructions,
+                "search_type": "WRITE",
+            }
+        )
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -2063,6 +2120,14 @@ class DiscoveryViewSet(
             query = journalist
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": "{} ({})".format(journalist, outlet),
+                "search_type": "DISCOVER",
+            }
+        )
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(
@@ -2744,8 +2809,11 @@ class ThreadViewSet(
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            instance = serializer.save()
             user.add_meta_data("thread_saved")
+            UserInteraction.add_instance(
+                {"user": user, "type": "SAVE", "search_id": str(instance.search.id)}
+            )
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -3214,8 +3282,18 @@ def get_google_summary(request):
     summary = request.data.get("summary", None)
     results = request.data.get("results", None)
     project = request.data.get("project", None)
+    for_omni = request.data.get("omni", False)
     text = ""
     elma = core_consts.ELMA
+    if not for_omni:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": query,
+                "search_type": "WEB",
+            }
+        )
     if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:
@@ -3744,13 +3822,11 @@ def get_social_media_data(request):
         if "error" in social_data.keys():
             errors.append(social_data["error"])
         else:
-            if value == "twitter":
-                return_data["includes"] = social_data["includes"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
     if errors:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+        print(f"ERROR IN SOCIAL MEDIA DATA: {errors}")
     return Response(status=status.HTTP_200_OK, data=return_data)
 
 
@@ -3814,3 +3890,107 @@ def scraper_webhook(request):
     body = response.get("body")
     parse_homepage(url, body, priority=5)
     return Response()
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_omni_summary(request):
+    user = request.user
+    clips = request.data.get("clips", [])
+    social_data = request.data.get("social_data", [])
+    web = request.data.get("web", [])
+    has_error = False
+    tweets = [t for t in social_data if t["type"] == "twitter"]
+    vids = [v for v in social_data if v["type"] == "youtube"]
+    skeets = [s for s in social_data if s["type"] == "bluesky"]
+    search = request.data.get("search")
+    project = request.data.get("project")
+    follow_up = request.data.get("follow_up", False)
+    original = request.data.get("original", None)
+    user.add_meta_data("omni")
+    if follow_up:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "FOLLOWUP",
+                "previous": original,
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
+    else:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    date = datetime.now().date()
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            if follow_up:
+                prompt = comms_consts.OPEN_AI_OMNI_FOLLOW_UP(
+                    original, search, clips, tweets, vids, skeets, web, project
+                )
+            else:
+                prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
+                    date, search, clips, tweets, vids, skeets, web, project
+                )
+
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content")
+
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount >= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
+    return Response(status=status.HTTP_200_OK, data={"summary": message})
+    # return Response(status=status.HTTP_200_OK, data={"summary": summary})

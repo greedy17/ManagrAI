@@ -62,7 +62,6 @@ def get_domain(url, full_netloc=False):
 
 
 def extract_date_from_text(text, timezone_dict={}):
-    text = text.replace("\n", "").replace("\t", "").strip()
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
@@ -71,13 +70,13 @@ def extract_date_from_text(text, timezone_dict={}):
             text = text[0]
         else:
             return None
+    text = text.replace("\n", "").replace("\t", "").strip()
     try:
         parsed_date = parser.parse(text, tzinfos=comms_consts.TIMEZONE_DICT)
         return str(parsed_date)
     except parser.ParserError:
         pass
 
-    print(2, repr(text))
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
@@ -506,24 +505,22 @@ def get_news_api_sources():
 
 
 def remove_api_sources():
-    all_sources = NewsSource.objects.all()
     try:
         news_api_source_res = get_news_api_sources()
         r = news_api_source_res["sources"]
         source_list = [source["url"] for source in r]
     except Exception as e:
         print(str(e))
-    for url in source_list:
-        database_check = all_sources.filter(domain=url).first()
-        if database_check:
-            database_check.delete()
+    database_check = NewsSource.objects.filter(domain__in=source_list, is_active=True)
+    if database_check:
+        database_check.update(is_active=False)
     return
 
 
 def valid_slug(slug):
     dash_count = slug.count("-")
     underscore_count = slug.count("_")
-    if dash_count < 4 or underscore_count < 4:
+    if dash_count >= 4 or underscore_count >= 4:
         return True
     else:
         return False
@@ -699,24 +696,32 @@ def alternate_google_search(query, number_of_results=10):
             res = res.json()
             results = res["items"]
             for index, item in enumerate(results):
-                metatags = item["pagemap"]["metatags"][0]
-                metatags_cse = item["pagemap"].get("cse_image", [])
-                cse_img = metatags_cse[0] if metatags_cse else {}
-                author = (
-                    metatags.get("article:author")
-                    if "article:author" in metatags
-                    else metatags.get("author", "Unknown")
-                )
+                if "pagemap" in item.keys():
+                    metatags = item["pagemap"]["metatags"][0]
+                    metatags_cse = item["pagemap"].get("cse_image", [])
+                    cse_img = metatags_cse[0] if metatags_cse else {}
+                    author = (
+                        metatags.get("article:author")
+                        if "article:author" in metatags
+                        else metatags.get("author", "Unknown")
+                    )
+                    source = metatags.get("og:site_name", "unknown")
+                    source_img = metatags.get("og:image", "")
+                    image = cse_img.get("src", "")
+                else:
+                    source = "N/A"
+                    source_img = ""
+                    image = ""
+                    author = "N/A"
                 result_data = {
                     "citationIndex": index,
                     "id": index + 1,
                     "title": item["title"],
                     "snippet": item["snippet"],
                     "link": item["link"],
-                    "source": metatags.get("og:site_name", "unknown"),
-                    "source_img": metatags.get("og:image", ""),
-                    # "description": metatags.get("og:description", ''),
-                    "image": cse_img.get("src", ""),
+                    "source": source,
+                    "source_img": source_img,
+                    "image": image,
                     "author": author,
                 }
                 results_list.append(result_data)
@@ -1072,11 +1077,15 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     attempts = 1
     now = datetime.now(timezone.utc)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
-    from_minute = (now.minute + 5) if (now.minute + 5) >= 10 else f"0{now.minute + 5}"
-    to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
+    if (now.minute + 5) >= 54:
+        from_minute = now.minute
+        to_minute = now.minute
+    else:
+        from_minute = (now.minute + 5) if ((now.minute + 5) >= 10) else f"0{now.minute + 5}"
+        to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
     while True:
         try:
-            if attempts >= 10:
+            if attempts >= 5:
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
@@ -1085,8 +1094,6 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 next_token=next_token,
             )
             tweets = tweet_res.get("data", {})
-            includes = tweet_res.get("includes", {})
-            media = includes.get("media", [])
             attempts += 1
             if not tweets and len(tweet_list) == 0:
                 suggestions = twitter_account.no_results(user.email, query_input)
@@ -1094,22 +1101,31 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
             if tweets:
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
-                user_data = tweet_res["includes"].get("users")
+                users = tweet_res["includes"].get("users")
+                media = tweet_res["includes"].get("media")
+                media_data = {m["media_key"]: m for m in media}
+                user_data = {u["id"]: u for u in users}
                 for tweet in tweets:
                     if len(tweet_list) >= 20:
                         break
-                    for u in user_data:
-                        if u["id"] == tweet["author_id"]:
-                            if u["public_metrics"]["followers_count"] > 10000:
-                                tweet["tweet_link"] = (
-                                    f"https://twitter.com/{u['username']}/status/{tweet['id']}"
-                                )
-                                tweet["user"] = u
-                                tweet["type"] = "twitter"
-                                tweet_list.append(tweet)
-                            break
-                media_data.extends(media)
-                include_data["users"].extends(includes["users"])
+                    u = user_data[tweet["author_id"]]
+                    if u["public_metrics"]["followers_count"] > 10000:
+                        new_attachments = []
+                        if (
+                            "attachments" in tweet.keys()
+                            and "media_keys" in tweet["attachments"].keys()
+                        ):
+                            new_attachments = []
+                            media_keys = tweet["attachments"]["media_keys"]
+                            for media_key in media_keys:
+                                new_attachments.append(media_data[media_key])
+                        tweet["attachments"] = new_attachments
+                        tweet["tweet_link"] = (
+                            f"https://twitter.com/{u['username']}/status/{tweet['id']}"
+                        )
+                        tweet["user"] = u
+                        tweet["type"] = "twitter"
+                        tweet_list.append(tweet)
             if len(tweet_list) < 20 and tweets:
                 continue
             break
@@ -1131,13 +1147,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         if obj["text"] not in ordered_dict.keys():
             ordered_dict[obj["text"]] = obj
     duplicated_removed = list(ordered_dict.values())
-    include_data["media"] = media_data
-    tweet_data = {
-        "data": duplicated_removed,
-        "string": query_input,
-        "includes": include_data,
-        "tweetMedia": media_data,
-    }
+    tweet_data = {"data": duplicated_removed, "string": query_input}
     return tweet_data
 
 

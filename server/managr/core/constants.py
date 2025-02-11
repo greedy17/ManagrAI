@@ -34,6 +34,15 @@ OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 OPEN_AI_CHAT_COMPLETIONS_URI = "https://api.openai.com/v1/chat/completions"
 OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
+USER_INTERACTION_SEARCH_TYPES = [
+    ("NEWS", "News"),
+    ("SOCIAL", "Social"),
+    ("WEB", "Web"),
+    ("OMNI", "Omni"),
+    ("WRITE", "Write"),
+    ("DISCOVER", "Discover"),
+]
+
 OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 

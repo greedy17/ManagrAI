@@ -211,7 +211,14 @@ class CommsApi extends ModelAPI {
             apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
         }
     }
-
+    async omniSummary(data) {
+        try {
+            const res = await this.client.post('users/comms/omni/', data)
+            return res.data
+        } catch (e) {
+            apiErrorHandler({ apiName: 'Error Retrieving Data' })(e)
+        }
+    }
     async getTweetSummary(data) {
         try {
             const res = await this.client.post(CommsApi.ENDPOINT + 'tweet-summary/', data)

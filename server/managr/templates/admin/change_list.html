@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+
+{% block search %}
+    {% if search_help_text %}
+        <p style="color: gray; font-style: italic; margin-bottom: 5px;">
+            {{ search_help_text }}
+        </p>
+    {% endif %}
+    {{ block.super }}  {# Keeps the original search bar #}
+{% endblock %}

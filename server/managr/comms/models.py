@@ -155,7 +155,6 @@ class Search(TimeStampModel):
             prompt,
             temperature=0.1,
             top_p=0.1,
-            # model="o1-mini",
         )
         with Variable_Client(timeout) as client:
             r = client.post(
@@ -1132,7 +1131,7 @@ class TwitterAccount(TimeStampModel):
         url = comms_consts.TWITTER_BASE_URI + comms_consts.TWITTER_RECENT_TWEETS_URI
         params = {
             "query": query,
-            "max_results": 50,
+            "max_results": 100,
             "expansions": "author_id,attachments.media_keys",
             "user.fields": "username,name,profile_image_url,public_metrics,verified,location,url",
             "tweet.fields": "created_at",
@@ -1840,6 +1839,9 @@ class Thread(TimeStampModel):
         on_delete=models.CASCADE,
     )
     title = models.TextField()
+    search = models.OneToOneField(
+        Search, related_name="search", on_delete=models.CASCADE, null=True, blank=True
+    )
     meta_data = JSONField(default=dict)
 
     def __str__(self):

@@ -151,6 +151,7 @@ urlpatterns = [
         "users/twitter/re-direct", comms_views.redirect_from_twitter, name="redirect-from-twitter"
     ),
     path("users/comms/upload-link/", comms_views.upload_link, name="upload-link"),
+    path("users/comms/omni/", comms_views.get_omni_summary, name="omni-summary"),
     path("account-status/", core_views.get_account_status, name="get_account_status"),
     path("task-status/", core_views.get_task_status, name="get-task-status"),
     path("sso-data/", core_views.get_sso_data, name="get-sso-data"),
@@ -625,4 +626,5 @@ router.register("jcontact", comms_views.JournalistContactViewSet, "jcontact")
 router.register("company-details", comms_views.CompanyDetailsViewSet, "company-details")
 router.register("tracker", comms_views.EmailTrackerViewSet, "tracker")
 router.register("threads", comms_views.ThreadViewSet, "threads")
+router.register("ints", core_views.UserInteractionViewSet, "ints")
 urlpatterns += router.urls

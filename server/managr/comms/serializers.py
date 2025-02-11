@@ -71,12 +71,6 @@ class ArticleSerializer(serializers.ModelSerializer):
             "content_search_vector",
         )
 
-    def create(self, validated_data):
-        article = Article.objects.create(**validated_data)
-        article.content_search_vector = SearchVector("content")
-        article.save()
-        return article
-
 
 class WritingStyleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,7 +81,17 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 class AssistAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssistAlert
-        fields = ("id", "user", "type", "title","search", "thread", "run_at", "meta_data", "recipients")
+        fields = (
+            "id",
+            "user",
+            "type",
+            "title",
+            "search",
+            "thread",
+            "run_at",
+            "meta_data",
+            "recipients",
+        )
 
 
 class ProcessSerializer(serializers.ModelSerializer):
@@ -225,3 +229,19 @@ class ThreadSerializer(serializers.ModelSerializer):
     def get_share_url(self, instance):
         url = instance.generate_url()
         return url
+
+    def create(self, validated_data):
+        meta_data = validated_data.get("meta_data")
+        search_data = {
+            "user": validated_data.get("user").id,
+            "name": validated_data.get("title"),
+            "input_text": meta_data.get("searchTerm"),
+            "search_boolean": meta_data.get("boolean"),
+            "type": meta_data.get("type").upper(),
+            "instructions": meta_data.get("project", ""),
+        }
+        search = SearchSerializer(data=search_data)
+        search.is_valid(raise_exception=True)
+        search_instance = search.save()
+        thread_instance = Thread.objects.create(search=search_instance, **validated_data)
+        return thread_instance
