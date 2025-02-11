@@ -241,29 +241,40 @@ class TaskResultsReportAdmin(admin.ModelAdmin):
     ordering = ("-datetime_created",)
 
 
-class UserInteractionInline(admin.StackedInline):
-    model = ZoomAuthAccount
-
-
 class UserInteractionAdmin(admin.ModelAdmin):
     model = UserInteraction
-    list_display = ("datetime_created", "user", "interaction_type")
+    list_display = ("datetime_created", "user", "get_type")
     readonly_fields = ["interaction_data"]
     ordering = ("-datetime_created",)
-    list_filter = ("interaction_type", "user")
+    list_filter = ("interaction_type",)
+    search_fields = ("user__email",)
+
+    def changelist_view(self, request, extra_context=None):
+        if extra_context is None:
+            extra_context = {}
+        extra_context["search_help_text"] = "Search by user email"
+        return super().changelist_view(request, extra_context=extra_context)
 
     def interaction_data(self, obj):
         int = obj.interaction_fields
         str_fields = [f"{k}:   {v}" for k, v in int.items()]
         return "\n".join(str_fields)
 
+    def get_type(self, obj):
+        int_type = obj.interaction_type
+        if int_type == "SEARCH":
+            return "{} ({})".format(obj.interaction_type, obj.search.search_type).title()
+        if int_type == "FOLLOWUP":
+            return "{} ({})".format(obj.interaction_type, obj.followup.search_type).title()
+        return int_type.title()
+
+    get_type.short_description = "Type"
+
 
 admin.site.register(User, CustomUserAdmin)
-# admin.site.register(NylasAuthAccount, CustomNylasAuthAccount)
-admin.site.register(NoteTemplate, CustomNoteTemplate)
+admin.site.register(UserInteraction, UserInteractionAdmin)
+admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)
 admin.site.register(Report, CustomReportAdmin)
 admin.site.register(GoogleAccount)
 admin.site.register(MicrosoftAccount)
 admin.site.register(TaskResults, TaskResultsReportAdmin)
-admin.site.register(CrawlerReport, CustomCrawlerReportAdmin)
-admin.site.register(UserInteraction, UserInteractionAdmin)

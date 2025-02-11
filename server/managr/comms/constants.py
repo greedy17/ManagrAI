@@ -343,7 +343,15 @@ NEW_API_EVERYTHING_DATE_URI = (
     lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
 )
 
-SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
+SEARCH_TYPE_CHOICES = (
+    ("NEWS", "News"),
+    ("SOCIAL", "Social Media"),
+    ("OMNI", "Omni"),
+    ("WEB", "Web"),
+    ("TRENDING", "Trending"),
+    ("WRITE", "Write"),
+    ("DISCOVER", "Discover"),
+)
 COVERAGE_TYPE_CHOICES = (("NATIONAL", "National"), ("LOCAL", "Local"), ("BOTH", "Both"))
 ALERT_TYPES = (("EMAIL", "Email"), ("SLACK", "Slack"), ("BOTH", "Both"))
 MESSAGE_TYPES = (("USER", "User"), ("SYSTEM", "System"))

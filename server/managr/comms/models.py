@@ -1733,6 +1733,9 @@ class Thread(TimeStampModel):
         on_delete=models.CASCADE,
     )
     title = models.TextField()
+    search = models.OneToOneField(
+        Search, related_name="search", on_delete=models.CASCADE, null=True, blank=True
+    )
     meta_data = JSONField(default=dict)
 
     def __str__(self):

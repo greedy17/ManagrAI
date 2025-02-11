@@ -1406,10 +1406,10 @@ class TaskResults(TimeStampModel):
 
 class UserInteraction(TimeStampModel):
     INTERACTION_TYPES = [
-        ("LINK", "link"),
-        ("SEARCH", "search"),
-        ("FOLLOWUP", "followup"),
-        ("SAVE", "save"),
+        ("LINK", "Link"),
+        ("SEARCH", "Search"),
+        ("FOLLOWUP", "Follow Up"),
+        ("SAVE", "Save"),
     ]
     user = models.ForeignKey("core.User", on_delete=models.CASCADE, related_name="interactions")
     interaction_type = models.CharField(max_length=20, choices=INTERACTION_TYPES)
@@ -1420,6 +1420,7 @@ class UserInteraction(TimeStampModel):
             instance = cls.objects.create(user=data.pop("user"), interaction_type=data.get("type"))
             instance.add_interaction(data=data)
         except Exception as e:
+            instance.delete()
             print("ERROR CREATING INTERACTION INSTANCE: {}".format(str(e)))
         return
 
@@ -1454,9 +1455,12 @@ class UserInteraction(TimeStampModel):
         return int.as_dict()
 
     @classmethod
-    def interaction_stats(cls, user, print_results=False):
+    def interaction_stats(cls, user=None, print_results=False):
         stat_dict = {"percentages": {}}
-        interactions = user.interactions.all()
+        if user:
+            interactions = user.interactions.all()
+        else:
+            interactions = cls.objects.all()
         stat_dict["total"] = len(interactions)
         int_types = list(interactions.values_list("interaction_type", flat=True))
         for t in int_types:
@@ -1480,18 +1484,10 @@ class UserInteraction(TimeStampModel):
 
 
 class SearchInteraction(models.Model):
-    SEARCH_TYPES = [
-        ("NEWS", "news"),
-        ("SOCIAL", "social"),
-        ("WEB", "web"),
-        ("OMNI", "omni"),
-        ("WRITE", "write"),
-        ("CONTACTS", "contacts"),
-    ]
     interaction = models.OneToOneField(
         UserInteraction, on_delete=models.CASCADE, related_name="search"
     )
-    search_type = models.CharField(max_length=20, choices=SEARCH_TYPES)
+    search_type = models.CharField(max_length=20, choices=core_consts.USER_INTERACTION_SEARCH_TYPES)
     query = models.TextField()
 
     def as_dict(self):
@@ -1514,8 +1510,16 @@ class SaveInteraction(models.Model):
     )
     search_id = models.CharField(max_length=255)
 
+    @property
+    def search(self):
+        from managr.comms.models import Search
+
+        search = Search.objects.filter(id=self.search_id).first()
+        return search
+
     def as_dict(self):
-        return {"search_id": self.search_id}
+        search = self.search
+        return {"search_id": self.search_id, "search": search.input_text, "type": search.type}
 
 
 class FollowupInteraction(models.Model):
@@ -1524,6 +1528,9 @@ class FollowupInteraction(models.Model):
     )
     query = models.TextField()
     previous = models.TextField(blank=True, null=True)
+    search_type = models.CharField(
+        max_length=20, choices=core_consts.USER_INTERACTION_SEARCH_TYPES, null=True, blank=True
+    )
 
     def as_dict(self):
-        return {"previous": self.previous, "query": self.query}
+        return {"previous": self.previous, "query": self.query, "search_type": self.search_type}

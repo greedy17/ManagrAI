@@ -259,6 +259,7 @@ class PRSearchViewSet(
                     "type": "FOLLOWUP",
                     "previous": previous,
                     "query": search,
+                    "search_type": "NEWS",
                 }
             )
 
@@ -1253,7 +1254,9 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
+        UserInteraction.add_instance(
+            {"user": user, "type": "SEARCH", "query": type, "search_type": "WRITE"}
+        )
         while True:
             try:
                 res = Pitch.generate_pitch(user, type, instructions, style, token_amount, timeout)
@@ -1314,7 +1317,15 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "FOLLOWUP",
+                "previous": details,
+                "query": instructions,
+                "search_type": "WRITE",
+            }
+        )
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -2109,6 +2120,14 @@ class DiscoveryViewSet(
             query = journalist
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": "{} ({})".format(journalist, outlet),
+                "search_type": "DISCOVER",
+            }
+        )
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(
@@ -2790,8 +2809,11 @@ class ThreadViewSet(
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            instance = serializer.save()
             user.add_meta_data("thread_saved")
+            UserInteraction.add_instance(
+                {"user": user, "type": "SAVE", "search_id": str(instance.search.id)}
+            )
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
