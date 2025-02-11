@@ -2047,7 +2047,7 @@
                       ? 'Upgrade to PRO'
                       : searchSaved
                       ? 'Generate Report'
-                      : 'Save Thread to enable report'
+                      : 'Save to enable report'
                   }}
                 </div>
               </div>
@@ -4674,11 +4674,11 @@
                             ? article.source.icon
                             : globePlaceholder
                         "
-                        height="12px"
+                        height="18px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
-                      <small>{{
+                      <small style="font-size: 14px">{{
                         mainView === 'trending'
                           ? article.source
                               .replace(/^https?:\/\//, '')
@@ -4783,11 +4783,11 @@
                         :src="
                           result.source && result.source_img ? result.source_img : globePlaceholder
                         "
-                        height="12px"
+                        height="18px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
-                      <small>{{ result.source }}</small>
+                      <small style="font-size: 14px">{{ result.source }}</small>
                     </div>
 
                     <p style="cursor: pointer" @click="goToArticle(result.link)">
@@ -4828,27 +4828,29 @@
                       <img
                         v-if="tweet.type === 'youtube'"
                         :src="youtubePlaceholder"
-                        height="12px"
+                        height="20px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
                       <img
                         v-else-if="tweet.type === 'bluesky'"
                         :src="blueskyPlaceholder"
-                        height="14px"
+                        height="24px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
                       <img
                         v-else-if="tweet.type === 'twitter'"
                         :src="twitterPlaceholder"
-                        height="12px"
+                        height="16px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
 
-                      <small v-if="tweet.type === 'twitter'">{{ tweet.user.username }}</small>
-                      <small v-else> {{ tweet.author }}</small>
+                      <small style="font-size: 14px" v-if="tweet.type === 'twitter'">{{
+                        tweet.user.username
+                      }}</small>
+                      <small style="font-size: 14px" v-else> {{ tweet.author }}</small>
                     </div>
 
                     <p
@@ -4959,11 +4961,11 @@
                             ? article.source_img
                             : globePlaceholder
                         "
-                        height="12px"
+                        height="20px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
-                      <small>{{ article.source }}</small>
+                      <small style="font-size: 14px">{{ article.source }}</small>
                     </div>
 
                     <p style="cursor: pointer" @click="goToArticle(article.link)">
@@ -4999,27 +5001,29 @@
                       <img
                         v-if="article.type === 'youtube'"
                         :src="youtubePlaceholder"
-                        height="12px"
+                        height="20px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
                       <img
                         v-else-if="article.type === 'bluesky'"
                         :src="blueskyPlaceholder"
-                        height="14px"
+                        height="24px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
                       <img
                         v-else-if="article.type === 'twitter'"
                         :src="twitterPlaceholder"
-                        height="12px"
+                        height="16px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
 
-                      <small v-if="article.type === 'twitter'">{{ article.user.username }}</small>
-                      <small v-else> {{ article.author }}</small>
+                      <small style="font-size: 14px" v-if="article.type === 'twitter'">{{
+                        article.user.username
+                      }}</small>
+                      <small style="font-size: 14px" v-else> {{ article.author }}</small>
                     </div>
 
                     <p
@@ -5126,11 +5130,11 @@
                             ? article.source.icon
                             : globePlaceholder
                         "
-                        height="12px"
+                        height="18px"
                         alt=""
-                        style="margin: 0 4px 0 1px"
+                        style="margin: 0 8px 0 1px"
                       />
-                      <small>{{
+                      <small style="font-size: 14px">{{
                         mainView === 'trending'
                           ? article.source
                               .replace(/^https?:\/\//, '')
