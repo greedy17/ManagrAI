@@ -11903,7 +11903,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
   },
   computed: {
     reportCredits() {
-      return !!this.$store.state.user.organizationRef.metaData
+      return !!this.$store.state.user && this.$store.state.user.organizationRef.metaData
         ? this.$store.state.user.organizationRef.metaData.reportCredits
         : 0
     },
