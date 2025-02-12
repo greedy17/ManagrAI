@@ -15,6 +15,7 @@ from dateutil import parser
 from django.db import models
 from managr.core.models import TimeStampModel
 from django.db.models.constraints import UniqueConstraint
+from django.utils.functional import cached_property
 from newspaper import ArticleException
 from newspaper import Article as ExternalArticle
 from managr.core import constants as core_consts
@@ -86,9 +87,11 @@ class Search(TimeStampModel):
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
             self.search_boolean = query_input.replace('"', "")
+            self.save()
+            return self.search_boolean
         except Exception as e:
             logger.exception(e)
-        return self.save()
+        return
 
     @classmethod
     def get_summary(
@@ -897,6 +900,25 @@ class AssistAlert(TimeStampModel):
         null=True,
         blank=True,
     )
+
+    @cached_property
+    def search_type(self):
+        return self.search.type
+
+    @cached_property
+    def search_boolean(self):
+        if not self.search.search_boolean or self.search.search_boolean == self.search.input_text:
+            updated_boolean = self.search.update_boolean()
+            return updated_boolean
+        return self.search.search_boolean
+
+    @cached_property
+    def instructions(self):
+        return self.meta_data.get("project", None)
+
+    @cached_property
+    def last_sent(self):
+        return self.meta_data.get("last_sent", None)
 
     def add_recipient(self, email):
         new_recipients = self.recipients.append(email)

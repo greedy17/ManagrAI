@@ -199,9 +199,20 @@ class CustomArchivedArticle(admin.ModelAdmin):
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
     list_display = ("user", "search", "run_at", "times_sent", "last_sent")
+    fields = [
+        "search_type",
+        "search_boolean",
+        "user",
+        "run_at",
+        "type",
+        "search",
+        "thread",
+        "recipients",
+    ]
     ordering = ("run_at",)
     list_filter = ("type", "search__type")
     search_fields = ["user__email"]
+    readonly_fields = ["search_type", "search_boolean", "user"]
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
