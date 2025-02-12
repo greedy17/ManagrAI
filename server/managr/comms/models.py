@@ -10,6 +10,7 @@ import re
 import requests
 import random
 from lxml import etree
+from copy import copy
 from datetime import datetime, timedelta
 from dateutil import parser
 from django.db import models
@@ -585,6 +586,96 @@ class NewsSource(TimeStampModel):
                 }
         return scrape_dict
 
+    def _initialize(self, response):
+        if response.status >= 400:
+            self.use_scrape_api = True
+            return self
+        self.site_name = self.get_site_name(response)
+        self.icon = self.get_site_icon(response)
+        url = self.validate_url(response)
+        if url != self.domain:
+            self.domain == url
+        self.scrape_data = self.get_article_link_data(response)
+        self.check_if_date_format()
+        if not self.article_link_attribute:
+            self = common_selectors_check(self)
+        self.article_link_regex = self.create_search_regex()
+        self.last_scraped = datetime.now()
+        return self
+
+    def initialize(self, response):
+        if self.last_scraped:
+            return self
+        return self._initialize(response)
+
+    def validate_url(self, response):
+        og_domain = self.domain
+        response_url = response.url
+        validated_url = response_url
+        if og_domain not in response_url:
+            if response_url[0] == "/":
+                validated_url = og_domain + response_url
+            if response.status >= 300:
+                redirect_urls = response.meta.get("redirect_urls", [])
+                if redirect_urls:
+                    if og_domain not in redirect_urls[0]:
+                        validated_url = redirect_urls[0]
+                        logger.info(f"New URL found for {og_domain}: {validated_url}")
+        return validated_url
+
+    def get_site_name(self, response):
+        xpaths = ["//meta[contains(@property, 'og:site_name')]/@content", "//title/text()"]
+        site_url = urlparse(response.request.url).netloc.strip("www.")
+        site_name = site_url
+        for xpath in xpaths:
+            found = response.xpath(xpath).get()
+            if found:
+                site_name = found
+                break
+        return site_name
+
+    def get_site_icon(self, response):
+        xpath = "//link[contains(@href,'.ico')]/@href"
+        icon_href = response.xpath(xpath).get()
+        if icon_href:
+            if icon_href[0] == "/":
+                icon_href = response.request.url + icon_href
+        else:
+            return None
+        return icon_href
+
+    def get_article_link_data(self, response):
+        from .webcrawler.constants import HOMEPAGE_ANCHOR_TAG_XPATH, EXCLUDE_CLASSES
+        from .utils import potential_link_check, complete_url
+
+        anchor_tags = response.xpath(HOMEPAGE_ANCHOR_TAG_XPATH)
+        scrape_dict = {}
+        for idx, link in enumerate(anchor_tags):
+            href = link.css("::attr(href)").get()
+            updated_url = complete_url(href, self.domain)
+            is_potential_link = potential_link_check(updated_url, self.domain)
+            if is_potential_link:
+                parent = response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
+                if parent:
+                    for word in EXCLUDE_CLASSES:
+                        if word in parent:
+                            is_potential_link = False
+                            break
+                if not is_potential_link:
+                    continue
+                classes = link.css("::attr(class)").get()
+                data_attributes = {}
+                for key, value in link.attrib.items():
+                    if key.startswith("data-"):
+                        data_attributes[key] = value
+                scrape_dict[idx] = {
+                    "href": href,
+                    "data_attributes": data_attributes,
+                    "classes": classes,
+                    "parent_classes": parent,
+                }
+        return scrape_dict
+
     def selector_processor(self):
         selector_split = self.article_link_selector.split(",")
         selector_type = selector_split[0]
@@ -853,6 +944,8 @@ class NewsSource(TimeStampModel):
         from .webcrawler.constants import URL_DATE_PATTERN
 
         urls = [u["href"] for u in self.scrape_data.values()]
+        if len(urls) == 0:
+            return self
         sample_size = max(1, len(urls) // 10)
         sample = random.sample(urls, sample_size)
         matches = []
@@ -873,6 +966,67 @@ class NewsSource(TimeStampModel):
                 self.article_link_attribute = "a"
                 return self
         return self
+
+    def get_selectors(self, response):
+        if self.selectors_defined:
+            return self, self.article_selectors
+        else:
+            return self._add_selectors(response)
+
+    def _add_selectors(self, response):
+        from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
+        from .utils import extract_date_from_text, find_key
+
+        url = response.url
+        xpath_copy = copy(XPATH_STRING_OBJ)
+        fields_dict = {}
+        article_selectors = self.article_selectors
+        for key in xpath_copy.keys():
+            if article_selectors[key] is not None:
+                xpath_copy[key] = [article_selectors[key]]
+            for path in xpath_copy[key]:
+                try:
+                    selector = response.xpath(path).getall()
+                except ValueError as e:
+                    selector = None
+                    print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
+                if selector:
+                    if key == "publish_date" and "//script" not in path:
+                        if "text" in path:
+                            selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
+                        else:
+                            try:
+                                check_if_date = parser.parse(
+                                    selector, tzinfos=comms_consts.TIMEZONE_DICT
+                                )
+                            except TypeError as e:
+                                selector = None
+                            except Exception as e:
+                                print(e)
+                                continue
+                    if "//script" in path:
+                        if isinstance(selector, list):
+                            selector = [json.loads(a.lower()) for a in selector]
+                        script_key = "name" if key == "author" else "datepublished"
+                        key_path = find_key(selector, script_key)
+                        if key_path is not None:
+                            if isinstance(selector, list):
+                                path = f"({path})[{int(key_path[1])+ 1}]{key_path[2:]}"
+                            else:
+                                path = path + key_path
+                        else:
+                            selector = None
+                else:
+                    selector = None
+                if selector is not None:
+                    fields_dict[key] = path
+                    break
+        if len(fields_dict):
+            for key in fields_dict.keys():
+                path = fields_dict[key]
+                field = XPATH_TO_FIELD[key]
+                setattr(self, field, path)
+        return self, self.article_selectors
 
 
 class Article(TimeStampModel):

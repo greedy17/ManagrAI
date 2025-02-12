@@ -38,11 +38,17 @@ SCRAPPY_HEADERS = {
     "Connection": "keep-alive",
 }
 
+CONTENT_XPATH_LIST = [
+    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+    for a in ["article", "story", "content"]
+]
+CONTENT_XPATH_LIST.append("//article//p//text()")
 XPATH_STRING_OBJ = {
     "title": ["//title/text()"],
     "author": [
+        "//script[@type='application/ld+json']/text()",
         "//meta[@name='author']/@content",
-        "//*[contains(@class,'gnt_ar_by')]/a/text()",
+        "//*[@class='gnt_ar_by']/a/text()",
         "//*[@class='article__author']/text()",
         "//meta[@name='twitter:data1']/@content",
         "//meta[@property='authors']/@content",
@@ -52,17 +58,19 @@ XPATH_STRING_OBJ = {
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
     "description": [
-        "//meta[contains(@property, 'description')]/@content",
+        "//meta[@property='og:description']/@content",
         "//meta[contains(@name, 'description')]/@content",
     ],
     "publish_date": [
-        "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
+        "//script[@type='application/ld+json']/text()",
+        "//*[@class='gnt_ar_dt']/@aria-label",
         "//meta[@property='article:published_time']/@content",
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@name, 'date')]/@content",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
+    "content": CONTENT_XPATH_LIST,
 }
 
 XPATH_TO_FIELD = {

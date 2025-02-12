@@ -53,6 +53,25 @@ def check_article_validity(anchor):
     return True
 
 
+def check_article_validity(anchor):
+    classes = anchor.xpath("@class").get()
+    article_url = anchor.xpath("@href").extract_first()
+    if article_url is None:
+        return False
+    parsed_path = urlparse(article_url).path
+    path_list = parsed_path.split("/")
+    if len(path_list) <= 1:
+        return False
+    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+        if word in article_url:
+            return False
+    if classes:
+        for class_word in comms_consts.NON_VIABLE_CLASSES:
+            if class_word in classes:
+                return False
+    return True
+
+
 class NewsSpider(scrapy.Spider):
     name = "news_spider"
     handle_httpstatus_list = [403, 400, 410, 500, 501]
@@ -164,11 +183,7 @@ class NewsSpider(scrapy.Spider):
         source = source._initialize(response)
         self.sources_cache[source.id] = source
         if source.article_link_attribute is not None:
-            if not source.article_link_regex:
-                regex = source.create_search_regex()
-                source = self.update_source(source.id, article_link_regex=regex)
-            else:
-                regex = source.article_link_regex
+            regex = source.article_link_regex
             article_links = response.xpath(regex)
             if len(article_links) < 1:
                 self.update_source(
@@ -198,13 +213,10 @@ class NewsSpider(scrapy.Spider):
                             errback=self.handle_error,
                             cb_kwargs={"source": source},
                         )
-        else:
-            self.process_new_url(response, source)
         self.urls_processed += 1
         return
 
     def parse_article(self, response, source=False):
-        xpath_copy = copy(crawler_consts.XPATH_STRING_OBJ)
         url = response.url
         if source is False:
             try:
@@ -219,88 +231,46 @@ class NewsSpider(scrapy.Spider):
                     logger.exception(f"Failed to find source with domain: {domain}")
                     return
         meta_tag_data = {"link": url, "source": source.id}
-        article_selectors = source.article_selectors
-        fields_dict = {}
+        source, article_selectors = source.get_selectors(response)
         article_tags = None
-        if source.selectors_defined:
-            for key in article_selectors.keys():
-                path = article_selectors[key]
-                if "//script" in path:
-                    script_path = path.split("|")[0]
-                    selector = response.xpath(script_path).get()
-                else:
-                    selector = response.xpath(path).getall()
-                if "//script" in path:
-                    data_path = path.split("|")[1:]
-                    for i, v in enumerate(data_path):
-                        try:
-                            integer_value = int(v)
-                            data_path[i] = integer_value
-                        except ValueError:
-                            continue
+        for key in article_selectors.keys():
+            path = article_selectors[key]
+            if "//script" in path:
+                script_path = path.split("|")[0]
+                selector = response.xpath(script_path).get()
+            else:
+                selector = response.xpath(path).getall()
+            if "//script" in path:
+                data_path = path.split("|")[1:]
+                for i, v in enumerate(data_path):
                     try:
-                        data = json.loads(selector.lower())
-                        selector_value = data
-                        for path in data_path:
-                            selector_value = selector_value[path]
-                        selector = [selector_value]
-                    except Exception as e:
-                        print(e)
-                        selector = []
-                if len(selector) and key != "content" and key != "publish_date":
-                    selector = ",".join(selector)
-                if key == "publish_date":
-                    if isinstance(selector, list) and len(selector):
-                        selector = selector[0]
-                    selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
-                if key == "content":
-                    article_tags = selector
-                    continue
-                if selector is not None:
-                    meta_tag_data[key] = selector
-                else:
-                    meta_tag_data[key] = "N/A"
-        else:
-            for key in xpath_copy.keys():
-                if article_selectors[key] is not None:
-                    xpath_copy[key] = [article_selectors[key]]
-                for path in xpath_copy[key]:
-                    try:
-                        selector = response.xpath(path).get()
-                    except ValueError as e:
-                        selector = None
-                        print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
-                    if key == "publish_date":
-                        if "text" in path and selector is not None:
-                            selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
-                        if "text" not in path:
-                            try:
-                                parser.parse(selector, tzinfos=comms_consts.TIMEZONE_DICT)
-                            except TypeError as e:
-                                selector = None
-                            except Exception as e:
-                                print(e)
-                                continue
-                    if selector is not None:
-                        fields_dict[key] = path
-                        meta_tag_data[key] = selector
-                        break
-                if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
-                    meta_tag_data[key] = None
-            article_tag_list = ["article", "story", "content"]
-            article_xpaths = ["//article//p//text()"]
-            for a in article_tag_list:
-                article_xpaths.append(
-                    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
-                )
-            if article_selectors["content"] is not None:
-                article_xpaths = [article_selectors["content"]]
-            for tag in article_xpaths:
-                tags = response.xpath(tag).getall()
-                if len(tags):
-                    fields_dict["content"] = tag
-                    article_tags = tags
-                    break
+                        integer_value = int(v)
+                        data_path[i] = integer_value
+                    except ValueError:
+                        continue
+                try:
+                    data = json.loads(selector.lower())
+                    selector_value = data
+                    for path in data_path:
+                        selector_value = selector_value[path]
+                    selector = [selector_value.title()]
+                except Exception as e:
+                    print(e)
+                    selector = []
+            if len(selector) and key != "content" and key != "publish_date":
+                selector = ",".join(selector)
+            if key == "publish_date":
+                if isinstance(selector, list) and len(selector):
+                    selector = selector[0]
+                selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
+            if key == "content":
+                article_tags = selector
+                continue
+            if selector is not None:
+                meta_tag_data[key] = selector
+            else:
+                meta_tag_data[key] = "N/A"
+
         full_article = ""
         cleaned_data = None
         if article_tags is not None:
@@ -324,83 +294,14 @@ class NewsSpider(scrapy.Spider):
                     raise Exception(cleaned_data)
             else:
                 logger.info(f"No content for article: {response.url}")
-
         except IntegrityError as e:
             return
         except Exception as e:
             self.error_log.append(f"{url}|{str(e)}")
             error = source.add_error(f"{str(e)}")
             source = self.update_source(source.id, error_log=error)
-        if len(fields_dict):
-            path_dict = {}
-            for key in fields_dict.keys():
-                path = fields_dict[key]
-                field = crawler_consts.XPATH_TO_FIELD[key]
-                path_dict[field] = path
-            source = self.update_source(source.id, **path_dict)
         self.urls_processed += 1
         self.articles_to_process -= 1
-        return
-
-    def process_new_url(self, response, source):
-        exclude_classes = " or ".join(
-            f"contains(@class, '{word}')" for word in crawler_consts.EXCLUDE_CLASSES
-        )
-        exclude_words = " or ".join(
-            f"contains(@href, '{word}')" for word in crawler_consts.EXCLUDE_WORDS
-        )
-        xpath = (
-            "//body//a["
-            + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
-            + f" and not({exclude_classes})"
-            + f" and not({exclude_words})"
-            + "]"
-        )
-        anchor_tags = response.xpath(xpath)
-        scrape_dict = {}
-        for idx, link in enumerate(anchor_tags):
-            href = link.css("::attr(href)").get()
-            updated_url = complete_url(href, source.domain)
-            is_potential_link = potential_link_check(updated_url, source.domain)
-            if is_potential_link:
-                try:
-                    parent = (
-                        response.xpath(f"//a[@href='{href}']/parent::*").css("::attr(class)").get()
-                    )
-                    if parent:
-                        for word in crawler_consts.EXCLUDE_CLASSES:
-                            if word in parent:
-                                is_potential_link = False
-                                break
-                        if not is_potential_link:
-                            continue
-                except ValueError:
-                    continue
-                classes = link.css("::attr(class)").get()
-                data_attributes = {}
-                for key, value in link.attrib.items():
-                    if key.startswith("data-"):
-                        data_attributes[key] = value
-                scrape_dict[idx] = {
-                    "href": href,
-                    "data_attributes": data_attributes,
-                    "classes": classes,
-                    "parent_classes": parent,
-                }
-        if len(scrape_dict):
-            source.scrape_data = scrape_dict
-            source = source.check_if_date_format()
-            site_name = self.get_site_name(response)
-            if not source.article_content_selector:
-                source = common_selectors_check(source)
-            source = self.update_source(
-                source.id,
-                scrape_data=scrape_dict,
-                site_name=site_name,
-                article_link_selector=source.article_link_selector,
-                article_link_attribute=source.article_link_attribute,
-            )
-
         return
 
     def get_sources(self):
@@ -409,8 +310,6 @@ class NewsSpider(scrapy.Spider):
         return NewsSource.objects.filter(domain__in=self.start_urls)
 
     def handle_error(self, failure):
-        print("HERE")
-        print(failure)
         deactivate = False
         error = ""
         if failure.check(TimeoutError, HttpError):

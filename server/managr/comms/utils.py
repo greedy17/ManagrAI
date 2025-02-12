@@ -76,7 +76,6 @@ def extract_date_from_text(text, timezone_dict={}):
         return str(parsed_date)
     except parser.ParserError:
         pass
-
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
@@ -1300,6 +1299,7 @@ def get_site_icon(response, url):
 def data_cleaner(data):
     import pytz
 
+    now = datetime.now(pytz.timezone("UTC"))
     try:
         now = datetime.now(pytz.timezone("GMT"))
         content = data.pop("content")
@@ -1641,3 +1641,24 @@ def check_classes(classes_str):
             found_value = f"class,{class_value}"
             found_attribute = attribute
     return found_value, found_attribute
+
+
+def find_key(obj, targetKey, path=""):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in ["publisher"]:
+                continue
+            new_path = f"{path}|{key}" if path else key
+            if key.lower() == targetKey:
+                return new_path
+            elif isinstance(value, (dict, list)):
+                result = find_key(value, targetKey, new_path)
+                if result is not None:
+                    return result
+    if isinstance(obj, list):
+        for index, item in enumerate(obj):
+            new_path = f"{path}|{index}"
+            result = find_key(item, targetKey, new_path)
+            if result is not None:
+                return result
+    return None
