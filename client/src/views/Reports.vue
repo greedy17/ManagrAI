@@ -1557,6 +1557,7 @@ export default {
   },
   data() {
     return {
+      preparedSocial: null,
       loadingClips: false,
       useSearchUrls: false,
       showSearches: false,
@@ -1705,7 +1706,13 @@ www.forbes.com/article-3
         })
       } else {
         articles = this.selectedSearch.meta_data.preparedTweets
+
         clips = this.selectedSearch.meta_data.tweets
+        this.preparedSocial = articles
+
+        this.urls = clips.map((clip) => {
+          return clip.link
+        })
       }
 
       let additionalClips = this.selectedSearch.meta_data.summaries
@@ -1720,7 +1727,10 @@ www.forbes.com/article-3
           return art.link
         })
       } else {
-        this.reportUrls = articles
+        this.reportUrls = articles.map((art) => {
+          return art.link
+        })
+        this.clips = clips
       }
 
       this.urlCount = this.reportUrls.length
@@ -2022,12 +2032,22 @@ www.forbes.com/article-3
       }
     },
     starArticle(art) {
-      const index = this.starredArticles.findIndex((a) => a.url === art.url)
+      if (art.hasOwnProperty('type')) {
+        const index = this.starredArticles.findIndex((a) => a.text === art.text)
 
-      if (index === -1) {
-        this.starredArticles = [...this.starredArticles, art]
+        if (index === -1) {
+          this.starredArticles = [...this.starredArticles, art]
+        } else {
+          this.starredArticles = this.starredArticles.filter((a) => a.text !== art.text)
+        }
       } else {
-        this.starredArticles = this.starredArticles.filter((a) => a.url !== art.url)
+        const index = this.starredArticles.findIndex((a) => a.url === art.url)
+
+        if (index === -1) {
+          this.starredArticles = [...this.starredArticles, art]
+        } else {
+          this.starredArticles = this.starredArticles.filter((a) => a.url !== art.url)
+        }
       }
     },
     getTimeDifferenceInMinutes(dateString) {
@@ -2155,9 +2175,11 @@ www.forbes.com/article-3
       } else {
         this.loadingText = 'Step 1/3: Analyzing media coverage...'
 
+        console.log('preparedSocial are here', this.preparedSocial)
+
         try {
           const res = await Comms.api.getReportSummary({
-            clips: this.urls,
+            clips: this.preparedSocial ? this.preparedSocial : this.urls,
             brand: this.brand,
             social: true,
           })
@@ -2239,6 +2261,7 @@ www.forbes.com/article-3
 
       this.totalVisits = this.calculateTotalVisits()
       this.starredArticles = this.clips.slice(0, 3)
+      console.log('CLIPS ARE RIGHT HERE ---  > ', this.clips)
       this.clipChartData = this.processClips(this.clips)
       this.socialTotals = this.getSocialTotals()
 
