@@ -2024,7 +2024,7 @@
                 </div>
               </div> -->
               <div
-                v-if="mainView !== 'omni'"
+                v-if="mainView === 'news' || mainView === 'social'"
                 @click.stop="openReportModal"
                 :class="{ 'soft-gray-bg': showDateSelection }"
                 class="img-container-button s-wrapper"
@@ -2047,7 +2047,7 @@
                       ? 'Upgrade to PRO'
                       : searchSaved
                       ? 'Generate Report'
-                      : 'Save to enable report'
+                      : 'Save to enable reporting'
                   }}
                 </div>
               </div>
@@ -4343,7 +4343,11 @@
             >
               <img
                 @error="onImageError($event)"
-                :src="currentArticle.image_url"
+                :src="
+                  currentArticle.hasOwnProperty('snippet')
+                    ? currentArticle.image
+                    : currentArticle.image_url
+                "
                 class="photo-header-small"
               />
             </div>
@@ -4809,10 +4813,27 @@
                     />
                   </div>
                 </div>
-                <div style="margin: -4px 0 0 10px">
+                <div class="space-between" style="margin: -4px 0 0 10px">
                   <p @click="selectJournalist(result, true)" class="turq-text">
                     By <span>{{ result.author }}</span>
                   </p>
+
+                  <button
+                    @click="getTrafficData(result.link, result)"
+                    style="margin-right: 16px"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -4885,7 +4906,15 @@
                     v-if="tweet.type === 'twitter'"
                     @click="openTweet(tweet.user.username, tweet.id)"
                   >
-                    <img :src="tweet.user.profile_image_url" class="card-photo-header" />
+                    <img
+                      @error="onImageErrorTwitter($event)"
+                      :src="
+                        tweet.user.profile_image_url
+                          ? tweet.user.profile_image_url
+                          : twitterPlaceholder
+                      "
+                      class="card-photo-header"
+                    />
                   </div>
 
                   <div v-else @click="openTweetAlt(tweet.url)">
@@ -4987,10 +5016,27 @@
                     />
                   </div>
                 </div>
-                <div style="margin: -4px 0 0 10px">
+                <div class="space-between" style="margin: -4px 0 0 10px">
                   <p @click="selectJournalist(article, true)" class="turq-text">
                     By <span>{{ article.author }}</span>
                   </p>
+
+                  <button
+                    @click="getTrafficData(article.link, article)"
+                    style="margin-right: 16px"
+                    class="secondary-button alt-btn s-wrapper"
+                    :disabled="isViewOnly"
+                  >
+                    <img
+                      style="margin-right: 8px"
+                      src="@/assets/images/sparkle.svg"
+                      height="12px"
+                      alt=""
+                    />
+                    Analyze
+
+                    <div v-if="isViewOnly" class="s-tooltip">Locked</div>
+                  </button>
                 </div>
               </div>
 
@@ -5613,7 +5659,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       ],
       omniExamples: [
         {
-          name: `Latest news on..`,
+          name: `Latest news on...`,
           value: `Latest news on {Brand/Topic}`,
         },
         {
@@ -6427,6 +6473,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.showingAnalytics = true
 
       this.currentArticle = article
+
+      console.log(article, 'article')
+
       try {
         const res = await Comms.api.getTrafficData({
           urls: [url],
@@ -6496,16 +6545,17 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
         this.loadingAnalytics = false
         this.refreshUser()
-        console.log('CURRENT ARTICLE --- > ', this.currentArticle)
       } catch (e) {
         console.log(e)
-        this.$toast('Article analysis not available', {
-          timeout: 2000,
-          position: 'top-left',
-          type: 'error',
-          toastClassName: 'custom',
-          bodyClassName: ['custom'],
-        })
+        // this.$toast('Article analysis not available', {
+        //   timeout: 2000,
+        //   position: 'top-left',
+        //   type: 'error',
+        //   toastClassName: 'custom',
+        //   bodyClassName: ['custom'],
+        // })
+
+        this.currentArticle['summary'] = 'Summary not available for this article'
 
         this.loadingAnalytics = false
       } finally {
@@ -6666,6 +6716,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
 
       reader.readAsDataURL(file)
+    },
+    onImageErrorTwitter(event) {
+      event.target.src = this.twitterPlaceholder
     },
     onImageErrorAlt(event) {
       event.target.src = this.blueskyPlaceholder
@@ -6946,6 +6999,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
             : this.discoverList
             ? this.discoverList
             : '',
+          last_search: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
         })
 
         if (this.searchSaved) {
@@ -7321,7 +7377,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <span class="citation-tooltip">
 
                 <span class="span-row">
-            <img height="16px" width="16px" src="${
+            <img height="20px" width="20px" src="${
               citation.type === 'youtube'
                 ? `${this.youtubePlaceholder}`
                 : `${this.blueskyPlaceholder}`
@@ -7367,9 +7423,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-blue c-elip " href="https://twitter.com/${citation.user.username}/status/${citation.id}}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-blue c-elip " href="https://twitter.com/${
+                citation.user.username
+              }/status/${citation.id}}" target="_blank" >${citation.text}</a>
               </span>
-               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.user.profile_image_url
+                   ? citation.user.profile_image_url
+                   : this.twitterPlaceholder
+               }" height="40px" width="40px" alt="">
               </span>
               
               
@@ -7402,7 +7464,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <span class="citation-tooltip">
 
             <span class="span-row">
-            <img height="16px" width="16px" src="${
+            <img height="20px" width="20px" src="${
               citation.type === 'youtube'
                 ? `${this.youtubePlaceholder}`
                 : `${this.blueskyPlaceholder}`
@@ -7452,10 +7514,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${
+                citation.user.username
+              }/status/${citation.id}" target="_blank" >${citation.text}</a>
               
                 </span>
-               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.user.profile_image_url
+                   ? citation.user.profile_image_url
+                   : this.twitterPlaceholder
+               }" height="40px" width="40px" alt="">
               </span>      
             
               <span class="c-elip-small cursor select-journalist" data-citation='${citationIndex}'>
@@ -7491,7 +7559,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <span class="citation-tooltip">
 
             <span class="span-row">
-            <img height="16px" width="16px" src="${
+            <img height="20px" width="20px" src="${
               citation.type === 'youtube'
                 ? `${this.youtubePlaceholder}`
                 : `${this.blueskyPlaceholder}`
@@ -7541,10 +7609,16 @@ Your goal is to create content that resonates deeply, connects authentically, an
               <span class="row">
                 <span class="col">
                
-              <a class="inline-link c-elip c-blue" href="https://twitter.com/${citation.user.username}/status/${citation.id}" target="_blank" >${citation.text}</a>
+              <a class="inline-link c-elip c-blue" href="https://twitter.com/${
+                citation.user.username
+              }/status/${citation.id}" target="_blank" >${citation.text}</a>
               
                 </span>
-               <img src="${citation.user.profile_image_url}" height="40px" width="40px" alt="">
+               <img src="${
+                 citation.user.profile_image_url
+                   ? citation.user.profile_image_url
+                   : this.twitterPlaceholder
+               }" height="40px" width="40px" alt="">
               </span>      
             
               <span class="c-elip-small cursor select-journalist-alt" summary-index='${i}' data-citation='${citationIndex}'>
@@ -7657,7 +7731,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             <span class="citation-tooltip">
 
             <span class="span-row">
-            <img height="16px" width="16px" src="${
+            <img height="20px" width="20px" src="${
               citation.type === 'youtube'
                 ? `${this.youtubePlaceholder}`
                 : `${this.blueskyPlaceholder}`
@@ -9367,6 +9441,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           summary: this.summary,
           results: clips,
           project: this.selectedOrg,
+          last_search: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
         })
 
         if (res.message.toLowerCase().includes('new search term')) {
@@ -11165,6 +11242,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           web: google,
           project: this.selectedOrg,
           follow_up: true,
+          last_search: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
         })
 
         if (res.summary.toLowerCase().includes('new search term')) {
@@ -11219,6 +11299,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
           tweets: clips,
           project: this.selectedOrg,
           followUp: true,
+          last_search: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
         })
 
         if (res.summary.toLowerCase().includes('new search term')) {
@@ -11444,10 +11527,15 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       try {
         const res = await Comms.api.regeneratePitch({
-          pitch: this.summaries.length ? this.summaries[this.summaries.length - 1] : this.summary,
+          pitch: this.summaries.length
+            ? this.summaries[this.summaries.length - 1].summary
+            : this.summary,
           instructions: this.followUps[this.followUps.length - 1],
           style: this.writingStyle,
           details: this.selectedOrg,
+          last_search: this.summaries.length
+            ? this.followUps[this.followUps.length - 1]
+            : this.newSearch,
         })
 
         this.summaries.push({
@@ -11658,6 +11746,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
               previous: previous ? previous : null,
               followUp: followUp,
               trending: this.mainView === 'trending' ? true : false,
+              last_search: this.summaries.length
+                ? this.followUps[this.followUps.length - 1]
+                : this.newSearch,
             },
             this.controllers.getSummary.controller.signal,
           )
@@ -12434,8 +12525,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
     align-items: center;
 
     img {
-      height: 14px !important;
-      width: 14px !important;
+      height: 20px !important;
+      width: 20px;
+      max-width: 30px !important;
       margin-right: 8px;
       margin-left: 0 !important;
     }
