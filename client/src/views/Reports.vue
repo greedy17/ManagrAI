@@ -24,12 +24,18 @@
           </div>
 
           <div style="margin-top: 8px" class="col">
-            <div class="row">
+            <div v-if="reportThread.thread.meta_data.type !== 'social'" class="row">
               <label class="bold" for=""> {{ urlCount }} URLs added:</label>
               <p style="margin-left: 4px">You can add or remove from the box below</p>
             </div>
 
+            <div v-else class="row">
+              <label style="font-size: 16px; margin-right: 4px" class="bold" for="">Content:</label>
+              <p>{{ urlCount }} social media clips</p>
+            </div>
+
             <textarea
+              v-if="reportThread.thread.meta_data.type !== 'social'"
               style="
                 width: 100%;
                 border: 1px solid rgba(0, 0, 0, 0.1) !important;
@@ -1695,6 +1701,8 @@ www.forbes.com/article-3
       this.selectedSearch = this.reportThread.thread
       this.reportName = this.reportThread.title
       this.brand = this.reportThread.brand
+
+      console.log('REPORT THREAD IS HERE', this.reportThread)
 
       let articles = []
       let clips = []

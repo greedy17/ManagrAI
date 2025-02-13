@@ -1266,10 +1266,10 @@
                           >
                             <span>
                               <img src="@/assets/images/users.svg" height="11px" alt="" />
-                              Media Contacts
+                              Bio
                             </span>
 
-                            <p>Search media contacts</p>
+                            <p>Lookup media contact</p>
                           </div>
                         </section>
                       </div>
@@ -2065,7 +2065,7 @@
                   Save to enable sharing
                 </div>
                 <div v-else-if="isViewOnly" class="s-tooltip">Locked</div>
-                <div v-else class="s-tooltip">Share thread</div>
+                <div v-else class="s-tooltip">Share Thread</div>
               </button>
 
               <!-- <div @click="copyText" v-if="mainView === 'write'" class="secondary-button">
@@ -2094,52 +2094,16 @@
                 }"
                 @click.stop="showSave"
                 v-if="
-                  (filteredArticles && filteredArticles.length) ||
-                  tweets.length ||
-                  (mainView === 'write' && summary) ||
-                  (mainView === 'discover' && summary) ||
-                  (mainView === 'web' && summary) ||
-                  (mainView === 'omni' && summary && !isViewOnly)
+                  !isViewOnly &&
+                  ((filteredArticles && filteredArticles.length) ||
+                    tweets.length ||
+                    (mainView === 'write' && summary) ||
+                    (mainView === 'discover' && summary) ||
+                    (mainView === 'web' && summary) ||
+                    (mainView === 'omni' && summary))
                 "
                 :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
               >
-                <!-- <img
-                  v-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    (searchSaved || savedSearch) &&
-                    !notifiedList.includes(searchId)
-                  "
-                  src="@/assets/images/bell.svg"
-                  height="14p"
-                  alt=""
-                />
-
-                <img
-                  v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
-                    (searchSaved || savedSearch) &&
-                    notifiedList.includes(searchId)
-                  "
-                  src="@/assets/images/bell-slash.svg"
-                  height="14p"
-                  alt=""
-                />
-
-                <img
-                  v-else-if="
-                    mainView !== 'news' &&
-                    mainView !== 'social' &&
-                    (savedDiscovery || savedPitch) &&
-                    !notifiedList.includes(searchId)
-                  "
-                  height="14px"
-                  src="@/assets/images/disk.svg"
-                  style="opacity: 0.4"
-                  alt=""
-                />
-
-                <img v-else height="14px" src="@/assets/images/disk.svg" alt="" /> -->
-
                 <div
                   v-if="
                     (mainView === 'news' || mainView === 'social') &&
@@ -3983,10 +3947,10 @@
                   >
                     <span>
                       <img src="@/assets/images/users.svg" height="11px" alt="" />
-                      Media Contacts
+                      Bio
                     </span>
 
-                    <p>Search media contacts</p>
+                    <p>Lookup media contact</p>
                   </div>
                 </section>
               </div>
@@ -6322,7 +6286,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       this.$router.push({ name: 'Reports' })
     },
     openReportModal() {
-      if (this.searchSaved && this.reportCredits > 0) {
+      if (this.searchSaved && this.reportCredits > 0 && !this.isViewOnly) {
         this.reportModalOpen = true
       }
     },
