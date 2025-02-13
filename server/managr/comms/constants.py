@@ -1289,14 +1289,14 @@ def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project
 
 def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, web, project):
     body = f"""
-    User is asking a follow up question. Please provide an output per the users request (see below) based on the previous response and the media coverage below (news coverage, social media coverage, and web data). Also, if a user provides project details (check below) reference those as well, they are applicable to the request. 
+    User is asking a follow up question, see "user request" below. Please answer it based on the previous response (see below) and the media coverage associated with it (see below). Also, if a user provides project details (check below) reference those as well, as they are applicable to the request.
     Cite your sources by enclosing the citationIndex of the coverage in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the coverage.
     Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never refer to X as twitter, only X.
-    
-    1. The user is most likely asking a follow up question (query) based on the previous response and the media coverage. Also assume the user's follow up is related to the current topic, event, entity, or company.
-    2. If the answer can not be provided using the previous response or media coverage below, or the user introduces a new entity/company/topic (e.g. from lululemon to Nike or from fashion to finance), or the user tells you to "run a new search", then create a new search term to find the required information. Make sure the search term is simple, fairly broad, likely to get media coverage. Use an AND or OR if needed. Example: Original search is about Lululemon, in the previous response there is nothing about Peloton. User asks a follow up, "top storylines about Peloton" -- new search should be Top storylines covering Peloton.
-    3. The output should just be the answer to their question / request. Example 1: "List top journalist covering this news" = return a list of journalist. Example 2: "What's being said about Joe Smith" = an concise answer about Joe smith.
-    4. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
+
+    1. Only create a new search if the user introduces a new entity/company/topic (e.g. from Lululemon to Nike or from fashion to finance),
+    or if the user tells you to "run a new search". If you create a new search make sure it's simple, fairly broad, and likely to get media coverage. Use an AND or OR if needed. 
+   
+    2. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
 
     Previous respons: {summary}
     User request: {instructions}
