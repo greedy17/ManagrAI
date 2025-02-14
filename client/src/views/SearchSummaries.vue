@@ -10449,7 +10449,18 @@ Your goal is to create content that resonates deeply, connects authentically, an
             ? this.followUps[this.followUps.length - 1]
             : this.newSearch,
           meta_data: this.metaData,
-          type: this.mainView === 'news' ? 'NEWS' : 'SOCIAL_MEDIA',
+          type:
+            this.mainView === 'news'
+              ? 'NEWS'
+              : this.mainView === 'social'
+              ? 'SOCIAL'
+              : this.mainView === 'omni'
+              ? 'OMNI'
+              : this.mainView === 'web'
+              ? 'WEB'
+              : this.mainView === 'write'
+              ? 'WRITE'
+              : '',
         })
 
         if (response.id) {
