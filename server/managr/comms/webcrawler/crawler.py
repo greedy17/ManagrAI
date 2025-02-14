@@ -25,51 +25,14 @@ from parsel import Selector
 from ..utils import (
     get_domain,
     extract_date_from_text,
-    potential_link_check,
     complete_url,
     data_cleaner,
+    check_article_validity,
 )
+from .extractor import ArticleExtractor
 from .. import constants as comms_consts
 
 logger = logging.getLogger("managr")
-
-
-def check_article_validity(anchor):
-    classes = anchor.xpath("@class").get()
-    article_url = anchor.xpath("@href").extract_first()
-    if article_url is None:
-        return False
-    parsed_path = urlparse(article_url).path
-    path_list = parsed_path.split("/")
-    if len(path_list) <= 1:
-        return False
-    if classes:
-        for class_word in comms_consts.NON_VIABLE_CLASSES:
-            if class_word in classes:
-                return False
-    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
-        if word in article_url:
-            return False
-    return True
-
-
-def check_article_validity(anchor):
-    classes = anchor.xpath("@class").get()
-    article_url = anchor.xpath("@href").extract_first()
-    if article_url is None:
-        return False
-    parsed_path = urlparse(article_url).path
-    path_list = parsed_path.split("/")
-    if len(path_list) <= 1:
-        return False
-    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
-        if word in article_url:
-            return False
-    if classes:
-        for class_word in comms_consts.NON_VIABLE_CLASSES:
-            if class_word in classes:
-                return False
-    return True
 
 
 class NewsSpider(scrapy.Spider):
@@ -106,6 +69,7 @@ class NewsSpider(scrapy.Spider):
         self.rescrape_data = kwargs.get("rescrape")
         self.urls_processed = 0
         self.articles_to_process = 0
+        self.articles_not_saved = 0
         self.error_log = []
         self.start_time = time.time()
         self.blocked_urls = 0
@@ -180,7 +144,7 @@ class NewsSpider(scrapy.Spider):
         return source
 
     def parse(self, response, source):
-        source = source._initialize(response)
+        source = source.initialize(response)
         self.sources_cache[source.id] = source
         if source.article_link_attribute is not None:
             regex = source.article_link_regex
@@ -217,89 +181,30 @@ class NewsSpider(scrapy.Spider):
         return
 
     def parse_article(self, response, source=False):
+        if self.articles_not_saved > 3:
+            raise CloseSpider("Too many articles failed to save")
         url = response.url
+        instance = None
         if source is False:
             try:
                 instance = Article.objects.get(link=url)
                 source = instance.source
             except Article.DoesNotExist:
-                instance = None
                 try:
                     domain = get_domain(url, True)
                     source = NewsSource.objects.get(domain__contains=domain)
                 except NewsSource.DoesNotExist:
                     logger.exception(f"Failed to find source with domain: {domain}")
                     return
-        meta_tag_data = {"link": url, "source": source.id}
         source, article_selectors = source.get_selectors(response)
-        article_tags = None
-        for key in article_selectors.keys():
-            path = article_selectors[key]
-            if "//script" in path:
-                script_path = path.split("|")[0]
-                selector = response.xpath(script_path).get()
-            else:
-                selector = response.xpath(path).getall()
-            if "//script" in path:
-                data_path = path.split("|")[1:]
-                for i, v in enumerate(data_path):
-                    try:
-                        integer_value = int(v)
-                        data_path[i] = integer_value
-                    except ValueError:
-                        continue
-                try:
-                    data = json.loads(selector.lower())
-                    selector_value = data
-                    for path in data_path:
-                        selector_value = selector_value[path]
-                    selector = [selector_value.title()]
-                except Exception as e:
-                    print(e)
-                    selector = []
-            if len(selector) and key != "content" and key != "publish_date":
-                selector = ",".join(selector)
-            if key == "publish_date":
-                if isinstance(selector, list) and len(selector):
-                    selector = selector[0]
-                selector = extract_date_from_text(selector, comms_consts.TIMEZONE_DICT)
-            if key == "content":
-                article_tags = selector
-                continue
-            if selector is not None:
-                meta_tag_data[key] = selector
-            else:
-                meta_tag_data[key] = "N/A"
-
-        full_article = ""
-        cleaned_data = None
-        if article_tags is not None:
-            for article in article_tags:
-                article = article.replace("\n", "").strip()
-                full_article += article
-            meta_tag_data["content"] = full_article
-        else:
-            meta_tag_data["content"] = None
-        try:
-            if "content" in meta_tag_data.keys():
-                cleaned_data = data_cleaner(meta_tag_data)
-                if isinstance(cleaned_data, dict):
-                    if self.article_only and instance:
-                        serializer = ArticleSerializer(instance=instance, data=cleaned_data)
-                    else:
-                        serializer = ArticleSerializer(data=cleaned_data)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save()
-                else:
-                    raise Exception(cleaned_data)
-            else:
-                logger.info(f"No content for article: {response.url}")
-        except IntegrityError as e:
-            return
-        except Exception as e:
-            self.error_log.append(f"{url}|{str(e)}")
-            error = source.add_error(f"{str(e)}")
-            source = self.update_source(source.id, error_log=error)
+        if source.selectors_defined:
+            extractor = ArticleExtractor(source, response, article_selectors, instance)
+            if not extractor.saved:
+                self.error_log.append("{}|{}".format(url, extractor.error))
+                error = source.add_error(extractor.error)
+                source = self.update_source(source.id, error_log=error)
+                self.articles_not_saved += 1
+                return
         self.urls_processed += 1
         self.articles_to_process -= 1
         return

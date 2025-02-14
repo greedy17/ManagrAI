@@ -1,3 +1,5 @@
+from dateutil.tz import gettz
+
 USER_AGENT_LIST = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 managr-crawler/1.0 (https://managr.ai/documentation)",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 managr-crawler/1.1 (https://managr.ai/documentation)",
@@ -31,6 +33,18 @@ REFERER_LIST = [
     "https://www.medium.com/",
     "https://www.quora.com/",
 ]
+
+TIMEZONE_DICT = {
+    "MYT": gettz("Asia/Kuala_Lumpur"),
+    "PT": gettz("America/Los_Angeles"),
+    "EST": gettz("America/New_York"),
+    "UK": gettz("Europe/London"),
+    "MT": gettz("America/Denver"),
+    "CT": gettz("America/Chicago"),
+    "ET": gettz("America/New_York"),
+    "EDT": gettz("America/New_York"),
+    "PST": gettz("America/Los_Angeles"),
+}
 
 SCRAPPY_HEADERS = {
     "Cache-Control": "no-cache",
