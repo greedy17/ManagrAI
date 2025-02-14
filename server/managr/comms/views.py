@@ -3830,6 +3830,7 @@ def get_social_media_data(request):
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
+    return_data["string"] = converted_search
     if errors:
         print(f"ERROR IN SOCIAL MEDIA DATA: {errors}")
     return Response(status=status.HTTP_200_OK, data=return_data)

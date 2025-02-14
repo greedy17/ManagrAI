@@ -980,16 +980,16 @@
           <div></div>
           <div class="row">
             <button class="secondary-button" :disabled="savingContact" @click="toggleBioModal">
-              Cancel
+              Close
             </button>
-            <button :disabled="savingContact" class="primary-button" @click="saveContactAlt">
+            <!-- <button :disabled="savingContact" class="primary-button" @click="saveContactAlt">
               Save
               <div v-if="savingContact" style="margin-left: 12px" class="loading-small">
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
               </div>
-            </button>
+            </button> -->
           </div>
         </footer>
       </div>
@@ -10930,6 +10930,8 @@ Your goal is to create content that resonates deeply, connects authentically, an
           date_to: this.dateEnd,
         })
 
+        console.log('social response', res)
+
         if (this.summary.length) {
           if (!res.data.length) {
             this.noResultsString = res.string
@@ -10949,6 +10951,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             this.showingArticles = false
           }
 
+          this.booleanString = res.string
           this.latestArticles = []
           this.latestMedia = []
           this.tweets = res.data
