@@ -612,7 +612,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
 
     Today is {date}. Please provide a concise and accurate response based on the social media coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the the coverage as it pertains to their search term and identify top influencers from all channels - X (formally Twitter), Bluesky, and Youtube. For additional context, user may provide their project details (pitch, product launch, company boiler plate).
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
     
     Input Format:
 
@@ -641,7 +641,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the social media coverage below. It is most likely a follow up question. User provides project details for additional context.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
     
     Follow these instructions carefully:
     
@@ -653,7 +653,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     Input Format:
     Previous response: {previous}
     User Request: {instructions}
-    Tweets, Posts, and clips: {tweets}
+    Social media coverage: {tweets}
     Project details (campaign, media pitch, etc): {project}
     
     Output format:
