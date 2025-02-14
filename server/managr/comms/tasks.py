@@ -657,7 +657,6 @@ def _send_news_summary(news_alert_id):
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
     user = alert.user
-    link = "{settings.MANAGR_URL}/login"
     thread = alert.thread
     link = thread.generate_url()
     search_boolean = alert.search_boolean
@@ -700,16 +699,15 @@ def _send_social_summary(news_alert_id):
     message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
-    if thread:
-        thread.meta_data["tweets"] = sorted_social_data
-        thread.meta_data["summary"] = message
-        thread.meta_data["summaries"] = []
-        if user.has_twitter_integration:
-            if "tweetMedia" in email_data.keys():
-                thread.meta_data["tweetMedia"] = email_data["media"]
-            if "includes" in email_data.keys():
-                thread.meta_data["includes"] = email_data["includes"]
-        thread.save()
+    thread.meta_data["tweets"] = sorted_social_data
+    thread.meta_data["summary"] = message
+    thread.meta_data["summaries"] = []
+    if user.has_twitter_integration:
+        if "tweetMedia" in email_data.keys():
+            thread.meta_data["tweetMedia"] = email_data["media"]
+        if "includes" in email_data.keys():
+            thread.meta_data["includes"] = email_data["includes"]
+    thread.save()
 
     content = {
         "thread_url": link,

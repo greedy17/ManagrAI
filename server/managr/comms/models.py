@@ -903,14 +903,17 @@ class AssistAlert(TimeStampModel):
 
     @cached_property
     def search_type(self):
-        return self.search.type
+        if hasattr(self, "search"):
+            return self.search.type
+        return self.thread.search.type
 
     @cached_property
     def search_boolean(self):
-        if not self.search.search_boolean or self.search.search_boolean == self.search.input_text:
-            updated_boolean = self.search.update_boolean()
+        search = self.search if hasattr(self, "search") else self.thread.search
+        if not search.search_boolean or search.search_boolean == search.input_text:
+            updated_boolean = search.update_boolean()
             return updated_boolean
-        return self.search.search_boolean
+        return search.search_boolean
 
     @cached_property
     def instructions(self):
