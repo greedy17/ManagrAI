@@ -682,7 +682,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Example 2: User requests, "Find journalists interested in this pitch", for a project about Lululemon's pitch on sustainable fashion, return relevant topics or beats such as : `"Sustainable fashion" OR "Recycled materials".
 
     Boolean Formatting:
-    1. Use quotes around exact phrases as needed.
+    1. Use single quotes around exact phrases as needed.
     2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
     3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
     4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".

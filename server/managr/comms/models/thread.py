@@ -67,7 +67,13 @@ class Search(TimeStampModel):
     def update_boolean(self):
         try:
             url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(self.input_text)
+            prompt = (
+                core_consts.OPEN_AI_QUERY_STRING(self.input_text, self.instructions)
+                if self.type == "NEWS"
+                else core_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(
+                    self.input_text, self.instructions
+                )
+            )
             body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
                 self.user.email,
                 prompt,
