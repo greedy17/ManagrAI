@@ -92,10 +92,12 @@ def SCRAPER_BATCH_BODY(urls, include_webhook=False, is_article=False):
         "apiKey": SCRAPER_API_KEY,
     }
     if include_webhook:
+        body.pop("render")
         body["callback"] = {
             "type": "webhook",
             "url": f"{SCRAPER_API_WEBHOOK}?isArticle={is_article}",
         }
+        body["apiParmas"] = {"render": "true"}
     return body
 
 

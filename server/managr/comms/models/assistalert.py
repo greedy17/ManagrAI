@@ -43,6 +43,12 @@ class AssistAlert(TimeStampModel):
         blank=True,
     )
 
+    def delete(self, *args, **kwargs):
+        self.search.delete()
+        self.thread.delete
+        self.delete()
+        return super().delete(AssistAlert, *args, **kwargs)
+
     def add_recipient(self, email):
         new_recipients = self.recipients.append(email)
         remove_duplicates = list(set(new_recipients))

@@ -250,7 +250,6 @@ def boolean_search_to_searchquery(search_string):
                 current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
                 current_search_queries = []
             if search_query:
-                print(search_query)
                 search_query &= current_query
             else:
                 search_query = current_query
@@ -528,30 +527,6 @@ def valid_slug(slug):
         return True
     else:
         return False
-
-
-def potential_link_check(href, website_url):
-    from .webcrawler.constants import URL_DATE_PATTERN, VALID_ARTICLE_WORDS
-
-    source_domain = urlparse(website_url)
-    site_url = source_domain.netloc
-    if "https" in href and site_url not in href:
-        return False
-    parsed_url = urlparse(href)
-    parsed_path = parsed_url.path
-    path_list = [x for x in parsed_path.split("/") if len(x) > 0]
-    if len(path_list) < 1:
-        return False
-    pattern = re.compile(URL_DATE_PATTERN)
-    m = pattern.search(href)
-    if m:
-        return True
-    for word in VALID_ARTICLE_WORDS:
-        if word in href:
-            return True
-    slug = path_list[-1]
-    is_valid_slug = valid_slug(slug)
-    return is_valid_slug
 
 
 def complete_url(url, default_domain, default_scheme="https"):
@@ -1018,7 +993,6 @@ def get_social_data(urls):
                     results = res["results"]
                     social_data[url] = results
                 else:
-                    print(vars(res))
                     social_data[url] = {}
         except Exception:
             social_data[url] = {}
@@ -1026,7 +1000,6 @@ def get_social_data(urls):
 
 
 def get_trend_articles(topics, countries):
-    print(topics, countries)
     headers = {"Accept": "application/json"}
     params = {
         "api_key": comms_consts.BUZZSUMO_API_KEY,
@@ -1265,7 +1238,6 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
 def send_url_batch(urls, include_webhook=False, is_article=False):
     from managr.comms.tasks import parse_article
 
-    print(urls)
     url = comms_consts.SCRAPER_BATCH_URI
     body = comms_consts.SCRAPER_BATCH_BODY(urls, include_webhook, is_article)
     with Variable_Client() as client:
@@ -1276,7 +1248,6 @@ def send_url_batch(urls, include_webhook=False, is_article=False):
                 parse_article(task["statusUrl"])
             return
         else:
-            print(vars(res))
             return False
 
 
@@ -1513,66 +1484,13 @@ def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=
         return
 
 
-def check_values(href):
-    from webcrawler.constants import COMMON_SELECTORS
-
-    found_value = None
-    found_attribute = None
-    for value_set in COMMON_SELECTORS["value"]:
-        value, attribute = value_set.split(".")
-        if value == "year":
-            year = datetime.datetime.now().year
-            if f"/{year}/" in href:
-                found_value = value
-                found_attribute = attribute
-                break
-        elif value != "year" and value in href:
-            found_value = f"value,{value}"
-            found_attribute = attribute
-            break
-    return found_value, found_attribute
-
-
-def check_classes(classes_str):
-    from webcrawler.constants import COMMON_SELECTORS
-
-    found_value = None
-    found_attribute = None
-    class_list = classes_str.split(" ")
-    for class_set in COMMON_SELECTORS["class"]:
-        class_value, attribute = class_set.split(".")
-        if class_value in class_list:
-            found_value = f"class,{class_value}"
-            found_attribute = attribute
-    return found_value, found_attribute
-
-
-def find_key(obj, targetKey, path=""):
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            if key in ["publisher"]:
-                continue
-            new_path = f"{path}|{key}" if path else key
-            if key.lower() == targetKey and len(value.split() > 1):
-                return new_path
-            elif isinstance(value, (dict, list)):
-                result = find_key(value, targetKey, new_path)
-                if result is not None:
-                    return result
-    if isinstance(obj, list):
-        for index, item in enumerate(obj):
-            new_path = f"{path}|{index}"
-            result = find_key(item, targetKey, new_path)
-            if result is not None:
-                return result
-    return None
-
-
 def check_article_validity(anchor):
     classes = anchor.xpath("@class").get()
     article_url = anchor.xpath("@href").extract_first()
     if article_url is None:
         return False
+    if article_url[len(article_url) - 1] == "/":
+        article_url = article_url[: len(article_url) - 1]
     parsed_path = urlparse(article_url).path
     path_list = parsed_path.split("/")
     if len(path_list) <= 1:
@@ -1584,4 +1502,6 @@ def check_article_validity(anchor):
     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
         if word in article_url:
             return False
-    return True
+    slug = path_list[-1]
+    is_valid_slug = valid_slug(slug)
+    return is_valid_slug

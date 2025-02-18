@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from urllib.parse import urlencode
 
@@ -16,6 +17,8 @@ from managr.utils.misc import encrypt_dict
 from managr.utils.sites import get_site_url
 
 from ..exceptions import _handle_response as _handle_news_response
+
+logger = logging.getLogger("managr")
 
 
 class CompanyDetails(models.Model):
@@ -70,7 +73,7 @@ class Search(TimeStampModel):
             prompt = (
                 core_consts.OPEN_AI_QUERY_STRING(self.input_text, self.instructions)
                 if self.type == "NEWS"
-                else core_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(
+                else comms_consts.OPEN_AI_TWITTER_SEARCH_CONVERSION(
                     self.input_text, self.instructions
                 )
             )

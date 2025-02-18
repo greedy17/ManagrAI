@@ -2,33 +2,105 @@ import json
 import logging
 import random
 import re
+import select
 from copy import copy
+from dataclasses import fields
 from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
 import requests
+import scrapy
+import scrapy.http
 from dateutil import parser
 from lxml import etree
 
-from managr.comms.utils import (
-    check_classes,
-    check_values,
-    complete_url,
-    extract_date_from_text,
-    find_key,
-    potential_link_check,
-)
+from managr.comms.utils import complete_url, extract_date_from_text, send_url_batch, valid_slug
 from managr.comms.webcrawler.constants import (
+    COMMON_SELECTORS,
     EXCLUDE_CLASSES,
     HOMEPAGE_ANCHOR_TAG_XPATH,
     TIMEZONE_DICT,
     URL_DATE_PATTERN,
+    VALID_ARTICLE_WORDS,
     XPATH_STRING_OBJ,
     XPATH_TO_FIELD,
 )
 
 logger = logging.getLogger("managr")
+
+
+def check_values(href):
+    found_value = None
+    found_attribute = None
+    for value_set in COMMON_SELECTORS["value"]:
+        value, attribute = value_set.split(".")
+        if value == "year":
+            year = datetime.now().year
+            if f"/{year}/" in href:
+                found_value = value
+                found_attribute = attribute
+                break
+        elif value != "year" and value in href:
+            found_value = f"value,{value}"
+            found_attribute = attribute
+            break
+    return found_value, found_attribute
+
+
+def check_classes(classes_str):
+    found_value = None
+    found_attribute = None
+    class_list = classes_str.split(" ")
+    for class_set in COMMON_SELECTORS["class"]:
+        class_value, attribute = class_set.split(".")
+        if class_value in class_list:
+            found_value = f"class,{class_value}"
+            found_attribute = attribute
+    return found_value, found_attribute
+
+
+def find_key(obj, targetKey, path=""):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in ["publisher"]:
+                continue
+            new_path = f"{path}|{key}" if path else key
+            if key.lower() == targetKey:
+                return new_path
+            elif isinstance(value, (dict, list)):
+                result = find_key(value, targetKey, new_path)
+                if result is not None:
+                    return result
+    if isinstance(obj, list):
+        for index, item in enumerate(obj):
+            new_path = f"{path}|{index}"
+            result = find_key(item, targetKey, new_path)
+            if result is not None:
+                return result
+    return None
+
+
+def potential_link_check(href, website_url):
+    source_domain = urlparse(website_url)
+    site_url = source_domain.netloc
+    if "https" in href and site_url not in href:
+        return False
+    parsed_url = urlparse(href)
+    parsed_path = parsed_url.path
+    path_list = [x for x in parsed_path.split("/") if len(x) > 0]
+    if len(path_list) < 1:
+        return False
+    pattern = re.compile(URL_DATE_PATTERN)
+    m = pattern.search(href)
+    if m:
+        return True
+    for word in VALID_ARTICLE_WORDS:
+        if word in href:
+            return True
+    slug = path_list[-1]
+    is_valid_slug = valid_slug(slug)
+    return is_valid_slug
 
 
 class ArticleExtractor:
@@ -48,10 +120,10 @@ class ArticleExtractor:
                       save to the DB
     """
 
-    def __init__(self, source, article, selectors, article_instance=None):
+    def __init__(self, source, article, selectors, url, article_instance=None):
         self.source = source
         self.article = article
-        self.link = article.url
+        self.link = url
         self.article_instance = article_instance
         self.selectors = selectors
         self.error = None
@@ -130,7 +202,6 @@ class ArticleExtractor:
         # This function checks if the date is a valid date/format.
         if selector_value is not None:
             selector_value = extract_date_from_text(selector_value, TIMEZONE_DICT)
-        print(selector_value)
         self.publish_date = selector_value
         return
 
@@ -167,6 +238,10 @@ class ArticleExtractor:
         selector_path = path[0]
         data_path = path[1:]
         selector = self.article.xpath(selector_path).getall()
+        if len(selector):
+            selector = selector[0]
+        else:
+            return None
         for i, v in enumerate(data_path):
             try:
                 integer_value = int(v)
@@ -180,6 +255,7 @@ class ArticleExtractor:
                 data_value = data_value[path]
             selector_value = data_value.title()
         except Exception as e:
+            print(e)
             self.error = "Error ({}) extracting script with path {}".format(e, path)
             selector_value = None
         return selector_value
@@ -250,7 +326,7 @@ class SourceExtractor:
         self.set_source_values()
 
     def set_source_values(self):
-        self.use_scrape_api = False
+        self.use_scrape_api = self.source.use_scrape_api
         self.site_name = self.source.site_name
         self.icon = self.source.icon
         self.domain = self.source.domain
@@ -269,8 +345,9 @@ class SourceExtractor:
         self.article_link_regex = self.source.article_link_regex
 
     def parse(self):
-        if self.response.status >= 400:
+        if isinstance(self.response, scrapy.http.HtmlResponse) and self.response.status >= 400:
             self.use_scrape_api = True
+            send_url_batch([self.domain], True)
         else:
             self.site_name = self.get_site_name()
             self.icon = self.get_site_icon()
@@ -281,7 +358,8 @@ class SourceExtractor:
             self.check_if_date_format()
             if not self.article_link_attribute:
                 self.common_selectors_check()
-            self.article_link_regex = self.create_search_regex()
+            if self.article_link_attribute and self.article_link_selector:
+                self.article_link_regex = self.create_search_regex()
         self.save_source_data()
         return self.source
 
@@ -341,7 +419,11 @@ class SourceExtractor:
 
     def validate_url(self):
         og_domain = self.domain
-        response_url = self.response.url
+        response_url = (
+            self.response.request.url
+            if isinstance(self.response, scrapy.http.HtmlResponse)
+            else self.domain
+        )
         validated_url = response_url
         if og_domain not in response_url:
             if response_url[0] == "/":
@@ -356,7 +438,12 @@ class SourceExtractor:
 
     def get_site_name(self):
         xpaths = ["//meta[contains(@property, 'og:site_name')]/@content", "//title/text()"]
-        site_url = urlparse(self.response.request.url).netloc.strip("www.")
+        url = (
+            self.response.request.url
+            if isinstance(self.response, scrapy.http.HtmlResponse)
+            else self.domain
+        )
+        site_url = urlparse(url).netloc.strip("www.")
         site_name = site_url
         for xpath in xpaths:
             found = self.response.xpath(xpath).get()
@@ -368,9 +455,14 @@ class SourceExtractor:
     def get_site_icon(self):
         xpath = "//link[contains(@href,'.ico')]/@href"
         icon_href = self.response.xpath(xpath).get()
+        url = (
+            self.response.request.url
+            if isinstance(self.response, scrapy.http.HtmlResponse)
+            else self.domain
+        )
         if icon_href:
             if icon_href[0] == "/":
-                icon_href = self.response.request.url + icon_href
+                icon_href = url + icon_href
         else:
             return None
         return icon_href
@@ -411,7 +503,11 @@ class SourceExtractor:
         selector_type = selector_split[0]
         if selector_type == "year":
             selector = "contains(@href, '{}')".format(str(datetime.now().year))
-        if selector_type == "value":
+        elif selector_type == "data":
+            selector = "contains(@{},'{}')".format(
+                self.data_attribute_key, self.data_attribute_value
+            )
+        elif selector_type == "value":
             if "|" in selector_split[1]:
                 selector = ""
                 values = selector_split[1].split("|")
@@ -421,7 +517,7 @@ class SourceExtractor:
                         selector += " or "
             else:
                 selector = "contains(@href, '{}')".format(selector_split[1])
-        if selector_type == "class":
+        elif selector_type == "class":
             if "|" in selector_split[1]:
                 selector = ""
                 values = selector_split[1].split("|")
@@ -436,7 +532,7 @@ class SourceExtractor:
             else:
                 if "=" in selector_split[1]:
                     value = selector_split[1].replace("=", "")
-                    selector = "@class='{value}'".format(value)
+                    selector = "@class='{}'".format(value)
                 else:
                     selector = "contains(@class, '{}')".format(selector_split[1])
         return selector
@@ -492,7 +588,7 @@ class SourceExtractor:
                     continue
                 else:
                     return self
-            logger.info("{} ({})".format((len(matches) / len(sample)), "{year}/{month}/{day}"))
+            logger.info("{} ({}/{}/{})".format((len(matches) / len(sample)), year, month, day))
             if is_date:
                 self.article_link_selector = "year"
                 self.article_link_attribute = "a"
@@ -500,7 +596,7 @@ class SourceExtractor:
         return
 
     def add_selectors(self):
-        url = self.response.url
+        url = self.domain
         xpath_copy = copy(XPATH_STRING_OBJ)
         fields_dict = {}
         article_selectors = self.source.article_selectors
@@ -558,23 +654,26 @@ class SourceExtractor:
                 return self.article_link_regex
         # add the link selector
         attribute_list = self.article_link_attribute.split(",")
-        regex = "//body//" + attribute_list[0]
-        if self.article_link_selector or self.data_attribute_key:
+        regex = "//" + attribute_list[0]
+        if (
+            self.article_link_selector and self.article_link_selector != "none"
+        ) or self.data_attribute_key:
             regex += "["
         # check for data attribute
-        if self.data_attribute_key:
+        if self.data_attribute_key and self.article_link_selector != "data":
             if self.data_attribute_value is not None:
                 regex += f"@{self.data_attribute_key}='{self.data_attribute_value}'"
             else:
                 regex += f"@{self.data_attribute_key}"
         # check for link attribute
-        if self.article_link_selector:
+        if self.article_link_selector and self.article_link_selector != "none":
             selector = self.selector_processor()
-            if "@data" in regex:
+            if "@data" in regex and self.article_link_selector is not "data":
                 regex += f" and {selector}"
             else:
                 regex += selector
             regex += "]"
         if len(attribute_list) > 1:
-            regex += f"//{attribute_list[1]}[1]"
+            for a in attribute_list:
+                regex += "//{}".format(a)
         return regex

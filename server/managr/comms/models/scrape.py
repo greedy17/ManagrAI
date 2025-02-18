@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 from dateutil import parser
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.search import SearchVector, SearchVectorField
 from django.db import models

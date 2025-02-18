@@ -1,71 +1,72 @@
-import logging
-import json
-import uuid
-import httpx
 import datetime
-import re
+import json
+import logging
 import math
+import re
+import uuid
 from copy import copy
-from scrapy.selector import Selector
-from django.db import transaction, IntegrityError
 from urllib.parse import urlparse
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta
-from dateutil import parser
-from django.conf import settings
+
+import httpx
 from background_task import background
-from managr.utils.client import Variable_Client
-from managr.utils.misc import custom_paginator
-from rest_framework.exceptions import ValidationError
-from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
-from . import constants as comms_consts
-from .models import (
-    Search,
-    NewsSource,
-    AssistAlert,
-    Journalist,
-    JournalistContact,
-    Thread,
-    TwitterAccount,
-    ArchivedArticle,
-)
-from .models import Article as InternalArticle
-from .serializers import (
-    SearchSerializer,
-    NewsSourceSerializer,
-    JournalistSerializer,
-    JournalistContactSerializer,
-    EmailTrackerSerializer,
-    ArticleSerializer,
-)
-from managr.core.models import TaskResults
-from managr.core import constants as core_consts
-from managr.core.models import User, TaskResults
-from managr.core import exceptions as open_ai_exceptions
-from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import block_builders
-from managr.slack.helpers.utils import action_with_params, send_to_error_channel
-from managr.slack import constants as slack_const
-from managr.slack.models import UserSlackIntegration
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 from newspaper import Article
-from managr.slack.helpers.utils import block_finder
+from rest_framework.exceptions import ValidationError
+from scrapy.selector import Selector
+
+from managr.api.emails import send_html_email
 from managr.comms.utils import (
-    generate_config,
-    extract_base_domain,
-    normalize_article_data,
     check_article_validity,
+    complete_url,
+    data_cleaner,
+    extract_base_domain,
+    extract_date_from_text,
+    generate_config,
     get_bluesky_data,
+    get_domain,
     get_tweet_data,
     get_youtube_data,
     merge_sort_dates,
-    complete_url,
+    normalize_article_data,
     send_url_batch,
-    data_cleaner,
-    extract_date_from_text,
-    get_domain,
 )
-from managr.api.emails import send_html_email
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import TaskResults, User
+from managr.slack import constants as slack_const
+from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
+from managr.slack.helpers.utils import action_with_params, block_finder, send_to_error_channel
+from managr.slack.models import UserSlackIntegration
+from managr.utils.client import Variable_Client
+from managr.utils.misc import custom_paginator
+
+from . import constants as comms_consts
+from .models import ArchivedArticle
+from .models import Article as InternalArticle
+from .models import (
+    AssistAlert,
+    Journalist,
+    JournalistContact,
+    NewsSource,
+    Search,
+    Thread,
+    TwitterAccount,
+)
+from .serializers import (
+    ArticleSerializer,
+    EmailTrackerSerializer,
+    JournalistContactSerializer,
+    JournalistSerializer,
+    NewsSourceSerializer,
+    SearchSerializer,
+)
+from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
 
 logger = logging.getLogger("managr")
 
@@ -1153,6 +1154,7 @@ def parse_homepage(domain, body):
         print(f"Could not find source with domain {domain}")
         return
     source = source.initialize(selector)
+    source.save()
     if source.article_link_attribute is not None:
         regex = source.article_link_regex
         article_links = selector.xpath(regex)
@@ -1219,7 +1221,6 @@ def parse_article(status_url):
         print(f"Multiple instances matching {url} ({domain})")
         return
     html = Selector(text=body)
-    url = response.url
     instance = None
     if source is False:
         try:
@@ -1232,12 +1233,13 @@ def parse_article(status_url):
             except NewsSource.DoesNotExist:
                 logger.exception(f"Failed to find source with domain: {domain}")
                 return
-    source, article_selectors = source.get_selectors(response)
+    source, article_selectors = source.get_selectors(html)
     if source.selectors_defined:
-        extractor = ArticleExtractor(source, html, article_selectors, instance)
+        extractor = ArticleExtractor(source, html, article_selectors, url, instance)
         if not extractor.saved:
             logger.info("Failed to save {}|{}".format(url, extractor.error))
         else:
+            source.crawling
             logger.info("Successfully saved {}".format(url))
     return
 
