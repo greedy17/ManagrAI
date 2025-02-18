@@ -1050,13 +1050,12 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     next_token = False
     tweet_data = {}
     tweet_list = []
-    include_data = {"users": [], "media": []}
     media_data = []
     attempts = 1
     now = datetime.now(timezone.utc)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
     if (now.minute + 5) >= 54:
-        from_minute = now.minute
+        from_minute = now.minute - 1
         to_minute = now.minute
     else:
         from_minute = (now.minute + 5) if ((now.minute + 5) >= 10) else f"0{now.minute + 5}"

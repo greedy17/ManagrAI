@@ -45,7 +45,7 @@ class Command(BaseCommand):
                     year=current_day.year, month=current_day.month, day=current_day.day
                 )
                 run_at = str(run_at)
-            if alert.search.type == "NEWS":
+            if alert.search_type == "NEWS":
                 emit_send_news_summary(str(alert.id), run_at)
             else:
                 emit_send_social_summary(str(alert.id), run_at)

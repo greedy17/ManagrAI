@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import models
+from django.utils.functional import cached_property
 
 from managr.comms import constants as comms_consts
 from managr.core.models import TimeStampModel
@@ -42,6 +43,28 @@ class AssistAlert(TimeStampModel):
         null=True,
         blank=True,
     )
+
+    @cached_property
+    def search_type(self):
+        if hasattr(self, "search"):
+            return self.search.type
+        return self.thread.search.type
+
+    @cached_property
+    def search_boolean(self):
+        search = self.search if hasattr(self, "search") else self.thread.search
+        if not search.search_boolean or search.search_boolean == search.input_text:
+            updated_boolean = search.update_boolean()
+            return updated_boolean
+        return search.search_boolean
+
+    @cached_property
+    def instructions(self):
+        return self.meta_data.get("project", None)
+
+    @cached_property
+    def last_sent(self):
+        return self.meta_data.get("last_sent", None)
 
     def delete(self, *args, **kwargs):
         self.search.delete()

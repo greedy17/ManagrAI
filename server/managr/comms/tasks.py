@@ -565,8 +565,7 @@ def _send_news_summary(news_alert_id):
         thread = Thread.objects.get(id=alert.thread.id)
         project = thread.meta_data.get("project", "")
         link = thread.generate_url()
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
+
     boolean = alert.search.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
@@ -658,16 +657,9 @@ def _send_news_summary(news_alert_id):
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
     user = alert.user
-    thread = None
-    link = "{settings.MANAGR_URL}/login"
-    if alert.thread:
-        thread = alert.thread
-        link = thread.generate_url()
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-        boolean = alert.search.search_boolean
-    else:
-        boolean = alert.search.search_boolean
+    thread = alert.thread
+    link = thread.generate_url()
+    search_boolean = alert.search_boolean
     social_switcher = {
         "youtube": get_youtube_data,
         "twitter": get_tweet_data,
@@ -687,56 +679,43 @@ def _send_social_summary(news_alert_id):
     social_data_list = []
     for value in social_values:
         data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from, date_to=date_to)
+        social_data = data_func(
+            search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
+        )
         if "error" in social_data.keys():
             continue
         else:
-            if value == "twitter":
-                email_data["includes"] = social_data["includes"]
-                if "media" in email_data.keys():
-                    email_data["media"] = social_data["tweetMedia"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    email_list = []
-    for value in sorted_social_data:
-        if value["type"] == "twitter":
-            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
-            email_list.append(social_value)
-        else:
-            social_value = [
-                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
-            ]
-            email_list.append(social_value)
     res = TwitterAccount.get_summary(
         alert.user,
         2000,
         60.0,
-        email_list,
-        alert.search.search_boolean,
-        alert.search.instructions,
+        sorted_social_data,
+        search_boolean,
+        alert.instructions,
         False,
     )
     message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
-    if thread:
-        thread.meta_data["tweets"] = sorted_social_data
-        thread.meta_data["summary"] = message
-        thread.meta_data["summaries"] = []
-        if user.has_twitter_integration:
-            if "tweetMedia" in email_data.keys():
-                thread.meta_data["tweetMedia"] = email_data["media"]
-            if "includes" in email_data.keys():
-                thread.meta_data["includes"] = email_data["includes"]
-        thread.save()
+    thread.meta_data["tweets"] = sorted_social_data
+    thread.meta_data["summary"] = message
+    thread.meta_data["summaries"] = []
+    if user.has_twitter_integration:
+        if "tweetMedia" in email_data.keys():
+            thread.meta_data["tweetMedia"] = email_data["media"]
+        if "includes" in email_data.keys():
+            thread.meta_data["includes"] = email_data["includes"]
+    thread.save()
 
     content = {
         "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",
-        "title": f"{alert.search.name}",
+        "title": f"{alert.title}",
     }
     send_html_email(
-        f"ManagrAI Digest: {alert.search.name}",
+        f"ManagrAI Digest: {alert.title}",
         "core/email-templates/social-email.html",
         settings.DEFAULT_FROM_EMAIL,
         [alert.user.email],

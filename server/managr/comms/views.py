@@ -246,12 +246,13 @@ class PRSearchViewSet(
         is_follow_up = request.data.get("followUp", False)
         trending = request.data.get("trending", False)
         company = request.data.get("company")
+        last_search = request.data.get("last_search")
         if is_follow_up:
             UserInteraction.add_instance(
                 data={
                     "user": user,
                     "type": "FOLLOWUP",
-                    "previous": previous,
+                    "previous": last_search,
                     "query": search,
                     "search_type": "NEWS",
                 }
@@ -768,6 +769,8 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
+        last_search = request.data.get("last_search")
+        
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
         if follow_up:
@@ -775,7 +778,7 @@ class PRSearchViewSet(
                 data={
                     "user": user,
                     "type": "FOLLOWUP",
-                    "previous": previous,
+                    "previous": last_search,
                     "query": search,
                     "search_type": "SOCIAL",
                 }
@@ -1311,11 +1314,13 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
+        last_search = request.data.get("last_search")
+
         UserInteraction.add_instance(
             data={
                 "user": user,
                 "type": "FOLLOWUP",
-                "previous": details,
+                "previous": last_search,
                 "query": instructions,
                 "search_type": "WRITE",
             }
@@ -3821,6 +3826,7 @@ def get_social_media_data(request):
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
+    return_data["string"] = converted_search
     if errors:
         print(f"ERROR IN SOCIAL MEDIA DATA: {errors}")
     return Response(status=status.HTTP_200_OK, data=return_data)
@@ -3905,12 +3911,14 @@ def get_omni_summary(request):
     follow_up = request.data.get("follow_up", False)
     original = request.data.get("original", None)
     user.add_meta_data("omni")
+    last_search = request.data.get("last_search")
+
     if follow_up:
         UserInteraction.add_instance(
             data={
                 "user": user,
                 "type": "FOLLOWUP",
-                "previous": original,
+                "previous": last_search,
                 "query": search,
                 "search_type": "OMNI",
             }

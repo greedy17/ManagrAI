@@ -210,10 +210,21 @@ class CustomArchivedArticle(admin.ModelAdmin):
 
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "title", "search", "run_at", "times_sent", "last_sent")
+    list_display = ("user", "search", "run_at", "times_sent", "last_sent")
+    fields = [
+        "search_type",
+        "search_boolean",
+        "user",
+        "run_at",
+        "type",
+        "search",
+        "thread",
+        "recipients",
+    ]
     ordering = ("run_at",)
     list_filter = ("type", "search__type")
     search_fields = ["user__email"]
+    readonly_fields = ["search_type", "search_boolean", "user"]
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
@@ -267,7 +278,9 @@ class CustomThread(admin.ModelAdmin):
     search_fields = ["user__email", "title"]
 
     def thread_type(self, obj):
-        return obj.search.type.title()
+        if hasattr(obj, "search"):
+            return obj.search.type.title()
+        return "-"
 
     def follow_ups(self, obj):
         meta_data = obj.meta_data
