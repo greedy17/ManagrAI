@@ -1,23 +1,25 @@
 from datetime import datetime
-from django.utils.timesince import timesince
+
 from django.contrib import admin
 from django.db.models import Q
+from django.utils.timesince import timesince
+
 from .models import (
-    Search,
-    Pitch,
-    NewsSource,
+    ArchivedArticle,
     Article,
     AssistAlert,
-    WritingStyle,
-    TwitterAccount,
-    InstagramAccount,
-    Discovery,
-    Journalist,
-    EmailTracker,
-    JournalistContact,
     CompanyDetails,
+    Discovery,
+    EmailTracker,
+    InstagramAccount,
+    Journalist,
+    JournalistContact,
+    NewsSource,
+    Pitch,
+    Search,
     Thread,
-    ArchivedArticle,
+    TwitterAccount,
+    WritingStyle,
 )
 
 # Register your models here.
@@ -74,10 +76,20 @@ def update_stopped(modeladmin, request, queryset):
 update_stopped.short_description = "Update stopped status"
 
 
+def update_boolean(modeladmin, request, queryset):
+    for instance in queryset:
+        instance.update_boolean()
+    modeladmin.message_user(request, f"{queryset.count()} searches were updated")
+
+
+update_active_status.short_description = "Update boolean"
+
+
 class CustomSearch(admin.ModelAdmin):
     list_display = ("user", "type", "input_text", "search_boolean")
     list_filter = ("user__organization",)
     ordering = ("-datetime_created",)
+    actions = [update_boolean]
 
 
 class CustomPitch(admin.ModelAdmin):

@@ -1772,8 +1772,10 @@ class AssistAlertViewSet(
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
+            instance = serializer.save()
+            instance.search = instance.thread.search
+            instance.save()
+            readSerializer = self.serializer_class(instance=instance)
         except Exception as e:
             logger.exception(f"Error validating data for email alert <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})

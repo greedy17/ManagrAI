@@ -1,22 +1,22 @@
 from rest_framework import serializers
-from .models import (
-    Search,
-    Pitch,
-    NewsSource,
+
+from managr.comms.models import (
     Article,
-    WritingStyle,
     AssistAlert,
-    Process,
-    TwitterAccount,
-    InstagramAccount,
-    Discovery,
-    Journalist,
-    EmailTracker,
-    JournalistContact,
     CompanyDetails,
+    Discovery,
+    EmailTracker,
+    InstagramAccount,
+    Journalist,
+    JournalistContact,
+    NewsSource,
+    Pitch,
+    Process,
+    Search,
     Thread,
+    TwitterAccount,
+    WritingStyle,
 )
-from django.contrib.postgres.search import SearchVector
 
 
 class SearchSerializer(serializers.ModelSerializer):

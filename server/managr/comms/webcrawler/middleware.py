@@ -1,8 +1,10 @@
 import os
 import random
-from scrapy.utils.request import request_fingerprint
-from .constants import USER_AGENT_LIST, REFERER_LIST
+
 from scrapy.dupefilters import RFPDupeFilter
+from scrapy.utils.request import fingerprint
+
+from .constants import REFERER_LIST, USER_AGENT_LIST
 
 
 class ClearCacheMiddleware:
@@ -24,8 +26,8 @@ class ClearCacheMiddleware:
             os.rmdir(cache_subdir)
 
     def _generate_cache_key(self, request):
-        # Use Scrapy's request_fingerprint method to generate the key
-        return request_fingerprint(request)
+        # Use Scrapy's fingerprint method to generate the key
+        return fingerprint(request)
 
 
 class RandomizeHeaderMiddleware:
