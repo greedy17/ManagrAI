@@ -2088,6 +2088,7 @@
                   'soft-gray-bg blk-text':
                     mainView !== 'news' &&
                     mainView !== 'social' &&
+                    mainView !== 'omni' &&
                     (savedDiscovery || savedPitch) &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId),
@@ -2102,11 +2103,13 @@
                     (mainView === 'web' && summary) ||
                     (mainView === 'omni' && summary))
                 "
-                :disabled="searchSaved && mainView !== 'news' && mainView !== 'social'"
+                :disabled="
+                  searchSaved && mainView !== 'news' && mainView !== 'social' && mainView !== 'omni'
+                "
               >
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    (mainView === 'news' || mainView === 'social' || mainView === 'omni') &&
                     (searchSaved || savedSearch) &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
@@ -2117,7 +2120,7 @@
 
                 <div
                   v-else-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    (mainView === 'news' || mainView === 'social' || mainView === 'omni') &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -2520,7 +2523,7 @@
 
                 <div
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    (mainView === 'news' || mainView === 'social' || mainView === 'omni') &&
                     !notifiedList.includes(searchId) &&
                     !notifiedList.includes(threadId)
                   "
@@ -2543,148 +2546,6 @@
                       savingAlert || !isPaid || (!savedSearch && !savedDiscovery && !savedPitch)
                     "
                   />
-
-                  <!-- <div style="margin: 8px 0" class="space-between">
-                    <div class="row">
-                      <img
-                        src="@/assets/images/email-round.svg"
-                        height="14px"
-                        alt=""
-                        style="margin-right: 8px; opacity: 0.7"
-                      />
-                      Send digest to email
-                    </div>
-
-                    <label class="switch">
-                      <input
-                        :checked="alertType === 'EMAIL'"
-                        @change="toggleAlert('EMAIL')"
-                        type="checkbox"
-                      />
-                      <span class="slider round"></span>
-                    </label>
-                  </div> -->
-
-                  <!-- <div
-                    v-if="user.slackRef && mainView === 'news'"
-                    style="margin-bottom: 16px"
-                    class="space-between"
-                  >
-                    <div class="row">
-                      <img
-                        src="@/assets/images/slackLogo.png"
-                        height="14px"
-                        alt=""
-                        style="margin-right: 8px"
-                      />
-                      Send digest to Slack
-                    </div>
-
-                    <label class="switch">
-                      <input
-                        :checked="alertType === 'SLACK'"
-                        @change="toggleAlert('SLACK')"
-                        type="checkbox"
-                      />
-                      <span class="slider round"></span>
-                    </label>
-                  </div>
-
-                  <div
-                    v-else-if="mainView === 'news'"
-                    style="margin-bottom: 16px"
-                    class="space-between"
-                  >
-                    <div class="row">
-                      <img
-                        src="@/assets/images/slackLogo.png"
-                        height="14px"
-                        alt=""
-                        style="margin-right: 8px"
-                      />
-                      Send digest to Slack
-                    </div>
-
-                    <button @click="goToIntegrations" class="secondary-button">
-                      <img src="@/assets/images/slackLogo.png" height="14px" alt="" />
-                      Connect
-                    </button>
-                  </div> -->
-
-                  <!-- <div style="width: 100%" class="fadein" v-show="alertType === 'SLACK'">
-                    <div class="dropdown-select">
-                      <div @click.stop="showAlertChannels" class="dropdown-select-header">
-                        {{ alertChannel ? alertChannelName : 'Select a Slack channel' }}
-                        <img src="@/assets/images/downArrow.svg" height="14px" alt="" />
-                      </div>
-
-                      <div
-                        v-outside-click="hideAlertChannels"
-                        v-show="showingAlertChannels"
-                        class="dropdown-select-body-up"
-                      >
-                        <div class="dropdown-select-top">
-                          <div style="width: 100% !important" class="input">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M4.1 11.06a6.95 6.95 0 1 1 13.9 0 6.95 6.95 0 0 1-13.9 0zm6.94-8.05a8.05 8.05 0 1 0 5.13 14.26l3.75 3.75a.56.56 0 1 0 .8-.79l-3.74-3.73A8.05 8.05 0 0 0 11.04 3v.01z"
-                                fill="currentColor"
-                              ></path>
-                            </svg>
-                            <input
-                              v-model="searchChannelText"
-                              class="search-input"
-                              :placeholder="`Search...`"
-                            />
-
-                            <img
-                              v-if="searchChannelText"
-                              @click="clearSearchText"
-                              src="@/assets/images/close.svg"
-                              class="pointer"
-                              height="12px"
-                              alt=""
-                            />
-                          </div>
-                        </div>
-
-                        <div v-show="filteredChannels.length" style="min-height: 180px">
-                          <div
-                            v-for="(channel, i) in filteredChannels"
-                            :key="i"
-                            class="dropdown-select-item"
-                            @click="selectAlertChannel(channel)"
-                          >
-                            {{ channel.name }}
-                          </div>
-                        </div>
-
-                        <div style="height: 180px" v-show="!filteredChannels.length">
-                          <p style="margin-left: 12px">No results...</p>
-                        </div>
-
-                        <div class="dropdown-select-bottom">
-                          <button
-                            style="position: sticky; bottom: 0"
-                            class="secondary-button"
-                            @click="listUserChannels(userChannelOpts.nextCursor)"
-                            :disabled="dropdownLoading || !userChannelOpts.nextCursor"
-                          >
-                            <img
-                              v-if="dropdownLoading"
-                              class="rotation innvert"
-                              src="@/assets/images/loading.svg"
-                              height="14px"
-                              alt=""
-                            />
-                            Load more
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div> -->
 
                   <div class="row-end-bottom" style="margin-top: 0">
                     <button @click="hideSave" class="secondary-button">Close</button>
@@ -2711,7 +2572,7 @@
                 <div
                   class="dropdown-small-section"
                   v-if="
-                    (mainView === 'news' || mainView === 'social') &&
+                    (mainView === 'news' || mainView === 'social' || mainView === 'omni') &&
                     (searchSaved || savedSearch) &&
                     (notifiedList.includes(searchId) || notifiedList.includes(threadId))
                   "
@@ -9079,7 +8940,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     setCurrentAlert(id = null) {
-      console.log('email alerts - >', this.emailAlerts)
+      // console.log('email alerts - >', this.emailAlerts)
       if (id) {
         this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
       } else {
@@ -9090,7 +8951,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             alert.thread === this.searchId,
         )[0]
 
-        console.log('currentalert', this.currentAlert)
+        // console.log('currentalert', this.currentAlert)
       }
 
       // this.getEmailAlerts()

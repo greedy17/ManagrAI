@@ -770,7 +770,7 @@ class PRSearchViewSet(
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
         last_search = request.data.get("last_search")
-        
+
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
         if follow_up:

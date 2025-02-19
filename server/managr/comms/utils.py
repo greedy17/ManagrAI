@@ -16,7 +16,6 @@ import requests
 from botocore.exceptions import ClientError
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-from django.apps import apps
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery
 from django.db import transaction
@@ -665,9 +664,9 @@ def google_search(query, number_of_results=10, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=10):
+def alternate_google_search(query, number_of_results=10, for_alert=False):
     url = comms_consts.GOOGLE_SEARCH_URI
-    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert)
     with Variable_Client() as client:
         res = client.get(url, params=params)
         results_list = []
@@ -706,7 +705,7 @@ def alternate_google_search(query, number_of_results=10):
                 results_list.append(result_data)
             return {"results": results_list}
         else:
-            return {}
+            return {"results": []}
 
 
 def check_journalist_validity(journalist, outlet, email):
@@ -1056,7 +1055,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
     if (now.minute + 5) >= 54:
         from_minute = now.minute - 1
-        to_minute = now.minute
+        to_minute = now.minute - 1
     else:
         from_minute = (now.minute + 5) if ((now.minute + 5) >= 10) else f"0{now.minute + 5}"
         to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
@@ -1303,98 +1302,6 @@ def data_cleaner(data):
         data["error"] = e
         return "Unknown Error () cleaning data: {}".format(e, data)
     return data
-
-
-#################################
-# DEV FUNCTIONS
-#################################
-def test_social_response(news_alert_id=False):
-    from managr.comms.models import AssistAlert
-
-    print("Func Start:", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    if news_alert_id:
-        alert = AssistAlert.objects.get(id=news_alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    user = alert.user
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-        boolean = alert.search.search_boolean
-    else:
-        boolean = alert.search.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_from = datetime.now(timezone.utc) - timedelta(hours=24)
-    email_data = {}
-    social_data_list = []
-    for value in social_values:
-        print("=============================")
-        print(f"{value}: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from)
-        print("Response returned: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        if "error" in social_data.keys():
-            continue
-        else:
-            if value == "twitter":
-                email_data["includes"] = social_data["includes"]
-            social_data_list.extend(social_data["data"])
-    print("Sort start: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    print("Sort stop: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    post_list = []
-    for value in sorted_social_data:
-        if value["type"] == "twitter":
-            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
-            post_list.append(social_value)
-        else:
-            social_value = (
-                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
-            )
-            post_list.append(social_value)
-    return post_list
-
-
-def test_social_summary_response(post_list, alert_id=False, completion_token=1000, model=False):
-    from managr.comms.models import AssistAlert, TwitterAccount
-
-    models = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "o1", "o1-mini", "gpt-3.5-turbo"]
-    if model:
-        models = [model]
-    response_times = "RESPONSE TIMES REPORT\n=====================\n"
-    if alert_id:
-        alert = AssistAlert.objects.get(id=alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    for model in models:
-        d = datetime.now()
-        res = TwitterAccount.get_summary(
-            alert.user,
-            completion_token,
-            60.0,
-            post_list,
-            alert.search.search_boolean,
-            alert.search.instructions,
-            False,
-            model=model,
-        )
-        c_tokens = res["usage"]["completion_tokens"]
-        seconds = (datetime.now() - d).seconds
-        response_times += (
-            f"{model}: {seconds} seconds at {round((seconds/c_tokens),3)} ms per token\n"
-        )
-        print(f"Response: {res}")
-    print(response_times)
 
 
 def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=False, auto=False):

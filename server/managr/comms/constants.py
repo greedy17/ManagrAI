@@ -1,3 +1,4 @@
+from dateutil.tz import gettz
 from django.conf import settings
 
 USE_NEWS_API = settings.USE_NEWS_API
@@ -116,13 +117,14 @@ def SEMRUSH_PARAMS(urls):
     return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
 
 
-def GOOGLE_SEARCH_PARAMS(query, number_of_results):
+def GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert=False):
+    date_restrict = "d1" if for_alert else "w1"
     params = {
         "q": query,
         "key": GOOGLE_SEARCH_KEY,
         "cx": GOOGLE_SEARCH_ID,
         "num": number_of_results,
-        "dateRestrict": "w1",
+        "dateRestrict": date_restrict,
     }
     return params
 
