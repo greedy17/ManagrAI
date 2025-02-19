@@ -2839,6 +2839,7 @@ class ThreadViewSet(
     @action(
         methods=["get"],
         permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
         detail=False,
         url_path="shared",
     )
@@ -3944,7 +3945,6 @@ def get_omni_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content")
-            print(message)
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -3997,4 +3997,3 @@ def get_omni_summary(request):
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
     return Response(status=status.HTTP_200_OK, data={"summary": message})
-    # return Response(status=status.HTTP_200_OK, data={"summary": summary})

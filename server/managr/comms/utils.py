@@ -1224,9 +1224,9 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
                 normalized_data = normalize_bluesky_data(posts)
                 bluesky_data["data"] = normalized_data
             else:
+                res = res.json()
                 if res.headers.get("Content-Type") == "application/json":
-                    res = res.json()
-                bluesky_data["error"] = res["error"]["message"]
+                    bluesky_data["error"] = res["error"]["message"]
     except Exception as e:
         print(f"Bluesky date error: {e}: {vars(res)}")
         bluesky_data["error"] = str(e)

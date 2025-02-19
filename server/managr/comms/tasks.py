@@ -12,7 +12,7 @@ from background_task import background
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.utils import timezone
 from newspaper import Article
 from rest_framework.exceptions import ValidationError
@@ -23,13 +23,9 @@ from managr.comms.utils import (
     alternate_google_search,
     check_article_validity,
     complete_url,
-    data_cleaner,
     extract_base_domain,
-    extract_date_from_text,
     generate_config,
     get_bluesky_data,
-    get_site_icon,
-    get_site_name,
     get_domain,
     get_tweet_data,
     get_youtube_data,
@@ -62,7 +58,6 @@ from .models import (
     TwitterAccount,
 )
 from .serializers import (
-    ArticleSerializer,
     EmailTrackerSerializer,
     JournalistContactSerializer,
     JournalistSerializer,
@@ -1328,6 +1323,7 @@ def _send_omni_summary(news_alert_id):
         social_data = data_func(
             search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
         )
+        print("{}, {}".format(value, social_data))
         if "error" in social_data.keys():
             social_data_dict[value] = []
             continue
@@ -1368,14 +1364,13 @@ def _send_omni_summary(news_alert_id):
     sorted_social_data.extend(social_data_dict["bluesky"][:7])
     sorted_social_data.extend(social_data_dict["youtube"][:6])
     sorted_social_data = merge_sort_dates(sorted_social_data, "created_at")
-    message = res.get("choices")[0].get("message").get("content")
     message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
     thread.meta_data["omniSocial"] = sorted_social_data
     thread.meta_data["omniNews"] = normalized_clips
     thread.meta_data["omniWeb"] = google_results
-    thread.meta_data["omniResults"] = sorted_social_data + sorted_social_data + google_results
+    thread.meta_data["omniResults"] = [*sorted_social_data, *normalized_clips, *google_results]
     thread.save()
     content = {
         "thread_url": link,
