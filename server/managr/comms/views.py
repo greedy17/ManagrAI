@@ -3912,26 +3912,6 @@ def get_omni_summary(request):
     original = request.data.get("original", None)
     user.add_meta_data("omni")
     last_search = request.data.get("last_search")
-
-    if follow_up:
-        UserInteraction.add_instance(
-            data={
-                "user": user,
-                "type": "FOLLOWUP",
-                "previous": last_search,
-                "query": search,
-                "search_type": "OMNI",
-            }
-        )
-    else:
-        UserInteraction.add_instance(
-            data={
-                "user": user,
-                "type": "SEARCH",
-                "query": search,
-                "search_type": "OMNI",
-            }
-        )
     attempts = 1
     token_amount = 1000
     timeout = 60.0
@@ -3964,7 +3944,7 @@ def get_omni_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content")
-
+            print(message)
             break
         except open_ai_exceptions.StopReasonLength:
             logger.exception(
@@ -3994,6 +3974,26 @@ def get_omni_summary(request):
             message = f"Unknown exception: {e}"
             logger.exception(e)
             break
+    if follow_up:
+        if "New Search Term:" not in message:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": last_search,
+                    "query": search,
+                    "search_type": "OMNI",
+                }
+            )
+    else:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
     if has_error:
         return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
     return Response(status=status.HTTP_200_OK, data={"summary": message})

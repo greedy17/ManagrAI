@@ -668,7 +668,7 @@ class SourceExtractor:
         # check for link attribute
         if self.article_link_selector and self.article_link_selector != "none":
             selector = self.selector_processor()
-            if "@data" in regex and self.article_link_selector is not "data":
+            if "@data" in regex and self.article_link_selector != "data":
                 regex += f" and {selector}"
             else:
                 regex += selector
