@@ -2,10 +2,6 @@ import csv
 import io
 import json
 import math
-<<<<<<< HEAD
-import random
-=======
->>>>>>> f322d4cf3bd89c86ac1d67b174470b77d9dc7e36
 import re
 import tempfile
 from collections import OrderedDict
@@ -20,34 +16,18 @@ import requests
 from botocore.exceptions import ClientError
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
-<<<<<<< HEAD
-=======
-from django.apps import apps
->>>>>>> f322d4cf3bd89c86ac1d67b174470b77d9dc7e36
 from django.conf import settings
 from django.contrib.postgres.search import SearchQuery
 from django.db import transaction
 from django.db.models import Q
 from newspaper import Article, ArticleException, Config
 
-<<<<<<< HEAD
-=======
 from managr.comms import constants as comms_consts
 from managr.comms import exceptions as comms_exceptions
->>>>>>> f322d4cf3bd89c86ac1d67b174470b77d9dc7e36
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
 from managr.core.utils import Variable_Client
-<<<<<<< HEAD
-
-from . import constants as comms_consts
-from . import exceptions as comms_exceptions
-from .models import ArchivedArticle
-from .models import Article as InternalArticle
-from .models import Journalist, JournalistContact, NewsSource
-=======
->>>>>>> f322d4cf3bd89c86ac1d67b174470b77d9dc7e36
 
 s3 = boto3.client("s3")
 
