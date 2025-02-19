@@ -1,3 +1,5 @@
+from dateutil.tz import gettz
+
 USER_AGENT_LIST = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 managr-crawler/1.0 (https://managr.ai/documentation)",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 managr-crawler/1.1 (https://managr.ai/documentation)",
@@ -32,17 +34,35 @@ REFERER_LIST = [
     "https://www.quora.com/",
 ]
 
+TIMEZONE_DICT = {
+    "MYT": gettz("Asia/Kuala_Lumpur"),
+    "PT": gettz("America/Los_Angeles"),
+    "EST": gettz("America/New_York"),
+    "UK": gettz("Europe/London"),
+    "MT": gettz("America/Denver"),
+    "CT": gettz("America/Chicago"),
+    "ET": gettz("America/New_York"),
+    "EDT": gettz("America/New_York"),
+    "PST": gettz("America/Los_Angeles"),
+}
+
 SCRAPPY_HEADERS = {
     "Cache-Control": "no-cache",
     "Pragma": "no-cache",
     "Connection": "keep-alive",
 }
 
+CONTENT_XPATH_LIST = [
+    f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
+    for a in ["article", "story", "content"]
+]
+CONTENT_XPATH_LIST.append("//article//p//text()")
 XPATH_STRING_OBJ = {
     "title": ["//title/text()"],
     "author": [
+        "//script[@type='application/ld+json']/text()",
         "//meta[@name='author']/@content",
-        "//*[contains(@class,'gnt_ar_by')]/a/text()",
+        "//*[@class='gnt_ar_by']/a/text()",
         "//*[@class='article__author']/text()",
         "//meta[@name='twitter:data1']/@content",
         "//meta[@property='authors']/@content",
@@ -52,17 +72,19 @@ XPATH_STRING_OBJ = {
         "//*[contains(@class,'author-name') and string-length() > 2]//text()",
     ],
     "description": [
-        "//meta[contains(@property, 'description')]/@content",
+        "//meta[@property='og:description']/@content",
         "//meta[contains(@name, 'description')]/@content",
     ],
     "publish_date": [
-        "//*[contains(@class,'gnt_ar_dt')]/@aria-label",
+        "//script[@type='application/ld+json']/text()",
+        "//*[@class='gnt_ar_dt']/@aria-label",
         "//meta[@property='article:published_time']/@content",
         "//body//time/@datetime | //body//time/@dateTime | //body//time/text()",
         "//meta[contains(@itemprop,'date')]/@content",
         "//meta[contains(@name, 'date')]/@content",
     ],
     "image_url": ["//meta[@property='og:image']/@content"],
+    "content": CONTENT_XPATH_LIST,
 }
 
 XPATH_TO_FIELD = {
@@ -131,3 +153,12 @@ EXCLUDE_WORDS = [
 ]
 
 EXCLUDE_CLASSES = ["menu", "nav", "footer", "header", "social"]
+EXCLUDE_CLASS_XPATH = " or ".join(f"contains(@class, '{word}')" for word in EXCLUDE_CLASSES)
+EXCLUDE_WORD_XPATH = " or ".join(f"contains(@href, '{word}')" for word in EXCLUDE_WORDS)
+HOMEPAGE_ANCHOR_TAG_XPATH = (
+    "//body//a["
+    + "(starts-with(@href, '/') or starts-with(@href, 'https'))"
+    + f" and not({EXCLUDE_CLASS_XPATH})"
+    + f" and not({EXCLUDE_WORD_XPATH}) and not(ancestor::*[contains(@class, 'nav')])"
+    + "]"
+)

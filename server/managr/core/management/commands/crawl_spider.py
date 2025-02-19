@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from scrapy.crawler import CrawlerProcess
-from managr.comms.webcrawler.crawler import NewsSpider, XMLSpider
+
 from managr.comms.models import NewsSource
 from managr.comms.utils import remove_api_sources, send_url_batch
+from managr.comms.webcrawler.crawler import NewsSpider, XMLSpider
 
 
 class Command(BaseCommand):
