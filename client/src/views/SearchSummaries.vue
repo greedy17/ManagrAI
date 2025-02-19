@@ -8940,7 +8940,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
     },
     setCurrentAlert(id = null) {
-      console.log('email alerts - >', this.emailAlerts)
+      // console.log('email alerts - >', this.emailAlerts)
       if (id) {
         this.currentAlert = this.emailAlerts.filter((alert) => alert.search === id)[0]
       } else {
@@ -8951,7 +8951,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
             alert.thread === this.searchId,
         )[0]
 
-        console.log('currentalert', this.currentAlert)
+        // console.log('currentalert', this.currentAlert)
       }
 
       // this.getEmailAlerts()

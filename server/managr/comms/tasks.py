@@ -1490,7 +1490,7 @@ def _send_omni_summary(news_alert_id):
     thread.meta_data["omniSocial"] = sorted_social_data
     thread.meta_data["omniNews"] = normalized_clips
     thread.meta_data["omniWeb"] = google_results
-    thread.meta_data["omniResults"] = []
+    thread.meta_data["omniResults"] = sorted_social_data + sorted_social_data + google_results
     thread.save()
     content = {
         "thread_url": link,
