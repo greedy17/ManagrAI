@@ -1,35 +1,38 @@
-import re
-import json
-import boto3
 import csv
-import fitz
-import tempfile
-import requests
-import pytz
 import io
+import json
 import math
 import random
-from django.db import transaction
-from dateutil.relativedelta import relativedelta
-from .models import Article as InternalArticle
-from datetime import datetime, timezone, timedelta
-from newspaper import Article, ArticleException
-from functools import reduce
-from managr.core.utils import Variable_Client
-from newspaper import Config
-from django.db.models import Q
-from . import constants as comms_consts
-from dateutil import parser
-from django.conf import settings
-from urllib.parse import urlparse, urlunparse
+import re
+import tempfile
 from collections import OrderedDict
-from . import exceptions as comms_exceptions
-from .models import NewsSource, Journalist, JournalistContact, ArchivedArticle
+from datetime import datetime, timedelta, timezone
+from functools import reduce
+from urllib.parse import urlparse, urlunparse
+
+import boto3
+import fitz
+import pytz
+import requests
 from botocore.exceptions import ClientError
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.postgres.search import SearchQuery
+from django.db import transaction
+from django.db.models import Q
+from newspaper import Article, ArticleException, Config
+
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
+from managr.core.utils import Variable_Client
+
+from . import constants as comms_consts
+from . import exceptions as comms_exceptions
+from .models import ArchivedArticle
+from .models import Article as InternalArticle
+from .models import Journalist, JournalistContact, NewsSource
 
 s3 = boto3.client("s3")
 
@@ -280,8 +283,8 @@ def boolean_search_to_searchquery(search_string):
 
 
 def get_search_boolean(search):
-    from managr.core import exceptions as open_ai_exceptions
     from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
 
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
@@ -317,8 +320,8 @@ def get_search_boolean(search):
 
 
 def convert_html_to_markdown(summary, clips):
-    from managr.core import exceptions as open_ai_exceptions
     from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
 
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
@@ -340,8 +343,8 @@ def convert_html_to_markdown(summary, clips):
 
 
 def convert_html_to_markdown(summary, clips):
-    from managr.core import exceptions as open_ai_exceptions
     from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
 
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
@@ -687,9 +690,9 @@ def google_search(query, number_of_results=10, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=10):
+def alternate_google_search(query, number_of_results=10, for_alert=False):
     url = comms_consts.GOOGLE_SEARCH_URI
-    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert)
     with Variable_Client() as client:
         res = client.get(url, params=params)
         results_list = []
@@ -728,7 +731,7 @@ def alternate_google_search(query, number_of_results=10):
                 results_list.append(result_data)
             return {"results": results_list}
         else:
-            return {}
+            return {"results": []}
 
 
 def check_journalist_validity(journalist, outlet, email):
@@ -902,7 +905,7 @@ def separate_weeks(start_date, end_date, delta=7):
 
 
 def generate_test_journalists(start, stop, email="zach@mymanagr.com"):
-    from managr.comms.serializers import JournalistSerializer, JournalistContactSerializer
+    from managr.comms.serializers import JournalistContactSerializer, JournalistSerializer
 
     user = User.objects.get(email=email)
     for i in range(start, stop):
@@ -1079,7 +1082,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
     if (now.minute + 5) >= 54:
         from_minute = now.minute - 1
-        to_minute = now.minute
+        to_minute = now.minute - 1
     else:
         from_minute = (now.minute + 5) if ((now.minute + 5) >= 10) else f"0{now.minute + 5}"
         to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
@@ -1335,98 +1338,6 @@ def data_cleaner(data):
     return data
 
 
-#################################
-# DEV FUNCTIONS
-#################################
-def test_social_response(news_alert_id=False):
-    from managr.comms.models import AssistAlert
-
-    print("Func Start:", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    if news_alert_id:
-        alert = AssistAlert.objects.get(id=news_alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    user = alert.user
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-        boolean = alert.search.search_boolean
-    else:
-        boolean = alert.search.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_from = datetime.now(timezone.utc) - timedelta(hours=24)
-    email_data = {}
-    social_data_list = []
-    for value in social_values:
-        print("=============================")
-        print(f"{value}: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from)
-        print("Response returned: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        if "error" in social_data.keys():
-            continue
-        else:
-            if value == "twitter":
-                email_data["includes"] = social_data["includes"]
-            social_data_list.extend(social_data["data"])
-    print("Sort start: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    print("Sort stop: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    post_list = []
-    for value in sorted_social_data:
-        if value["type"] == "twitter":
-            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
-            post_list.append(social_value)
-        else:
-            social_value = (
-                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
-            )
-            post_list.append(social_value)
-    return post_list
-
-
-def test_social_summary_response(post_list, alert_id=False, completion_token=1000, model=False):
-    from managr.comms.models import AssistAlert, TwitterAccount
-
-    models = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "o1", "o1-mini", "gpt-3.5-turbo"]
-    if model:
-        models = [model]
-    response_times = "RESPONSE TIMES REPORT\n=====================\n"
-    if alert_id:
-        alert = AssistAlert.objects.get(id=alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    for model in models:
-        d = datetime.now()
-        res = TwitterAccount.get_summary(
-            alert.user,
-            completion_token,
-            60.0,
-            post_list,
-            alert.search.search_boolean,
-            alert.search.instructions,
-            False,
-            model=model,
-        )
-        c_tokens = res["usage"]["completion_tokens"]
-        seconds = (datetime.now() - d).seconds
-        response_times += (
-            f"{model}: {seconds} seconds at {round((seconds/c_tokens),3)} ms per token\n"
-        )
-        print(f"Response: {res}")
-    print(response_times)
-
-
 def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=False, auto=False):
     import sys
 
@@ -1508,102 +1419,3 @@ def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=
         print("Deleting articles")
         articles_to_archive.delete()
         return
-
-
-def test_get_clips(search, boolean=False):
-    from managr.comms.models import Article, Search
-    from managr.core.constants import (
-        OPEN_AI_CHAT_COMPLETIONS_URI,
-        OPEN_AI_CHAT_COMPLETIONS_BODY,
-        OPEN_AI_HEADERS,
-    )
-    from managr.core.exceptions import _handle_response
-
-    try:
-        today = datetime.now()
-        date_to = str(datetime.now().date())
-        date_from = str((today - timedelta(days=7)).date())
-        if "journalist:" in search:
-            internal_articles = Article.search_by_query(search, date_to, date_from, True)
-            articles = normalize_article_data([], internal_articles)
-            return {"articles": articles, "string": search}
-        if not boolean:
-            url = OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "support@mymanagr.com",
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
-            r = _handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            print("BOOLEAN:", query_input)
-            print("---------------------------------------")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-            print("NEWSAPI CLIPS:", len(articles), articles)
-            print("---------------------------------------")
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = Article.search_by_query(query_input, date_to, date_from)
-        dict_articles = [article.fields_to_dict() for article in internal_articles]
-        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
-        print("---------------------------------------")
-        articles = normalize_article_data(articles, internal_articles, True)
-        return {"articles": articles, "string": query_input}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def test_prompt(pitch, user_id):
-    user = User.objects.get(email="zach@mymanagr.com")
-    token_amount = 4000
-    timeout = 60.0
-    while True:
-        try:
-            journalists_query = JournalistContact.objects.filter(user=user)
-            journalists = [
-                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
-                for journalist in journalists_query
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "zach@mymanagr.com",
-                prompt,
-                token_amount=token_amount,
-                temperature=0,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
-            message = json.loads(message)
-            journalist_data = message["journalists"]
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount >= 6000:
-                journalist_data = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-        except Exception as e:
-            journalist_data = f"Unknown exception: {e}"
-            break
-    return journalist_data

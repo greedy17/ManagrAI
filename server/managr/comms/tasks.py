@@ -1,72 +1,73 @@
-import logging
-import json
-import uuid
-import httpx
 import datetime
-import re
+import json
+import logging
 import math
+import re
+import uuid
 from copy import copy
-from scrapy.selector import Selector
-from django.db import transaction, IntegrityError
 from urllib.parse import urlparse
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta
-from dateutil import parser
-from django.conf import settings
+
+import httpx
 from background_task import background
-from managr.utils.client import Variable_Client
-from managr.utils.misc import custom_paginator
-from rest_framework.exceptions import ValidationError
-from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
-from . import constants as comms_consts
-from .models import (
-    Search,
-    NewsSource,
-    AssistAlert,
-    Journalist,
-    JournalistContact,
-    Thread,
-    TwitterAccount,
-    ArchivedArticle,
-)
-from .models import Article as InternalArticle
-from .serializers import (
-    SearchSerializer,
-    NewsSourceSerializer,
-    JournalistSerializer,
-    JournalistContactSerializer,
-    EmailTrackerSerializer,
-    ArticleSerializer,
-)
-from managr.core.models import TaskResults
-from managr.core import constants as core_consts
-from managr.core.models import User, TaskResults
-from managr.core import exceptions as open_ai_exceptions
-from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import block_builders
-from managr.slack.helpers.utils import action_with_params, send_to_error_channel
-from managr.slack import constants as slack_const
-from managr.slack.models import UserSlackIntegration
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 from newspaper import Article
-from managr.slack.helpers.utils import block_finder
+from rest_framework.exceptions import ValidationError
+from scrapy.selector import Selector
+
+from managr.api.emails import send_html_email
 from managr.comms.utils import (
-    generate_config,
+    alternate_google_search,
+    complete_url,
+    data_cleaner,
     extract_base_domain,
-    normalize_article_data,
-    separate_weeks,
+    extract_date_from_text,
+    generate_config,
     get_bluesky_data,
+    get_site_icon,
+    get_site_name,
     get_tweet_data,
     get_youtube_data,
     merge_sort_dates,
-    complete_url,
+    normalize_article_data,
     send_url_batch,
-    get_site_icon,
-    get_site_name,
-    data_cleaner,
-    extract_date_from_text,
 )
-from managr.api.emails import send_html_email
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import TaskResults, User
+from managr.slack import constants as slack_const
+from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
+from managr.slack.helpers.utils import action_with_params, block_finder, send_to_error_channel
+from managr.slack.models import UserSlackIntegration
+from managr.utils.client import Variable_Client
+from managr.utils.misc import custom_paginator
+
+from . import constants as comms_consts
+from .models import ArchivedArticle
+from .models import Article as InternalArticle
+from .models import (
+    AssistAlert,
+    Journalist,
+    JournalistContact,
+    NewsSource,
+    Search,
+    Thread,
+    TwitterAccount,
+)
+from .serializers import (
+    ArticleSerializer,
+    EmailTrackerSerializer,
+    JournalistContactSerializer,
+    JournalistSerializer,
+    NewsSourceSerializer,
+    SearchSerializer,
+)
+from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
 
 logger = logging.getLogger("managr")
 
@@ -89,6 +90,10 @@ def emit_process_website_domain(url, organization_name):
 
 def emit_send_news_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
+
+
+def emit_send_omni_summary(news_alert_id, schedule=datetime.datetime.now()):
+    return _send_omni_summary(news_alert_id, schedule={"run_at": schedule})
 
 
 def emit_share_client_summary(link, title, user_email):
@@ -1408,3 +1413,101 @@ def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
                     print(f"Successfully archived {len(successful_arts)}/{len(batch)} articles.")
         articles_to_archive.delete()
         return
+
+
+@background()
+def _send_omni_summary(news_alert_id):
+    alert = AssistAlert.objects.get(id=news_alert_id)
+    user = alert.user
+    thread = alert.thread
+    link = thread.generate_url()
+    search_boolean = alert.search_boolean
+    social_switcher = {
+        "youtube": get_youtube_data,
+        "twitter": get_tweet_data,
+        "bluesky": get_bluesky_data,
+    }
+    max = 0
+    social_values = ["youtube", "bluesky"]
+    if user.has_twitter_integration:
+        max = 20
+        social_values.append("twitter")
+    else:
+        max = 25
+    date_now = datetime.datetime.now(datetime.timezone.utc)
+    date_to = str(date_now.date())
+    date_from = str((date_now - datetime.timedelta(hours=24)).date())
+    social_data_dict = {"twitter": []}
+    for value in social_values:
+        data_func = social_switcher[value]
+        social_data = data_func(
+            search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
+        )
+        if "error" in social_data.keys():
+            social_data_dict[value] = []
+            continue
+        else:
+            social_data_dict[value] = social_data["data"]
+    internal_articles = InternalArticle.search_by_query(
+        search_boolean, str(date_to), str(date_from)
+    )
+    normalized_clips = normalize_article_data([], internal_articles, False)[:31]
+    google_results = alternate_google_search(search_boolean, 5, True)["results"]
+    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+    prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
+        date_now,
+        alert.search.input_text,
+        normalized_clips,
+        social_data_dict["twitter"][:5],
+        social_data_dict["youtube"][:6],
+        social_data_dict["bluesky"][:7],
+        google_results,
+        thread.meta_data["project"],
+    )
+
+    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+        user.email,
+        prompt,
+        "You are a VP of Communications",
+        top_p=0.1,
+    )
+    with Variable_Client(30) as client:
+        r = client.post(
+            url,
+            data=json.dumps(body),
+            headers=core_consts.OPEN_AI_HEADERS,
+        )
+    res = open_ai_exceptions._handle_response(r)
+    sorted_social_data = []
+    sorted_social_data.extend(social_data_dict["twitter"][:5])
+    sorted_social_data.extend(social_data_dict["bluesky"][:7])
+    sorted_social_data.extend(social_data_dict["youtube"][:6])
+    sorted_social_data = merge_sort_dates(sorted_social_data, "created_at")
+    message = res.get("choices")[0].get("message").get("content")
+    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
+    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
+    message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
+    thread.meta_data["omniSocial"] = sorted_social_data
+    thread.meta_data["omniNews"] = normalized_clips
+    thread.meta_data["omniWeb"] = google_results
+    thread.meta_data["omniResults"] = []
+    thread.save()
+    content = {
+        "thread_url": link,
+        "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{alert.title}",
+    }
+    send_html_email(
+        f"ManagrAI Digest: {alert.title}",
+        "core/email-templates/social-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
+    )
+    if "sent_count" in alert.meta_data.keys():
+        alert.meta_data["sent_count"] += 1
+    else:
+        alert.meta_data["sent_count"] = 1
+    alert.meta_data["last_sent"] = datetime.datetime.now().strftime("%m/%d/%Y %H:%M")
+    alert.save()
+    return

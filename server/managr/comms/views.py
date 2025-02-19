@@ -1,115 +1,109 @@
-import json
-import httpx
-import logging
-import io
 import csv
-import xlrd
-import pytz
-from django.db.models import Q
-from openpyxl import load_workbook
-from rest_framework import (
-    mixins,
-    viewsets,
-)
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from asgiref.sync import async_to_sync, sync_to_async
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from .pagination import PageNumberPagination
+import io
+import json
+import logging
 from datetime import datetime, timedelta, timezone
-from newspaper import Article, ArticleException
-from managr.api.models import ExpiringTokenAuthentication
-from managr.core.models import TaskResults
-from rest_framework.response import Response
-from rest_framework import (
-    permissions,
-    mixins,
-    status,
-    viewsets,
-)
 from urllib.parse import urlencode
+
+import httpx
+import pytz
+import xlrd
+from asgiref.sync import async_to_sync, sync_to_async
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
-from rest_framework.decorators import action
+from django.views.decorators.http import require_http_methods
+from django_filters.rest_framework import DjangoFilterBackend
+from newspaper import Article, ArticleException
+from newspaper.article import ArticleException
+from openpyxl import load_workbook
+from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    parser_classes,
+    permission_classes,
+)
+from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
+
+from managr.api.emails import send_html_email, send_mailgun_email
+from managr.api.models import ExpiringTokenAuthentication
+from managr.comms import exceptions as comms_exceptions
+from managr.comms.tasks import emit_get_meta_account_info
+from managr.comms.utils import (
+    alternate_google_search,
+    check_journalist_validity,
+    convert_pdf_from_url,
+    convert_social_search,
+    extract_email_address,
+    extract_pdf_text,
+    generate_config,
+    get_article_data,
+    get_bluesky_data,
+    get_domain,
+    get_journalists,
+    get_social_data,
+    get_trend_articles,
+    get_tweet_data,
+    get_url_traffic_data,
+    get_youtube_data,
+    google_search,
+    merge_sort_dates,
+    normalize_article_data,
+)
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import TaskResults, User, UserInteraction
+from managr.slack.helpers.utils import send_to_error_channel
+from managr.utils.client import Variable_Client
+from managr.utils.misc import decrypt_dict
+
 from . import constants as comms_consts
 from .filters import JournalistContactFilter
+from .models import Article as InternalArticle
 from .models import (
+    AssistAlert,
     CompanyDetails,
-    Search,
-    TwitterAccount,
+    Discovery,
+    EmailTracker,
+    InstagramAccount,
+    Journalist,
+    JournalistContact,
     Pitch,
     Process,
-    InstagramAccount,
-    Discovery,
-    Journalist,
-    EmailTracker,
+    Search,
     Thread,
+    TwitterAccount,
+    WritingStyle,
 )
-from .models import Article as InternalArticle
-from .models import WritingStyle, AssistAlert, JournalistContact
-from managr.core.models import User, UserInteraction
-from managr.comms import exceptions as comms_exceptions
+from .pagination import PageNumberPagination
+from .serializers import (
+    AssistAlertSerializer,
+    CompanyDetailsSerializer,
+    DiscoverySerializer,
+    EmailTrackerSerializer,
+    InstagramAccountSerializer,
+    JournalistContactSerializer,
+    PitchSerializer,
+    ProcessSerializer,
+    SearchSerializer,
+    ThreadSerializer,
+    TwitterAccountSerializer,
+    WritingStyleSerializer,
+)
 from .tasks import (
+    _add_journalist_to_db,
+    emit_process_bulk_draft,
+    emit_process_contacts_excel,
     emit_process_website_domain,
     emit_send_news_summary,
     emit_send_social_summary,
     emit_share_client_summary,
-    _add_journalist_to_db,
-    emit_process_contacts_excel,
-    emit_process_bulk_draft,
-    parse_homepage,
     parse_article,
+    parse_homepage,
 )
-from .serializers import (
-    SearchSerializer,
-    PitchSerializer,
-    AssistAlertSerializer,
-    ProcessSerializer,
-    TwitterAccountSerializer,
-    InstagramAccountSerializer,
-    WritingStyleSerializer,
-    DiscoverySerializer,
-    EmailTrackerSerializer,
-    JournalistContactSerializer,
-    CompanyDetailsSerializer,
-    ThreadSerializer,
-)
-from managr.core import constants as core_consts
-from managr.utils.client import Variable_Client
-from managr.utils.misc import decrypt_dict
-from managr.core import exceptions as open_ai_exceptions
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-    parser_classes,
-)
-from managr.comms.utils import (
-    generate_config,
-    normalize_article_data,
-    get_domain,
-    extract_pdf_text,
-    convert_pdf_from_url,
-    extract_email_address,
-    google_search,
-    alternate_google_search,
-    check_journalist_validity,
-    get_journalists,
-    merge_sort_dates,
-    get_url_traffic_data,
-    get_article_data,
-    get_social_data,
-    get_trend_articles,
-    get_youtube_data,
-    get_tweet_data,
-    convert_social_search,
-    get_bluesky_data,
-)
-from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
-from managr.comms.tasks import emit_get_meta_account_info
-from managr.api.emails import send_html_email, send_mailgun_email
-from newspaper.article import ArticleException
-from managr.slack.helpers.utils import send_to_error_channel
 
 logger = logging.getLogger("managr")
 
@@ -776,7 +770,7 @@ class PRSearchViewSet(
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
         last_search = request.data.get("last_search")
-        
+
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
         if follow_up:
