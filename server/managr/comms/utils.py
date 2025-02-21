@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import logging
 import math
 import re
 import tempfile
@@ -31,7 +32,7 @@ from managr.core.utils import Variable_Client
 
 s3 = boto3.client("s3")
 
-
+logger = logging.getLogger("managr")
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
@@ -669,12 +670,13 @@ def alternate_google_search(query, number_of_results=10, for_alert=False):
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert)
     with Variable_Client() as client:
         res = client.get(url, params=params)
-        results_list = []
-        if res.status_code == 200:
+    results_list = []
+    if res.status_code == 200:
+        try:
             res = res.json()
             results = res["items"]
             for index, item in enumerate(results):
-                if "pagemap" in item.keys():
+                if "pagemap" in item.keys() and "metatags" in item["pagemap"].keys():
                     metatags = item["pagemap"]["metatags"][0]
                     metatags_cse = item["pagemap"].get("cse_image", [])
                     cse_img = metatags_cse[0] if metatags_cse else {}
@@ -704,8 +706,11 @@ def alternate_google_search(query, number_of_results=10, for_alert=False):
                 }
                 results_list.append(result_data)
             return {"results": results_list}
-        else:
+        except Exception as e:
+            logger.exception("Error in google search: {}".format(e))
             return {"results": []}
+    else:
+        return {"results": []}
 
 
 def check_journalist_validity(journalist, outlet, email):
@@ -1225,8 +1230,8 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
                 bluesky_data["data"] = normalized_data
             else:
                 res = res.json()
-                if res.headers.get("Content-Type") == "application/json":
-                    bluesky_data["error"] = res["error"]["message"]
+                logger.info(res)
+                bluesky_data["error"] = res["error"]["message"]
     except Exception as e:
         print(f"Bluesky date error: {e}: {vars(res)}")
         bluesky_data["error"] = str(e)

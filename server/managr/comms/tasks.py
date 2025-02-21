@@ -1323,7 +1323,6 @@ def _send_omni_summary(news_alert_id):
         social_data = data_func(
             search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
         )
-        print("{}, {}".format(value, social_data))
         if "error" in social_data.keys():
             social_data_dict[value] = []
             continue
@@ -1370,7 +1369,7 @@ def _send_omni_summary(news_alert_id):
     thread.meta_data["omniSocial"] = sorted_social_data
     thread.meta_data["omniNews"] = normalized_clips
     thread.meta_data["omniWeb"] = google_results
-    thread.meta_data["omniResults"] = [*sorted_social_data, *normalized_clips, *google_results]
+    thread.meta_data["omniResults"] = [*normalized_clips, *sorted_social_data, *google_results]
     thread.save()
     content = {
         "thread_url": link,

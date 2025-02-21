@@ -352,7 +352,7 @@ class Article(TimeStampModel):
 
         date_to_date_obj = parser.parse(date_to)
         day_incremented = date_to_date_obj + timedelta(days=1)
-        day_incremented_str = str(day_incremented)
+        day_incremented_str = str(day_incremented.date())
         date_range_articles = Article.objects.filter(
             publish_date__range=(date_from, day_incremented_str)
         )
