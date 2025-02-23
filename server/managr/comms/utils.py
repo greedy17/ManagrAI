@@ -520,13 +520,13 @@ def remove_api_sources():
     return
 
 
-def valid_slug(slug):
-    dash_count = slug.count("-")
-    underscore_count = slug.count("_")
-    if dash_count >= 4 or underscore_count >= 4:
-        return True
-    else:
-        return False
+def valid_slug(path_list):
+    for path in path_list:
+        dash_count = path.count("-")
+        underscore_count = path.count("_")
+        if dash_count >= 4 or underscore_count >= 4:
+            return True
+    return False
 
 
 def complete_url(url, default_domain, default_scheme="https"):
@@ -1413,6 +1413,6 @@ def check_article_validity(anchor):
     for word in comms_consts.DO_NOT_INCLUDE_WORDS:
         if word in article_url:
             return False
-    slug = path_list[-1]
-    is_valid_slug = valid_slug(slug)
-    return is_valid_slug
+
+    has_valid_slug = valid_slug(path_list)
+    return has_valid_slug
