@@ -33,6 +33,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         func_switcher = {
             "NEWS": emit_send_news_summary,
+            "SOCIAL_MEDIA": emit_send_social_summary,
             "SOCIAL": emit_send_social_summary,
             "OMNI": emit_send_omni_summary,
         }
