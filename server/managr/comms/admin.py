@@ -210,7 +210,7 @@ class CustomArchivedArticle(admin.ModelAdmin):
 
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "search", "run_at", "times_sent", "last_sent")
+    list_display = ("user", "run_at", "times_sent", "last_sent")
     fields = [
         "search_type",
         "search_boolean",
@@ -222,7 +222,7 @@ class CustomAssistAlertAdmin(admin.ModelAdmin):
         "recipients",
     ]
     ordering = ("run_at",)
-    list_filter = ("type", "search__type")
+    list_filter = ("type",)
     search_fields = ["user__email"]
     readonly_fields = ["search_type", "search_boolean", "user"]
 

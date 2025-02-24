@@ -1378,7 +1378,7 @@ def _send_omni_summary(news_alert_id):
     }
     send_html_email(
         f"ManagrAI Digest: {alert.title}",
-        "core/email-templates/social-email.html",
+        "core/email-templates/omni-email.html",
         settings.DEFAULT_FROM_EMAIL,
         [alert.user.email],
         context=content,

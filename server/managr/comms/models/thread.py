@@ -236,7 +236,7 @@ class Thread(TimeStampModel):
         on_delete=models.CASCADE,
     )
     title = models.TextField()
-    search = models.OneToOneField(
+    search = models.ForeignKey(
         Search, related_name="search", on_delete=models.CASCADE, null=True, blank=True
     )
     meta_data = JSONField(default=dict)
@@ -268,6 +268,10 @@ class Thread(TimeStampModel):
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
         return f"{base_url}/summaries/{encrypted_data}"
+
+    def delete(self, *args, **kwargs):
+        self.search.delete()
+        return super(Thread, self).delete(*args, **kwargs)
 
 
 class ThreadMessage(TimeStampModel):
