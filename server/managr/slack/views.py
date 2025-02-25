@@ -1145,7 +1145,7 @@ def slack_events(request):
                 user.organization.slack_integration.access_token,
                 block_set=[
                     block_builders.simple_section(
-                        f"Hi there! :wave: I'm ManagrAI, your AI-powered PR assistant.\nTo get a news summary, run this command: /managrai-search\nIf you need further assistance please email us at support@mymanagr.com"
+                        f"Hi there! :wave: I'm ManagrAI, AI that reads the news for you.\nTo get a news summary, run this command: /managrai-search\nIf you need further assistance please email us at support@mymanagr.com"
                     )
                 ],
             )

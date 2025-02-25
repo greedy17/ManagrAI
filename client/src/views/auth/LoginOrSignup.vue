@@ -11,7 +11,7 @@
     <div class="column">
       <div class="column">
         <h1>Welcome to ManagrAI</h1>
-        <h4>Your AI-Powered PR Assistant</h4>
+        <h4>AI that reads the news for you</h4>
       </div>
 
       <div class="row">
