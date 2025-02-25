@@ -1794,6 +1794,7 @@ class AssistAlertViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 
@@ -2833,6 +2834,7 @@ class ThreadViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 

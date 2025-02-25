@@ -23,13 +23,6 @@ class AssistAlert(TimeStampModel):
     type = models.CharField(choices=comms_consts.ALERT_TYPES, max_length=50, default="EMAIL")
     title = models.CharField(max_length=255)
     run_at = models.DateTimeField()
-    search = models.ForeignKey(
-        "Search",
-        related_name="alerts",
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
-    )
     thread = models.ForeignKey(
         "Thread",
         related_name="threads",
@@ -46,13 +39,11 @@ class AssistAlert(TimeStampModel):
 
     @cached_property
     def search_type(self):
-        if hasattr(self, "search"):
-            return self.search.type
         return self.thread.search.type
 
     @cached_property
     def search_boolean(self):
-        search = self.search if hasattr(self, "search") else self.thread.search
+        search = self.thread.search
         if not search.search_boolean or search.search_boolean == search.input_text:
             updated_boolean = search.update_boolean()
             return updated_boolean
@@ -65,12 +56,6 @@ class AssistAlert(TimeStampModel):
     @cached_property
     def last_sent(self):
         return self.meta_data.get("last_sent", None)
-
-    def delete(self, *args, **kwargs):
-        self.search.delete()
-        self.thread.delete
-        self.delete()
-        return super().delete(AssistAlert, *args, **kwargs)
 
     def add_recipient(self, email):
         new_recipients = self.recipients.append(email)

@@ -65,7 +65,15 @@ class Search(TimeStampModel):
         ordering = ["name"]
 
     def __str__(self):
-        return f"{self.name} - {self.user.email}"
+        return f"{self.name}  ({self.search_boolean})"
+
+    def as_object(self):
+        return {
+            "name": self.name,
+            "search_boolean": self.search_boolean,
+            "input_text": self.input_text,
+            "instrucitons": self.instructions,
+        }
 
     def update_boolean(self):
         try:
@@ -92,9 +100,11 @@ class Search(TimeStampModel):
             r = open_ai_exceptions._handle_response(r)
             query_input = r.get("choices")[0].get("message").get("content")
             self.search_boolean = query_input.replace('"', "")
+            self.save()
+            return self.search_boolean
         except Exception as e:
             logger.exception(e)
-        return self.save()
+        return
 
     @classmethod
     def get_summary(
@@ -236,7 +246,7 @@ class Thread(TimeStampModel):
         on_delete=models.CASCADE,
     )
     title = models.TextField()
-    search = models.OneToOneField(
+    search = models.ForeignKey(
         Search, related_name="search", on_delete=models.CASCADE, null=True, blank=True
     )
     meta_data = JSONField(default=dict)
@@ -268,6 +278,10 @@ class Thread(TimeStampModel):
         encrypted_data = encrypt_dict(data)
         base_url = get_site_url()
         return f"{base_url}/summaries/{encrypted_data}"
+
+    def delete(self, *args, **kwargs):
+        self.search.delete()
+        return super(Thread, self).delete(*args, **kwargs)
 
 
 class ThreadMessage(TimeStampModel):

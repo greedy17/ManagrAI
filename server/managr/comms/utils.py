@@ -1231,7 +1231,7 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
             else:
                 res = res.json()
                 logger.info(res)
-                bluesky_data["error"] = res["error"]["message"]
+                bluesky_data["error"] = res["message"]
     except Exception as e:
         print(f"Bluesky date error: {e}: {vars(res)}")
         bluesky_data["error"] = str(e)
