@@ -210,19 +210,18 @@ class CustomArchivedArticle(admin.ModelAdmin):
 
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "run_at", "times_sent", "last_sent")
+    list_display = ("user", "run_at", "search", "times_sent", "last_sent")
     fields = [
         "search_type",
         "search_boolean",
         "user",
         "run_at",
         "type",
-        "search",
         "thread",
         "recipients",
     ]
-    ordering = ("run_at",)
-    list_filter = ("type",)
+    ordering = ("datetime_created",)
+    list_filter = ("type", "thread__search__type")
     search_fields = ["user__email"]
     readonly_fields = ["search_type", "search_boolean", "user"]
 
@@ -241,6 +240,11 @@ class CustomAssistAlertAdmin(admin.ModelAdmin):
 
     times_sent.short_description = "Times Sent"
     last_sent.short_description = "Last Sent"
+
+    def search(self, obj):
+        if hasattr(obj.thread, "search"):
+            return obj.thread.search
+        return "N/A"
 
 
 class CustomJournalAdmin(admin.ModelAdmin):
