@@ -568,11 +568,11 @@ def _send_news_summary(news_alert_id):
         project = thread.meta_data.get("project", "")
         link = thread.generate_url()
 
-    boolean = alert.search.search_boolean
+    boolean = alert.search_boolean
     end_time = datetime.datetime.now()
     start_time = end_time - datetime.timedelta(hours=24)
 
-    context = {"search_id": str(alert.search.id), "u": str(alert.user.id)}
+    context = {"search_id": str(alert.thread.search.id), "u": str(alert.user.id)}
     payload = {
         "view": {
             "state": {
@@ -585,7 +585,7 @@ def _send_news_summary(news_alert_id):
     }
     if alert.type in ["EMAIL", "BOTH"]:
         try:
-            clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
+            clips = alert.thread.search.get_clips(boolean, end_time, start_time)["articles"]
             clips = [article for article in clips if article["title"] != "[Removed]"]
             internal_articles = InternalArticle.search_by_query(
                 boolean, str(end_time), str(start_time)
@@ -598,12 +598,12 @@ def _send_news_summary(news_alert_id):
                     2000,
                     60.0,
                     descriptions,
-                    alert.search.instructions,
+                    alert.thread.search.instructions,
                     False,
                     False,
                     project,
                     False,
-                    alert.search.instructions,
+                    alert.thread.search.instructions,
                     True,
                 )
 
@@ -624,10 +624,10 @@ def _send_news_summary(news_alert_id):
                 content = {
                     "thread_url": link,
                     "website_url": f"{settings.MANAGR_URL}/login",
-                    "title": f"{alert.search.name}",
+                    "title": f"{alert.thread.search.name}",
                 }
                 send_html_email(
-                    f"ManagrAI Digest: {alert.search.name}",
+                    f"ManagrAI Digest: {alert.thread.search.name}",
                     "core/email-templates/news-email.html",
                     settings.DEFAULT_FROM_EMAIL,
                     email_list,
@@ -1336,7 +1336,7 @@ def _send_omni_summary(news_alert_id):
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
         date_now,
-        alert.search.input_text,
+        alert.thread.search.input_text,
         normalized_clips,
         social_data_dict["twitter"][:5],
         social_data_dict["youtube"][:6],
