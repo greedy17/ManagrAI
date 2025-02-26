@@ -3341,7 +3341,8 @@ def get_google_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-            user.add_meta_data("google_search")
+            if not for_omni:
+                user.add_meta_data("google_search")
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
