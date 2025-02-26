@@ -1333,6 +1333,14 @@ def _send_omni_summary(news_alert_id):
     )
     normalized_clips = normalize_article_data([], internal_articles, False)[:31]
     google_results = alternate_google_search(search_boolean, 5, True)["results"]
+    sorted_social_data = []
+    sorted_social_data.extend(social_data_dict["twitter"][:5])
+    sorted_social_data.extend(social_data_dict["bluesky"][:7])
+    sorted_social_data.extend(social_data_dict["youtube"][:6])
+    sorted_social_data = merge_sort_dates(sorted_social_data, "created_at")
+    omniResults = [*normalized_clips, *sorted_social_data, *google_results]
+    for i, r in enumerate(omniResults):
+        r["citationIndex"] = i
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
         date_now,
@@ -1358,18 +1366,13 @@ def _send_omni_summary(news_alert_id):
             headers=core_consts.OPEN_AI_HEADERS,
         )
     res = open_ai_exceptions._handle_response(r)
-    sorted_social_data = []
-    sorted_social_data.extend(social_data_dict["twitter"][:5])
-    sorted_social_data.extend(social_data_dict["bluesky"][:7])
-    sorted_social_data.extend(social_data_dict["youtube"][:6])
-    sorted_social_data = merge_sort_dates(sorted_social_data, "created_at")
     message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
     thread.meta_data["omniSocial"] = sorted_social_data
     thread.meta_data["omniNews"] = normalized_clips
     thread.meta_data["omniWeb"] = google_results
-    thread.meta_data["omniResults"] = [*normalized_clips, *sorted_social_data, *google_results]
+    thread.meta_data["omniResults"] = omniResults
     thread.save()
     content = {
         "thread_url": link,
