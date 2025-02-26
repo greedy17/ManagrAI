@@ -1327,7 +1327,7 @@ def _send_omni_summary(news_alert_id):
             social_data_dict[value] = []
             continue
         else:
-            social_data_dict[value] = social_data["data"]
+            social_data_dict[value] = merge_sort_dates(social_data["data"], "created_at")
     internal_articles = InternalArticle.search_by_query(
         search_boolean, str(date_to), str(date_from)
     )
@@ -1369,6 +1369,8 @@ def _send_omni_summary(news_alert_id):
     message = res.get("choices")[0].get("message").get("content").replace("**", "*")
     message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
     message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
+    thread.meta_data["summary"] = message
+    thread.meta_data["summaries"] = []
     thread.meta_data["omniSocial"] = sorted_social_data
     thread.meta_data["omniNews"] = normalized_clips
     thread.meta_data["omniWeb"] = google_results
