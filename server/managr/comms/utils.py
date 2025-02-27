@@ -556,37 +556,41 @@ def alternate_google_search(query, number_of_results=10, for_alert=False):
     if res.status_code == 200:
         try:
             res = res.json()
-            results = res["items"]
-            for index, item in enumerate(results):
-                if "pagemap" in item.keys() and "metatags" in item["pagemap"].keys():
-                    metatags = item["pagemap"]["metatags"][0]
-                    metatags_cse = item["pagemap"].get("cse_image", [])
-                    cse_img = metatags_cse[0] if metatags_cse else {}
-                    author = (
-                        metatags.get("article:author")
-                        if "article:author" in metatags
-                        else metatags.get("author", "Unknown")
-                    )
-                    source = metatags.get("og:site_name", "unknown")
-                    source_img = metatags.get("og:image", "")
-                    image = cse_img.get("src", "")
-                else:
-                    source = "N/A"
-                    source_img = ""
-                    image = ""
-                    author = "N/A"
-                result_data = {
-                    "citationIndex": index,
-                    "id": index + 1,
-                    "title": item["title"],
-                    "snippet": item["snippet"],
-                    "link": item["link"],
-                    "source": source,
-                    "source_img": source_img,
-                    "image": image,
-                    "author": author,
-                }
-                results_list.append(result_data)
+            if "items" in res.keys():
+                results = res["items"]
+                for index, item in enumerate(results):
+                    if "pagemap" in item.keys() and "metatags" in item["pagemap"].keys():
+                        metatags = item["pagemap"]["metatags"][0]
+                        metatags_cse = item["pagemap"].get("cse_image", [])
+                        cse_img = metatags_cse[0] if metatags_cse else {}
+                        author = (
+                            metatags.get("article:author")
+                            if "article:author" in metatags
+                            else metatags.get("author", "Unknown")
+                        )
+                        source = metatags.get("og:site_name", "unknown")
+                        source_img = metatags.get("og:image", "")
+                        image = cse_img.get("src", "")
+                    else:
+                        source = "N/A"
+                        source_img = ""
+                        image = ""
+                        author = "N/A"
+                    result_data = {
+                        "citationIndex": index,
+                        "id": index + 1,
+                        "title": item["title"],
+                        "snippet": item["snippet"],
+                        "link": item["link"],
+                        "source": source,
+                        "source_img": source_img,
+                        "image": image,
+                        "author": author,
+                    }
+                    results_list.append(result_data)
+            else:
+                print(res)
+                results_list = []
             return {"results": results_list}
         except Exception as e:
             logger.exception("Error in google search: {}".format(e))
