@@ -1286,7 +1286,7 @@ def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=
 def check_article_validity(anchor):
     classes = anchor.xpath("@class").get()
     article_url = anchor.xpath("@href").extract_first()
-    if article_url is None:
+    if article_url is None or len(article_url) < 1:
         return False
     if article_url[len(article_url) - 1] == "/":
         article_url = article_url[: len(article_url) - 1]

@@ -2,9 +2,7 @@ import json
 import logging
 import random
 import re
-import select
 from copy import copy
-from dataclasses import fields
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -255,7 +253,7 @@ class ArticleExtractor:
                 data_value = data_value[path]
             selector_value = data_value.title()
         except Exception as e:
-            print(e)
+            print("EXTRACT SCRIPT ERROR: {} {}".format(e, data_value))
             self.error = "Error ({}) extracting script with path {}".format(e, path)
             selector_value = None
         return selector_value
