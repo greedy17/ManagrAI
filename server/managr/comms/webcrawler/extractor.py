@@ -11,6 +11,7 @@ import requests
 import scrapy
 import scrapy.http
 from dateutil import parser
+from django.db import IntegrityError
 from lxml import etree
 
 from managr.comms.utils import complete_url, extract_date_from_text, send_url_batch, valid_slug
@@ -310,6 +311,8 @@ class ArticleExtractor:
             serializer.is_valid(raise_exception=True)
             serializer.save()
             self.saved = True
+        except IntegrityError:
+            self.saved = False
         except Exception as e:
             self.error = "Error saving article: {}".format(e)
             self.saved = False
