@@ -221,101 +221,6 @@ def boolean_search_to_query(search_string):
     return query
 
 
-def boolean_search_to_searchquery(search_string):
-    term_list = split_and_combine_terms(search_string)
-    search_query = None
-    current_search_queries = []
-    current_query = None
-    is_negative = False
-    for idx, term in enumerate(term_list):
-        if idx == len(term_list) - 1:
-            current_query = SearchQuery(term, search_type="plain")
-            if current_search_queries:
-                if current_query is not None:
-                    current_search_queries.append(current_query)
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if is_negative:
-                if search_query:
-                    search_query &= ~current_query
-                else:
-                    search_query = ~current_query
-            else:
-                if search_query:
-                    search_query &= current_query
-                else:
-                    search_query = current_query
-        elif term == "AND":
-            if current_search_queries:
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if search_query:
-                search_query &= current_query
-            else:
-                search_query = current_query
-            current_query = None
-            is_negative = False
-        elif term == "OR":
-            if current_query is not None:
-                current_search_queries.append(current_query)
-            current_query = None
-        elif term == "NOT":
-            if current_search_queries:
-                if current_query is not None:
-                    current_search_queries.append(current_query)
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if current_query:
-                if is_negative:
-                    search_query &= ~current_query
-                else:
-                    search_query &= current_query
-            current_query = None
-            is_negative = True
-        else:
-            current_query = SearchQuery(term, search_type="plain")
-    if search_query is None:
-        search_query = current_query
-    return search_query
-
-
-def get_search_boolean(search):
-    from managr.core import constants as core_consts
-    from managr.core import exceptions as open_ai_exceptions
-
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
-    tokens = 2000
-    while True:
-        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            "dev",
-            prompt,
-            token_amount=tokens,
-            top_p=0.1,
-        )
-        try:
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount <= 5000:
-                has_error = True
-
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-
-    query_input = r.get("choices")[0].get("message").get("content")
-    return query_input
-
-
 def convert_html_to_markdown(summary, clips):
     from managr.core import constants as core_consts
     from managr.core import exceptions as open_ai_exceptions
@@ -326,29 +231,6 @@ def convert_html_to_markdown(summary, clips):
         "ManagrAI",
         prompt,
         token_amount=2000,
-        top_p=0.1,
-    )
-    with Variable_Client() as client:
-        r = client.post(
-            url,
-            data=json.dumps(body),
-            headers=core_consts.OPEN_AI_HEADERS,
-        )
-    r = open_ai_exceptions._handle_response(r)
-    new_summary = r.get("choices")[0].get("message").get("content")
-    return new_summary
-
-
-def convert_html_to_markdown(summary, clips):
-    from managr.core import constants as core_consts
-    from managr.core import exceptions as open_ai_exceptions
-
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
-    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-        "ManagrAI",
-        prompt,
-        token_amount=1500,
         top_p=0.1,
     )
     with Variable_Client() as client:
@@ -1058,6 +940,8 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     attempts = 1
     now = datetime.now(timezone.utc)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
+    from_now = now + timedelta(hours=1)
+    from_hour = from_now.hour if from_now.hour >= 10 else f"0{from_now.hour}"
     if (now.minute + 5) >= 54:
         from_minute = now.minute - 1
         to_minute = now.minute - 1
@@ -1070,7 +954,7 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
-                date_from=f"{date_from}T{hour}:{from_minute}:00Z",
+                date_from=f"{date_from}T{from_hour}:{from_minute}:00Z",
                 date_to=f"{date_to}T{hour}:{to_minute}:00Z",
                 next_token=next_token,
             )

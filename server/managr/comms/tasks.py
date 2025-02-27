@@ -4,7 +4,6 @@ import logging
 import math
 import re
 import uuid
-from copy import copy
 from urllib.parse import urlparse
 
 import httpx
@@ -20,16 +19,11 @@ from scrapy.selector import Selector
 
 from managr.api.emails import send_html_email
 from managr.comms.utils import (
-    alternate_google_search,
     check_article_validity,
     complete_url,
     extract_base_domain,
     generate_config,
-    get_bluesky_data,
     get_domain,
-    get_tweet_data,
-    get_youtube_data,
-    merge_sort_dates,
     normalize_article_data,
     send_url_batch,
 )
@@ -48,15 +42,7 @@ from managr.utils.misc import custom_paginator
 from . import constants as comms_consts
 from .models import ArchivedArticle
 from .models import Article as InternalArticle
-from .models import (
-    AssistAlert,
-    Journalist,
-    JournalistContact,
-    NewsSource,
-    Search,
-    Thread,
-    TwitterAccount,
-)
+from .models import AssistAlert, Journalist, JournalistContact, NewsSource, Search
 from .serializers import (
     EmailTrackerSerializer,
     JournalistContactSerializer,
@@ -560,92 +546,21 @@ def _process_website_domain(urls, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    thread = None
-    project = None
-    link = "{settings.MANAGR_URL}/login"
-    if alert.thread:
-        thread = Thread.objects.get(id=alert.thread.id)
-        project = thread.meta_data.get("project", "")
-        link = thread.generate_url()
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
 
-    boolean = alert.search_boolean
-    end_time = datetime.datetime.now()
-    start_time = end_time - datetime.timedelta(hours=24)
-
-    context = {"search_id": str(alert.thread.search.id), "u": str(alert.user.id)}
-    payload = {
-        "view": {
-            "state": {
-                "values": {
-                    "START_DATE": {"start": {"selected_date": str(start_time.date())}},
-                    "STOP_DATE": {"stop": {"selected_date": str(start_time.date())}},
-                }
-            }
-        }
+    content = {
+        "thread_url": link,
+        "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{alert.thread.search.name}",
     }
-    if alert.type in ["EMAIL", "BOTH"]:
-        try:
-            clips = alert.thread.search.get_clips(boolean, end_time, start_time)["articles"]
-            clips = [article for article in clips if article["title"] != "[Removed]"]
-            internal_articles = InternalArticle.search_by_query(
-                boolean, str(end_time), str(start_time)
-            )
-            normalized_clips = normalize_article_data(clips, internal_articles, False)
-            if len(normalized_clips):
-                descriptions = [clip["description"] for clip in normalized_clips]
-                res = Search.get_summary(
-                    alert.user,
-                    2000,
-                    60.0,
-                    descriptions,
-                    alert.thread.search.instructions,
-                    False,
-                    False,
-                    project,
-                    False,
-                    alert.thread.search.instructions,
-                    True,
-                )
-
-                email_list = [alert.user.email]
-
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-                message = re.sub(
-                    r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
-                )
-                if thread:
-                    thread.meta_data["articlesFiltered"] = normalized_clips
-                    thread.meta_data["filteredArticles"] = normalized_clips
-                    thread.meta_data["summary"] = message
-                    thread.meta_data["summaries"] = []
-                    thread.save()
-
-                content = {
-                    "thread_url": link,
-                    "website_url": f"{settings.MANAGR_URL}/login",
-                    "title": f"{alert.thread.search.name}",
-                }
-                send_html_email(
-                    f"ManagrAI Digest: {alert.thread.search.name}",
-                    "core/email-templates/news-email.html",
-                    settings.DEFAULT_FROM_EMAIL,
-                    email_list,
-                    context=content,
-                )
-            else:
-                return
-        except Exception as e:
-            print(str(e))
-            send_to_error_channel(str(e), alert.user.email, "send news alert")
-        if type == "BOTH":
-            recipients = "|".join(alert.recipients)
-            context.update(r=recipients)
-            emit_process_slack_news_summary(payload, context)
-    else:
-        recipients = "|".join(alert.recipients)
-        context.update(r=recipients)
-        emit_process_slack_news_summary(payload, context)
+    send_html_email(
+        f"ManagrAI Digest: {alert.thread.search.name}",
+        "core/email-templates/news-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
+    )
     if "sent_count" in alert.meta_data.keys():
         alert.meta_data["sent_count"] += 1
     else:
@@ -658,59 +573,8 @@ def _send_news_summary(news_alert_id):
 @background()
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    user = alert.user
-    thread = alert.thread
-    link = thread.generate_url()
-    search_boolean = alert.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_now = datetime.datetime.now(datetime.timezone.utc)
-    date_to = str(date_now.date())
-    date_from = str((date_now - datetime.timedelta(hours=24)).date())
-    email_data = {}
-    social_data_list = []
-    for value in social_values:
-        data_func = social_switcher[value]
-        social_data = data_func(
-            search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
-        )
-        if "error" in social_data.keys():
-            continue
-        else:
-            social_data_list.extend(social_data["data"])
-    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    res = TwitterAccount.get_summary(
-        alert.user,
-        2000,
-        60.0,
-        sorted_social_data,
-        search_boolean,
-        alert.instructions,
-        False,
-    )
-    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-    message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
-    thread.meta_data["tweets"] = sorted_social_data
-    thread.meta_data["summary"] = message
-    thread.meta_data["summaries"] = []
-    if user.has_twitter_integration:
-        if "tweetMedia" in email_data.keys():
-            thread.meta_data["tweetMedia"] = email_data["media"]
-        if "includes" in email_data.keys():
-            thread.meta_data["includes"] = email_data["includes"]
-    thread.save()
-
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
     content = {
         "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",
@@ -893,7 +757,6 @@ def create_contacts_from_file(journalist_ids, user_id, tags):
 
 @background()
 def _process_contacts_excel(user_id, data, result_id, tags):
-    print(tags)
     data_length = len(data["email"])
     contacts_to_create = []
     failed_list = []
@@ -1298,84 +1161,8 @@ def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
 @background()
 def _send_omni_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    user = alert.user
-    thread = alert.thread
-    link = thread.generate_url()
-    search_boolean = alert.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_now = datetime.datetime.now(datetime.timezone.utc)
-    date_to = str(date_now.date())
-    date_from = str((date_now - datetime.timedelta(hours=24)).date())
-    social_data_dict = {"twitter": []}
-    for value in social_values:
-        data_func = social_switcher[value]
-        social_data = data_func(
-            search_boolean, max=max, user=user, date_from=date_from, date_to=date_to
-        )
-        if "error" in social_data.keys():
-            social_data_dict[value] = []
-            continue
-        else:
-            social_data_dict[value] = merge_sort_dates(social_data["data"], "created_at")
-    internal_articles = InternalArticle.search_by_query(
-        search_boolean, str(date_to), str(date_from)
-    )
-    normalized_clips = normalize_article_data([], internal_articles, False)[:31]
-    google_results = alternate_google_search(search_boolean, 5, True)["results"]
-    sorted_social_data = []
-    sorted_social_data.extend(social_data_dict["twitter"][:5])
-    sorted_social_data.extend(social_data_dict["bluesky"][:7])
-    sorted_social_data.extend(social_data_dict["youtube"][:6])
-    sorted_social_data = merge_sort_dates(sorted_social_data, "created_at")
-    omniResults = [*normalized_clips, *sorted_social_data, *google_results]
-    for i, r in enumerate(omniResults):
-        r["citationIndex"] = i
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
-        date_now,
-        alert.thread.search.input_text,
-        normalized_clips,
-        social_data_dict["twitter"][:5],
-        social_data_dict["youtube"][:6],
-        social_data_dict["bluesky"][:7],
-        google_results,
-        thread.meta_data["project"],
-    )
-
-    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-        user.email,
-        prompt,
-        "You are a VP of Communications",
-        top_p=0.1,
-    )
-    with Variable_Client(30) as client:
-        r = client.post(
-            url,
-            data=json.dumps(body),
-            headers=core_consts.OPEN_AI_HEADERS,
-        )
-    res = open_ai_exceptions._handle_response(r)
-    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-    message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
-    thread.meta_data["summary"] = message
-    thread.meta_data["summaries"] = []
-    thread.meta_data["omniSocial"] = sorted_social_data
-    thread.meta_data["omniNews"] = normalized_clips
-    thread.meta_data["omniWeb"] = google_results
-    thread.meta_data["omniResults"] = omniResults
-    thread.save()
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
     content = {
         "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",

@@ -381,7 +381,7 @@ class SourceExtractor:
             value = getattr(self, field)
             setattr(self.source, field, value)
         self.source.save()
-        self.source.refresh_from_db()
+        self.source = self.source.refresh_from_db()
         return
 
     def save_article_selectors(self):

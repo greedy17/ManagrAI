@@ -348,7 +348,7 @@ class Article(TimeStampModel):
     def search_by_query(
         cls, boolean_string, date_to=False, date_from=False, author=False, for_report=False
     ):
-        from managr.comms.utils import boolean_search_to_query, boolean_search_to_searchquery
+        from managr.comms.utils import boolean_search_to_query
 
         date_to_date_obj = parser.parse(date_to)
         day_incremented = date_to_date_obj + timedelta(days=1)
