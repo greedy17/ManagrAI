@@ -603,7 +603,8 @@ class SourceExtractor:
         article_selectors = self.source.article_selectors
         for key in xpath_copy.keys():
             if article_selectors[key] is not None:
-                xpath_copy[key] = [article_selectors[key]]
+                fields_dict[key] = article_selectors[key]
+                continue
             for path in xpath_copy[key]:
                 try:
                     selector = self.response.xpath(path).getall()
@@ -621,14 +622,14 @@ class SourceExtractor:
                                 selector = None
                             except Exception as e:
                                 continue
-                    if "//script" in path:
+                    elif "//script" in path:
                         if isinstance(selector, list):
                             selector = [json.loads(a.lower()) for a in selector]
                         script_key = "name" if key == "author" else "datepublished"
                         key_path = find_key(selector, script_key)
                         if key_path is not None:
                             if isinstance(selector, list):
-                                path = f"({path})[{int(key_path[1])+ 1}]{key_path[2:]}"
+                                path = "({})[{}]{}".format(path, int(key_path[1]) + 1, key_path[2:])
                             else:
                                 path = path + key_path
                         else:
