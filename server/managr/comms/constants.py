@@ -1,4 +1,3 @@
-from dateutil.tz import gettz
 from django.conf import settings
 
 USE_NEWS_API = settings.USE_NEWS_API
@@ -84,6 +83,87 @@ YOUTUBE_VIDEO_PARAMS = lambda video_id: {
 
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SCRAPER_BATCH_URI = "https://async.scraperapi.com/batchjobs"
+
+DO_NOT_TRACK_LIST = [
+    "https://www.bizjournals.com",
+    "https://www.tiktok.com",
+    "https://www.instagram.com",
+    "https://www.facebook.com",
+    "https://www.x.com",
+    "https://www.linkedin.com",
+]
+
+
+DO_NOT_INCLUDE_WORDS = [
+    "/photos",
+    "sex",
+    "/review",
+    "linkedin",
+    ".pdf",
+    "facebook",
+    "instagram",
+    ".jpg",
+    "/video",
+    "x.com",
+    ".png",
+    ".jpeg",
+    "/category",
+    "/podcast",
+    "/author",
+    ".jpeg",
+    "/event",
+]
+
+NON_VIABLE_CLASSES = ["menu", "nav"]
+
+EXCLUDE_DOMAINS = [
+    "bringatrailer.com",
+    "globenewswire.com",
+    "marketscreener.com",
+    "zacjohnson.com",
+    "allafrica.com",
+    "prnewswire.com",
+    "prnewswire.co.uk",
+    "gov.uk",
+    "pulse.ug",
+    "timesofindia.indiatimes.com",
+    "indiatimes.com",
+    "ibtimes.com.au",
+    "etfdailynews.com",
+    "dealnews.com",
+    "slickdeals.net",
+    "prtimes.jp",
+    "doctorofcredit.com",
+    "ozbargain.com.au",
+    "politicalwire.com",
+    "freerepublic.com",
+    "blogger.com",
+    "slashdot.org",
+    "theflightdeal.com",
+    "fly4free.com",
+    "antaranews.com",
+    "investorsobserver.com",
+    "dealcatcher.com",
+    "dansdeals.com",
+    "superpunch.net",
+    "securityaffairs.com",
+    "fuckingyoung.es",
+    "pypi.org",
+    "biztoc.com",
+    "kicksonfire.com",
+    "memeorandum.com",
+    "sostav.ru",
+]
+
+JOURNALIST_CHOICES = [
+    ("ACTIVE", "Active"),
+    ("INACTIVE", "Inactive"),
+    ("NOT_WITH", "No longer with outlet"),
+    ("FREE", "Freelancer"),
+    ("CON", "Contributor"),
+    ("OPT", "Opt out"),
+    ("OTHER", "Other"),
+]
 
 
 def SCRAPER_BATCH_BODY(urls, include_webhook=False, is_article=False):
@@ -335,7 +415,7 @@ NEW_API_EVERYTHING_DATE_URI = (
 
 SEARCH_TYPE_CHOICES = (
     ("NEWS", "News"),
-    ("SOCIAL", "Social Media"),
+    ("SOCIAL_MEDIA", "Social Media"),
     ("OMNI", "Omni"),
     ("WEB", "Web"),
     ("TRENDING", "Trending"),
@@ -378,6 +458,7 @@ OPEN_AI_QUERY_STRING = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 
@@ -678,6 +759,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 
@@ -686,7 +768,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Example 2: User requests, "Find journalists interested in this pitch", for a project about Lululemon's pitch on sustainable fashion, return relevant topics or beats such as : `"Sustainable fashion" OR "Recycled materials".
 
     Boolean Formatting:
-    1. Use single quotes around exact phrases as needed.
+    1. Don't include quotes around entities.
     2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
     3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
     4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".
@@ -1311,88 +1393,6 @@ def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, w
     Keep responses structured and consistent for easy reading in a Vue.js app.
     """
     return body
-
-
-DO_NOT_TRACK_LIST = [
-    "https://www.bizjournals.com",
-    "https://www.tiktok.com",
-    "https://www.instagram.com",
-    "https://www.facebook.com",
-    "https://www.x.com",
-    "https://www.linkedin.com",
-]
-
-
-DO_NOT_INCLUDE_WORDS = [
-    "/photos",
-    "sex",
-    "/review",
-    "linkedin",
-    ".pdf",
-    "facebook",
-    "instagram",
-    ".jpg",
-    "/video",
-    "x.com",
-    ".png",
-    ".jpeg",
-    "/category",
-    "/podcast",
-    "/author",
-    ".jpeg",
-    "/event",
-]
-
-NON_VIABLE_CLASSES = ["menu", "nav"]
-
-EXCLUDE_DOMAINS = [
-    "bringatrailer.com",
-    "globenewswire.com",
-    "marketscreener.com",
-    "zacjohnson.com",
-    "allafrica.com",
-    "prnewswire.com",
-    "prnewswire.co.uk",
-    "gov.uk",
-    "pulse.ug",
-    "timesofindia.indiatimes.com",
-    "indiatimes.com",
-    "ibtimes.com.au",
-    "etfdailynews.com",
-    "dealnews.com",
-    "slickdeals.net",
-    "prtimes.jp",
-    "doctorofcredit.com",
-    "ozbargain.com.au",
-    "politicalwire.com",
-    "freerepublic.com",
-    "blogger.com",
-    "slashdot.org",
-    "theflightdeal.com",
-    "fly4free.com",
-    "antaranews.com",
-    "investorsobserver.com",
-    "dealcatcher.com",
-    "dansdeals.com",
-    "superpunch.net",
-    "securityaffairs.com",
-    "fuckingyoung.es",
-    "pypi.org",
-    "biztoc.com",
-    "kicksonfire.com",
-    "memeorandum.com",
-    "sostav.ru",
-]
-
-JOURNALIST_CHOICES = [
-    ("ACTIVE", "Active"),
-    ("INACTIVE", "Inactive"),
-    ("NOT_WITH", "No longer with outlet"),
-    ("FREE", "Freelancer"),
-    ("CON", "Contributor"),
-    ("OPT", "Opt out"),
-    ("OTHER", "Other"),
-]
 
 
 def REPORT_SUMMARY(elma, brand, clips):
