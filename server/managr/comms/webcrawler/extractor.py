@@ -2,9 +2,7 @@ import json
 import logging
 import random
 import re
-import select
 from copy import copy
-from dataclasses import fields
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -13,6 +11,7 @@ import requests
 import scrapy
 import scrapy.http
 from dateutil import parser
+from django.db import IntegrityError
 from lxml import etree
 
 from managr.comms.utils import complete_url, extract_date_from_text, send_url_batch, valid_slug
@@ -255,7 +254,7 @@ class ArticleExtractor:
                 data_value = data_value[path]
             selector_value = data_value.title()
         except Exception as e:
-            print(e)
+            print("EXTRACT SCRIPT ERROR: {} {}".format(e, data_value))
             self.error = "Error ({}) extracting script with path {}".format(e, path)
             selector_value = None
         return selector_value
@@ -312,6 +311,8 @@ class ArticleExtractor:
             serializer.is_valid(raise_exception=True)
             serializer.save()
             self.saved = True
+        except IntegrityError:
+            self.saved = False
         except Exception as e:
             self.error = "Error saving article: {}".format(e)
             self.saved = False
@@ -602,7 +603,8 @@ class SourceExtractor:
         article_selectors = self.source.article_selectors
         for key in xpath_copy.keys():
             if article_selectors[key] is not None:
-                xpath_copy[key] = [article_selectors[key]]
+                fields_dict[key] = article_selectors[key]
+                continue
             for path in xpath_copy[key]:
                 try:
                     selector = self.response.xpath(path).getall()
@@ -620,14 +622,14 @@ class SourceExtractor:
                                 selector = None
                             except Exception as e:
                                 continue
-                    if "//script" in path:
+                    elif "//script" in path:
                         if isinstance(selector, list):
                             selector = [json.loads(a.lower()) for a in selector]
                         script_key = "name" if key == "author" else "datepublished"
                         key_path = find_key(selector, script_key)
                         if key_path is not None:
                             if isinstance(selector, list):
-                                path = f"({path})[{int(key_path[1])+ 1}]{key_path[2:]}"
+                                path = "({})[{}]{}".format(path, int(key_path[1]) + 1, key_path[2:])
                             else:
                                 path = path + key_path
                         else:

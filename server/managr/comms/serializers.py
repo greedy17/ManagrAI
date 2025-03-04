@@ -79,6 +79,8 @@ class WritingStyleSerializer(serializers.ModelSerializer):
 
 
 class AssistAlertSerializer(serializers.ModelSerializer):
+    search = serializers.SerializerMethodField("get_search_ref")
+
     class Meta:
         model = AssistAlert
         fields = (
@@ -92,6 +94,9 @@ class AssistAlertSerializer(serializers.ModelSerializer):
             "meta_data",
             "recipients",
         )
+
+    def get_search_ref(self, instance):
+        return instance.thread.search.as_object()
 
 
 class ProcessSerializer(serializers.ModelSerializer):

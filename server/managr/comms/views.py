@@ -1794,6 +1794,7 @@ class AssistAlertViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 
@@ -2833,6 +2834,7 @@ class ThreadViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 
@@ -3339,7 +3341,8 @@ def get_google_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-            user.add_meta_data("google_search")
+            if not for_omni:
+                user.add_meta_data("google_search")
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
