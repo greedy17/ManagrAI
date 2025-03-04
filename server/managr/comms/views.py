@@ -3559,7 +3559,6 @@ def redirect_from_instagram(request):
 def get_traffic_data(request):
     user = request.user
     urls = request.data.get("urls")
-    print('urls are here', urls)
     traffic_data = get_url_traffic_data(urls)
     emit_process_website_domain(urls, request.user.organization.name)
     user.add_meta_data("analyzed_article")
