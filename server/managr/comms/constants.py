@@ -458,6 +458,7 @@ OPEN_AI_QUERY_STRING = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 
@@ -758,6 +759,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 

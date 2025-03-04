@@ -8251,6 +8251,14 @@ Your goal is to create content that resonates deeply, connects authentically, an
     },
 
     async getJournalistBioAlt() {
+      if (!this.isPaid && this.searchesUsed >= 10) {
+        this.contactsModalOpen = false
+        this.openPaidModal(
+          'You have reached your usage limit for the month. Please upgrade your plan.',
+        )
+        return
+      }
+
       this.newContactBio = ''
       this.newContactImages = []
       this.loadingContacts = true
@@ -8954,7 +8962,10 @@ Your goal is to create content that resonates deeply, connects authentically, an
         // console.log('currentalert', this.currentAlert)
       }
 
-      // this.getEmailAlerts()
+      this.$nextTick(() => {
+        this.getEmailAlerts()
+        this.refreshUser()
+      })
     },
     async testEmailAlert() {
       try {
@@ -9834,48 +9845,9 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.citationsMounted = true
         this.altCitationsMounted = true
       }, 3000)
-      // this.summarizing = false
-      // this.searchName = search.name
-      this.setAlertTime()
-      // this.showSummaryInstructions = true
-      // if (search.hasOwnProperty('audience')) {
-      //   this.newTemplate = search.instructions
-      //   this.summary = search.generated_pitch
-      //   this.newSearch = search.type
-      //   this.savedPitch = true
-      // } else if (search.hasOwnProperty('location')) {
-      //   console.log(search)
-      //   this.newTemplate = search.content
-      //   this.summary = search.list
-      //   this.discoverList = search.results
-      //   this.newSearch = search.type || search.name
-      //   this.savedDiscovery = true
-      // } else {
-      //   this.newSearch = search.input_text
-      //   this.newTemplate = search.instructions
-      //   this.booleanString = search.search_boolean
-      //   this.metaData = search.meta_data
-      //   this.summary = ''
-      //   this.addedClips = this.$store.state.currentReportClips
-      // }
 
-      // this.mainView =
-      //   search.search_boolean === 'Ig'
-      //     ? 'instagram'
-      //     : search.type === 'SOCIAL_MEDIA'
-      //     ? 'social'
-      //     : search.type === 'NEWS'
-      //     ? 'news'
-      //     : search.hasOwnProperty('audience')
-      //     ? 'write'
-      //     : search.hasOwnProperty('location')
-      //     ? 'discover'
-      //     : ''
-      // if (this.mainView !== 'write' && this.mainView !== 'discover') {
-      //   this.generateNewSearch(null, true, search.search_boolean)
-      // } else {
-      //   this.changeSearch(search.type)
-      // }
+      this.setAlertTime()
+
       this.setCurrentAlert()
     },
     changeIndex() {

@@ -3,7 +3,7 @@
     <header>
       <img src="@/assets/images/newLogo.png" height="36px" alt="" />
       <div class="header">
-        <small>Already a member ?</small>
+        <small>Already a customer ?</small>
         <router-link class="secondary-button" :to="{ name: 'Login' }">Log in</router-link>
       </div>
     </header>
