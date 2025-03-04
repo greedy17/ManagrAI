@@ -1761,8 +1761,6 @@ www.forbes.com/article-3
       this.reportName = this.reportThread.title
       this.brand = this.reportThread.brand
 
-      console.log('REPORT THREAD IS HERE', this.reportThread)
-
       let articles = []
       let clips = []
 
@@ -1780,6 +1778,7 @@ www.forbes.com/article-3
           return clip.link
         })
       } else {
+        clips = this.selectedSearch.meta_data.filteredArticles
         articles = this.selectedSearch.meta_data.filteredArticles
         this.urls = articles.map((art) => {
           return art.link
@@ -1790,8 +1789,17 @@ www.forbes.com/article-3
         ? this.selectedSearch.meta_data.summaries.map((summary) => summary.clips)
         : []
 
+      // console.log('additionalClips are here', additionalClips)
+
       articles = [articles, ...additionalClips].flat()
       clips = [clips, ...additionalClips].flat()
+
+      // console.log('articles are here', articles)
+      console.log('clips are here now', clips)
+
+      this.urls = articles.map((art) => {
+        return art.link
+      })
 
       if (
         this.selectedSearch &&
@@ -2250,7 +2258,7 @@ www.forbes.com/article-3
       ) {
         this.loadingText = 'Step 1/3: Analyzing media coverage...'
 
-        console.log('preparedSocial are here', this.preparedSocial)
+        // console.log('preparedSocial are here', this.preparedSocial)
 
         try {
           const res = await Comms.api.getReportSummary({
@@ -2286,8 +2294,6 @@ www.forbes.com/article-3
           })
         }
       } else {
-        console.log('in the right place', this.reportUrls)
-
         try {
           const res = await Comms.api.getReportClips({
             urls: this.urls,
@@ -2375,6 +2381,8 @@ www.forbes.com/article-3
           urls: this.urls,
         })
         this.traffic = res
+
+        console.log('traffic response', res)
         this.getSocialData()
       } catch (e) {
         console.error(e)
@@ -2396,6 +2404,8 @@ www.forbes.com/article-3
           urls: this.urls,
         })
         this.socialData = res
+
+        console.log('socialData response', res)
 
         this.combineArticlesWithTraffic()
       } catch (e) {
@@ -2469,6 +2479,8 @@ www.forbes.com/article-3
       )
     },
     combineArticlesWithTraffic() {
+      console.log('im in the combin function', this.clips)
+
       this.clips = this.clips.map((article) => {
         const domain = article.source.replace(/^https?:\/\//, '').replace(/^www\./, '')
         const traffic = this.traffic[domain] || null
