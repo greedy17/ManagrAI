@@ -469,3 +469,5 @@ class MicrosoftAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = MicrosoftAccount
         fields = ("user", "access_token", "refresh_token", "account_id")
+
+

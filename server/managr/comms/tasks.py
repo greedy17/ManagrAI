@@ -547,6 +547,7 @@ def _process_website_domain(urls, organization_name):
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
     alert.update_thread_data()
+    alert.refresh_from_db()
     link = alert.thread.generate_url()
 
     content = {
@@ -574,6 +575,7 @@ def _send_news_summary(news_alert_id):
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
     alert.update_thread_data()
+    alert.refresh_from_db()
     link = alert.thread.generate_url()
     content = {
         "thread_url": link,
@@ -1162,6 +1164,7 @@ def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
 def _send_omni_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
     alert.update_thread_data()
+    alert.refresh_from_db()
     link = alert.thread.generate_url()
     content = {
         "thread_url": link,

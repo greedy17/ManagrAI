@@ -158,7 +158,7 @@ def getclips(request):
 
     except Exception as e:
         send_to_error_channel(str(e), user.email, "get clips (platform)")
-        return {"error": str(e)}
+        return {"error": str(e), "articles": []}
 
 
 def process_journalists(journalists, contacts):

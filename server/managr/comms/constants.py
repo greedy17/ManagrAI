@@ -415,7 +415,7 @@ NEW_API_EVERYTHING_DATE_URI = (
 
 SEARCH_TYPE_CHOICES = (
     ("NEWS", "News"),
-    ("SOCIAL_MEDIA", "Social Media"),
+    ("SOCIAL", "Social Media"),
     ("OMNI", "Omni"),
     ("WEB", "Web"),
     ("TRENDING", "Trending"),

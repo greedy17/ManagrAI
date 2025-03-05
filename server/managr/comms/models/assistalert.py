@@ -205,7 +205,7 @@ def update_social_alert_data(alert_id):
 
 update_switcher = {
     "OMNI": update_omni_alert_data,
-    "SOCIAL_MEDIA": update_social_alert_data,
+    "SOCIAL": update_social_alert_data,
     "NEWS": update_news_alert_data,
 }
 
