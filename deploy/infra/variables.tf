@@ -208,15 +208,15 @@ variable "scheduled_tasks" {
   default = [
     {
       name       = "processalltasks"
-      command    = "process_tasks --duration 3600"
-      cron       = "cron(*/20 0-11,13-22 * * ? *)"
+      command    = "process_tasks --queue DEFAULT --duration 3600"
+      cron       = "cron(*/20 * * * ? *)"
       task_count = 1
       cpu        = 2048
       memory     = 4096
     },
     {
       name       = "processalltaskscrawleram"
-      command    = "process_tasks --duration 10800"
+      command    = "process_tasks --queue CRAWLER --duration 10800"
       cron       = "cron(0 12 * * ? *)"
       task_count = 1
       cpu        = 16384
@@ -224,8 +224,8 @@ variable "scheduled_tasks" {
     },
     {
       name       = "processalltaskscrawlerpm"
-      command    = "process_tasks --duration 10800"
-      cron       = "cron(0 23 * * ? *)"
+      command    = "process_tasks --queue CRAWLER --duration 10800"
+      cron       = "cron(0 21 * * ? *)"
       task_count = 1
       cpu        = 16384
       memory     = 32768
@@ -241,7 +241,7 @@ variable "scheduled_tasks" {
     {
       name       = "batchspiderpm"
       command    = "batch_spiders"
-      cron       = "cron(0 23 * * ? *)"
+      cron       = "cron(0 22 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
@@ -257,7 +257,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatusam"
       command    = "spider_status"
-      cron       = "cron(15/15 11-15 * * ? *)"
+      cron       = "cron(0/15 12-15 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
@@ -265,7 +265,7 @@ variable "scheduled_tasks" {
     {
       name       = "spiderstatuspm"
       command    = "spider_status"
-      cron       = "cron(15/15 22-3 * * ? *)"
+      cron       = "cron(0/15 22-1 * * ? *)"
       task_count = 1
       cpu        = 1024
       memory     = 2048
