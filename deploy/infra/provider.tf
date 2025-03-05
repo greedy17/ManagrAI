@@ -29,3 +29,12 @@ provider "aws" {
 }
 
 data "aws_region" "current" {}
+
+provider "aws" {
+  alias = "crawler_region"
+  region = "us-east-2"
+}
+
+data "aws_region" "crawler_region" {
+  provider = aws.crawler_region
+}
