@@ -1,18 +1,18 @@
+import base64
 import calendar
 import json
-import base64
 from copy import copy
-from django.conf import settings
-from django.utils import timezone
-from managr.utils.client import Variable_Client
 from datetime import datetime
-from django.db.models import Q
-from managr.core.models import User
-from managr.alerts.models import AlertConfig
-from managr.slack.models import OrgCustomSlackFormInstance
-from managr.organization.models import Organization
-from managr.core import constants as core_const
 
+from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone
+
+from managr.core import constants as core_const
+from managr.core.models import User
+from managr.organization.models import Organization
+from managr.slack.models import OrgCustomSlackFormInstance
+from managr.utils.client import Variable_Client
 
 MONTH_OBJECT = {
     "01": "31",
@@ -181,6 +181,8 @@ def get_user_fields(user_id, first, last):
 
 
 def get_totals_for_year(month_only=False):
+    from managr.alerts.models import AlertConfig
+
     # Base queries
     totals = {}
     current_date = datetime.now(tz=timezone.utc)
@@ -499,10 +501,10 @@ def convert_date_string(date_string, value):
 
 def ask_managr_data_collector(user_id, resource_type, resource_id):
     from managr.core.models import User
-    from managr.salesforce.models import MeetingWorkflow
-    from managr.slack.models import OrgCustomSlackFormInstance, OrgCustomSlackForm
-    from managr.salesforce.routes import routes as sf_routes
     from managr.hubspot.routes import routes as hs_routes
+    from managr.salesforce.models import MeetingWorkflow
+    from managr.salesforce.routes import routes as sf_routes
+    from managr.slack.models import OrgCustomSlackForm, OrgCustomSlackFormInstance
 
     CRM_SWITCHER = {"SALESFORCE": sf_routes, "HUBSPOT": hs_routes}
     user = User.objects.get(id=user_id)

@@ -1,4 +1,5 @@
 from django.db import connection
+import json
 
 maintenance_queries = {
     "vacuum": {
@@ -53,3 +54,36 @@ def articles_per_month():
             break
         print(f" {current.strftime('%m/%d/%Y')}  |  {'{:,}'.format(article_count)}")
         current = current - relativedelta(months=1)
+
+
+def load_interactions(user):
+    from managr.core.models import UserInteraction, SearchInteraction
+    import random
+    import os
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, "interactions.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+    searches = data["interactions"]
+    urls = data["links"]
+    for num in range(1, 31):
+        if random.choice([True, False]):
+            s = random.choice(searches)
+            si = UserInteraction.objects.create(user=user, interaction_type="SEARCH")
+            s_type = random.choice(SearchInteraction.SEARCH1_TYPES)
+            si.add_interaction(
+                data={"interaction": si, "search_type": s_type[0], "query": s, "type": "search"}
+            )
+            if random.choice([True, False]):
+                f = random.choice(searches)
+                fi = UserInteraction.objects.create(user=user, interaction_type="FOLLOWUP")
+                fi.add_interaction(
+                    data={"interaction": fi, "query": f, "previous": s, "type": "followup"}
+                )
+        if random.choice([True, False]):
+            l = random.choice(urls)
+            li = UserInteraction.objects.create(user=user, interaction_type="LINK")
+            li.add_interaction(data={"interaction": li, "article_link": l, "type": "link"})
+    return

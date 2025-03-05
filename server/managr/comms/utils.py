@@ -1,38 +1,38 @@
-import re
-import json
-import boto3
 import csv
-import fitz
-import tempfile
-import requests
-import pytz
 import io
+import json
+import logging
 import math
-import random
-from django.db import transaction
-from dateutil.relativedelta import relativedelta
-from .models import Article as InternalArticle
-from datetime import datetime, timezone, timedelta
-from newspaper import Article, ArticleException
-from functools import reduce
-from managr.core.utils import Variable_Client
-from newspaper import Config
-from django.db.models import Q
-from . import constants as comms_consts
-from dateutil import parser
-from django.conf import settings
-from urllib.parse import urlparse, urlunparse
+import re
+import tempfile
 from collections import OrderedDict
-from . import exceptions as comms_exceptions
-from .models import NewsSource, Journalist, JournalistContact, ArchivedArticle
+from datetime import datetime, timedelta, timezone
+from functools import reduce
+from urllib.parse import urlparse, urlunparse
+
+import boto3
+import fitz
+import pytz
+import requests
 from botocore.exceptions import ClientError
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
 from django.contrib.postgres.search import SearchQuery
+from django.db import transaction
+from django.db.models import Q
+from newspaper import Article, ArticleException, Config
+
+from managr.comms import constants as comms_consts
+from managr.comms import exceptions as comms_exceptions
 from managr.core import constants as core_consts
 from managr.core import exceptions as open_ai_exceptions
 from managr.core.models import User
+from managr.core.utils import Variable_Client
 
 s3 = boto3.client("s3")
 
+logger = logging.getLogger("managr")
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
@@ -63,6 +63,8 @@ def get_domain(url, full_netloc=False):
 
 
 def extract_date_from_text(text, timezone_dict={}):
+    from managr.comms.webcrawler.constants import TIMEZONE_DICT
+
     if "Published" in text and "Updated" in text:
         text = text.split("Updated")
         text[0] = text[0].replace("Published:", "")
@@ -71,12 +73,12 @@ def extract_date_from_text(text, timezone_dict={}):
             text = text[0]
         else:
             return None
+    text = text.replace("\n", "").replace("\t", "").strip()
     try:
-        parsed_date = parser.parse(text, tzinfos=timezone_dict)
+        parsed_date = parser.parse(text, tzinfos=TIMEZONE_DICT)
         return str(parsed_date)
     except parser.ParserError:
         pass
-    text = text.replace("\n", "").replace("\t", "").strip()
     patterns = [
         r"(\d{1,2} [A-Za-z]+ \d{4})",
         r"([A-Za-z]+(?: \d{1,2},)? \d{4})",
@@ -219,105 +221,9 @@ def boolean_search_to_query(search_string):
     return query
 
 
-def boolean_search_to_searchquery(search_string):
-    term_list = split_and_combine_terms(search_string)
-    search_query = None
-    current_search_queries = []
-    current_query = None
-    is_negative = False
-    for idx, term in enumerate(term_list):
-        if idx == len(term_list) - 1:
-            current_query = SearchQuery(term, search_type="plain")
-            if current_search_queries:
-                if current_query is not None:
-                    current_search_queries.append(current_query)
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if is_negative:
-                if search_query:
-                    search_query &= ~current_query
-                else:
-                    search_query = ~current_query
-            else:
-                if search_query:
-                    search_query &= current_query
-                else:
-                    search_query = current_query
-        elif term == "AND":
-            if current_search_queries:
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if search_query:
-                print(search_query)
-                search_query &= current_query
-            else:
-                search_query = current_query
-            current_query = None
-            is_negative = False
-        elif term == "OR":
-            if current_query is not None:
-                current_search_queries.append(current_query)
-            current_query = None
-        elif term == "NOT":
-            if current_search_queries:
-                if current_query is not None:
-                    current_search_queries.append(current_query)
-                current_query = reduce(lambda q1, q2: q1 | q2, current_search_queries)
-                current_search_queries = []
-            if current_query:
-                if is_negative:
-                    search_query &= ~current_query
-                else:
-                    search_query &= current_query
-            current_query = None
-            is_negative = True
-        else:
-            current_query = SearchQuery(term, search_type="plain")
-    if search_query is None:
-        search_query = current_query
-    return search_query
-
-
-def get_search_boolean(search):
-    from managr.core import exceptions as open_ai_exceptions
-    from managr.core import constants as core_consts
-
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    prompt = core_consts.OPEN_AI_NEWS_BOOLEAN_CONVERSION(search)
-    tokens = 2000
-    while True:
-        body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-            "dev",
-            prompt,
-            token_amount=tokens,
-            top_p=0.1,
-        )
-        try:
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount <= 5000:
-                has_error = True
-
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-
-    query_input = r.get("choices")[0].get("message").get("content")
-    return query_input
-
-
 def convert_html_to_markdown(summary, clips):
-    from managr.core import exceptions as open_ai_exceptions
     from managr.core import constants as core_consts
+    from managr.core import exceptions as open_ai_exceptions
 
     url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
     prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
@@ -325,29 +231,6 @@ def convert_html_to_markdown(summary, clips):
         "ManagrAI",
         prompt,
         token_amount=2000,
-        top_p=0.1,
-    )
-    with Variable_Client() as client:
-        r = client.post(
-            url,
-            data=json.dumps(body),
-            headers=core_consts.OPEN_AI_HEADERS,
-        )
-    r = open_ai_exceptions._handle_response(r)
-    new_summary = r.get("choices")[0].get("message").get("content")
-    return new_summary
-
-
-def convert_html_to_markdown(summary, clips):
-    from managr.core import exceptions as open_ai_exceptions
-    from managr.core import constants as core_consts
-
-    url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-    prompt = core_consts.OPEN_AI_CONVERT_HTML(summary, clips)
-    body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-        "ManagrAI",
-        prompt,
-        token_amount=1500,
         top_p=0.1,
     )
     with Variable_Client() as client:
@@ -505,51 +388,27 @@ def get_news_api_sources():
 
 
 def remove_api_sources():
-    all_sources = NewsSource.objects.all()
+    from managr.comms.models import NewsSource
+
     try:
         news_api_source_res = get_news_api_sources()
         r = news_api_source_res["sources"]
         source_list = [source["url"] for source in r]
     except Exception as e:
         print(str(e))
-    for url in source_list:
-        database_check = all_sources.filter(domain=url).first()
-        if database_check:
-            database_check.delete()
+    database_check = NewsSource.objects.filter(domain__in=source_list, is_active=True)
+    if database_check:
+        database_check.update(is_active=False)
     return
 
 
-def valid_slug(slug):
-    dash_count = slug.count("-")
-    underscore_count = slug.count("_")
-    if dash_count < 4 or underscore_count < 4:
-        return True
-    else:
-        return False
-
-
-def potential_link_check(href, website_url):
-    from .webcrawler.constants import URL_DATE_PATTERN, VALID_ARTICLE_WORDS
-
-    source_domain = urlparse(website_url)
-    site_url = source_domain.netloc
-    if "https" in href and site_url not in href:
-        return False
-    parsed_url = urlparse(href)
-    parsed_path = parsed_url.path
-    path_list = [x for x in parsed_path.split("/") if len(x) > 0]
-    if len(path_list) < 1:
-        return False
-    pattern = re.compile(URL_DATE_PATTERN)
-    m = pattern.search(href)
-    if m:
-        return True
-    for word in VALID_ARTICLE_WORDS:
-        if word in href:
+def valid_slug(path_list):
+    for path in path_list:
+        dash_count = path.count("-")
+        underscore_count = path.count("_")
+        if dash_count >= 4 or underscore_count >= 4:
             return True
-    slug = path_list[-1]
-    is_valid_slug = valid_slug(slug)
-    return is_valid_slug
+    return False
 
 
 def complete_url(url, default_domain, default_scheme="https"):
@@ -657,7 +516,7 @@ def convert_pdf_from_url(url):
         return "", image_list
 
 
-def google_search(query, number_of_results=5, include_images=True):
+def google_search(query, number_of_results=10, include_images=True):
     url = comms_consts.GOOGLE_SEARCH_URI
     params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
     with Variable_Client() as client:
@@ -688,43 +547,60 @@ def google_search(query, number_of_results=5, include_images=True):
             return {}
 
 
-def alternate_google_search(query, number_of_results=6):
+def alternate_google_search(query, number_of_results=10, for_alert=False):
     url = comms_consts.GOOGLE_SEARCH_URI
-    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results)
+    params = comms_consts.GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert)
     with Variable_Client() as client:
         res = client.get(url, params=params)
-        results_list = []
-        if res.status_code == 200:
+    results_list = []
+    if res.status_code == 200:
+        try:
             res = res.json()
-            results = res["items"]
-            for index, item in enumerate(results):
-                metatags = item["pagemap"]["metatags"][0]
-                metatags_cse = item["pagemap"].get("cse_image", [])
-                cse_img = metatags_cse[0] if metatags_cse else {}
-                author = (
-                    metatags.get("article:author")
-                    if "article:author" in metatags
-                    else metatags.get("author", "Unknown")
-                )
-                result_data = {
-                    "citationIndex": index,
-                    "id": index + 1,
-                    "title": item["title"],
-                    "snippet": item["snippet"],
-                    "link": item["link"],
-                    "source": metatags.get("og:site_name", "unknown"),
-                    "source_img": metatags.get("og:image", ""),
-                    # "description": metatags.get("og:description", ''),
-                    "image": cse_img.get("src", ""),
-                    "author": author,
-                }
-                results_list.append(result_data)
+            if "items" in res.keys():
+                results = res["items"]
+                for index, item in enumerate(results):
+                    if "pagemap" in item.keys() and "metatags" in item["pagemap"].keys():
+                        metatags = item["pagemap"]["metatags"][0]
+                        metatags_cse = item["pagemap"].get("cse_image", [])
+                        cse_img = metatags_cse[0] if metatags_cse else {}
+                        author = (
+                            metatags.get("article:author")
+                            if "article:author" in metatags
+                            else metatags.get("author", "Unknown")
+                        )
+                        source = metatags.get("og:site_name", "unknown")
+                        source_img = metatags.get("og:image", "")
+                        image = cse_img.get("src", "")
+                    else:
+                        source = "N/A"
+                        source_img = ""
+                        image = ""
+                        author = "N/A"
+                    result_data = {
+                        "citationIndex": index,
+                        "id": index + 1,
+                        "title": item["title"],
+                        "snippet": item["snippet"],
+                        "link": item["link"],
+                        "source": source,
+                        "source_img": source_img,
+                        "image": image,
+                        "author": author,
+                    }
+                    results_list.append(result_data)
+            else:
+                print(res)
+                results_list = []
             return {"results": results_list}
-        else:
-            return {}
+        except Exception as e:
+            logger.exception("Error in google search: {}".format(e))
+            return {"results": []}
+    else:
+        return {"results": []}
 
 
 def check_journalist_validity(journalist, outlet, email):
+    from managr.comms.models import Journalist
     from managr.comms.serializers import JournalistSerializer
 
     data = {"email": email, "outlet": outlet}
@@ -895,7 +771,7 @@ def separate_weeks(start_date, end_date, delta=7):
 
 
 def generate_test_journalists(start, stop, email="zach@mymanagr.com"):
-    from managr.comms.serializers import JournalistSerializer, JournalistContactSerializer
+    from managr.comms.serializers import JournalistContactSerializer, JournalistSerializer
 
     user = User.objects.get(email=email)
     for i in range(start, stop):
@@ -1007,7 +883,6 @@ def get_social_data(urls):
                     results = res["results"]
                     social_data[url] = results
                 else:
-                    print(vars(res))
                     social_data[url] = {}
         except Exception:
             social_data[url] = {}
@@ -1015,7 +890,6 @@ def get_social_data(urls):
 
 
 def get_trend_articles(topics, countries):
-    print(topics, countries)
     headers = {"Accept": "application/json"}
     params = {
         "api_key": comms_consts.BUZZSUMO_API_KEY,
@@ -1066,58 +940,63 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
     next_token = False
     tweet_data = {}
     tweet_list = []
+    media_data = []
     attempts = 1
     now = datetime.now(timezone.utc)
     hour = now.hour if now.hour >= 10 else f"0{now.hour}"
-    from_minute = (now.minute + 5) if (now.minute + 5) >= 10 else f"0{now.minute + 5}"
-    to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
+    from_now = now + timedelta(hours=1)
+    from_hour = from_now.hour if from_now.hour >= 10 else f"0{from_now.hour}"
+    if (now.minute + 5) >= 54:
+        from_minute = now.minute - 1
+        to_minute = now.minute - 1
+    else:
+        from_minute = (now.minute + 5) if ((now.minute + 5) >= 10) else f"0{now.minute + 5}"
+        to_minute = (now.minute - 1) if (now.minute - 1) >= 10 else f"0{now.minute - 1}"
     while True:
         try:
-            if attempts >= 10:
+            if attempts >= 5:
                 break
             tweet_res = twitter_account.get_tweets(
                 query_input,
-                date_from=f"{date_from}T{hour}:{from_minute}:00Z",
+                date_from=f"{date_from}T{from_hour}:{from_minute}:00Z",
                 date_to=f"{date_to}T{hour}:{to_minute}:00Z",
                 next_token=next_token,
             )
-            tweets = tweet_res.get("data", None)
-            includes = tweet_res.get("includes", [])
-            media = includes.get("media", [])
+            tweets = tweet_res.get("data", {})
             attempts += 1
-            if not tweets:
+            if not tweets and len(tweet_list) == 0:
                 suggestions = twitter_account.no_results(user.email, query_input)
                 query_input = suggestions.get("choices")[0].get("message").get("content")
             if tweets:
                 if "next_token" in tweet_res["meta"].keys():
                     next_token = tweet_res["meta"]["next_token"]
-                user_data = tweet_res["includes"].get("users")
+                users = tweet_res["includes"].get("users")
+                media = tweet_res["includes"].get("media")
+                media_data = {m["media_key"]: m for m in media}
+                user_data = {u["id"]: u for u in users}
                 for tweet in tweets:
-                    if len(tweet_list) > 19:
+                    if len(tweet_list) >= 20:
                         break
-                    for u in user_data:
-                        if u["id"] == tweet["author_id"]:
-                            if u["public_metrics"]["followers_count"] > 10000:
-                                tweet["tweet_link"] = (
-                                    f"https://twitter.com/{u['username']}/status/{tweet['id']}"
-                                )
-                                tweet["user"] = u
-                                tweet["type"] = "twitter"
-                                tweet_list.append(tweet)
-                            break
+                    u = user_data[tweet["author_id"]]
+                    if u["public_metrics"]["followers_count"] > 10000:
+                        new_attachments = []
+                        if (
+                            "attachments" in tweet.keys()
+                            and "media_keys" in tweet["attachments"].keys()
+                        ):
+                            new_attachments = []
+                            media_keys = tweet["attachments"]["media_keys"]
+                            for media_key in media_keys:
+                                new_attachments.append(media_data[media_key])
+                        tweet["attachments"] = new_attachments
+                        tweet["tweet_link"] = (
+                            f"https://twitter.com/{u['username']}/status/{tweet['id']}"
+                        )
+                        tweet["user"] = u
+                        tweet["type"] = "twitter"
+                        tweet_list.append(tweet)
             if len(tweet_list) < 20 and tweets:
                 continue
-            ordered_dict = OrderedDict()
-            for obj in tweet_list:
-                if obj["text"] not in ordered_dict.keys():
-                    ordered_dict[obj["text"]] = obj
-            duplicated_removed = list(ordered_dict.values())
-            tweet_data = {
-                "data": duplicated_removed,
-                "string": query_input,
-                "includes": includes,
-                "tweetMedia": media,
-            }
             break
         except KeyError as e:
             tweet_data["error"] = {"error": f"No results for {query_input}", "string": query_input}
@@ -1132,6 +1011,12 @@ def get_tweet_data(query_input, max=50, user=None, date_from=None, date_to=None)
         except Exception as e:
             tweet_data["error"] = str(e)
             break
+    ordered_dict = OrderedDict()
+    for obj in tweet_list:
+        if obj["text"] not in ordered_dict.keys():
+            ordered_dict[obj["text"]] = obj
+    duplicated_removed = list(ordered_dict.values())
+    tweet_data = {"data": duplicated_removed, "string": query_input}
     return tweet_data
 
 
@@ -1232,9 +1117,9 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
                 normalized_data = normalize_bluesky_data(posts)
                 bluesky_data["data"] = normalized_data
             else:
-                if res.headers.get("Content-Type") == "application/json":
-                    res = res.json()
-                bluesky_data["error"] = res["error"]["message"]
+                res = res.json()
+                logger.info(res)
+                bluesky_data["error"] = res["message"]
     except Exception as e:
         print(f"Bluesky date error: {e}: {vars(res)}")
         bluesky_data["error"] = str(e)
@@ -1244,7 +1129,6 @@ def get_bluesky_data(query, max=50, user=None, date_from=None, date_to=None):
 def send_url_batch(urls, include_webhook=False, is_article=False):
     from managr.comms.tasks import parse_article
 
-    print(urls)
     url = comms_consts.SCRAPER_BATCH_URI
     body = comms_consts.SCRAPER_BATCH_BODY(urls, include_webhook, is_article)
     with Variable_Client() as client:
@@ -1255,7 +1139,6 @@ def send_url_batch(urls, include_webhook=False, is_article=False):
                 parse_article(task["statusUrl"])
             return
         else:
-            print(vars(res))
             return False
 
 
@@ -1282,10 +1165,18 @@ def get_site_icon(response, url):
 
 
 def data_cleaner(data):
+    import pytz
+
+    now = datetime.now(pytz.timezone("America/New_York"))
     try:
+        now = datetime.now(pytz.timezone("America/New_York"))
         content = data.pop("content")
         date = data.pop("publish_date")
-        parsed_date = parser.parse(date)
+        parsed_date = parser.parse(date, tzinfos=comms_consts.TIMEZONE_DICT)
+        if not parsed_date.tzinfo:
+            parsed_date = parsed_date.astimezone(pytz.timezone("America/New_York"))
+        if parsed_date > now:
+            parsed_date = None
         content = content.replace("\n", " ").replace("\t", " ").replace("  ", "")
         data["author"] = (
             data["author"].replace("\n", "").replace(" and ", ",").replace("By ,", "").strip()
@@ -1297,109 +1188,20 @@ def data_cleaner(data):
         data["publish_date"] = parsed_date
         if len(data["title"]) > 150:
             data["title"] = data["title"][:145] + "..."
-    except TypeError as e:
-        return f"Error cleaning data: {data}"
-    except KeyError as e:
-        return f"Error cleaning data: {data}"
-    except parser.ParserError as e:
-        return f"Error cleaning data: {data}"
+    except (TypeError, KeyError, parser.ParserError) as e:
+        data["error"] = e
+        return "{} Error cleaning data: {}".format(type(e).__name__, data)
+    except Exception as e:
+        data["error"] = e
+        return "Unknown Error () cleaning data: {}".format(e, data)
     return data
-
-
-#################################
-# DEV FUNCTIONS
-#################################
-def test_social_response(news_alert_id=False):
-    from managr.comms.models import AssistAlert
-
-    print("Func Start:", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    if news_alert_id:
-        alert = AssistAlert.objects.get(id=news_alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    user = alert.user
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-        boolean = alert.search.search_boolean
-    else:
-        boolean = alert.search.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_from = datetime.now(timezone.utc) - timedelta(hours=24)
-    email_data = {}
-    social_data_list = []
-    for value in social_values:
-        print("=============================")
-        print(f"{value}: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from)
-        print("Response returned: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-        if "error" in social_data.keys():
-            continue
-        else:
-            if value == "twitter":
-                email_data["includes"] = social_data["includes"]
-            social_data_list.extend(social_data["data"])
-    print("Sort start: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    print("Sort stop: ", datetime.now().strftime("%H:%M:%S.%f")[:-3])
-    post_list = []
-    for value in sorted_social_data:
-        if value["type"] == "twitter":
-            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
-            post_list.append(social_value)
-        else:
-            social_value = (
-                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
-            )
-            post_list.append(social_value)
-    return post_list
-
-
-def test_social_summary_response(post_list, alert_id=False, completion_token=1000, model=False):
-    from managr.comms.models import AssistAlert, TwitterAccount
-
-    models = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "o1", "o1-mini", "gpt-3.5-turbo"]
-    if model:
-        models = [model]
-    response_times = "RESPONSE TIMES REPORT\n=====================\n"
-    if alert_id:
-        alert = AssistAlert.objects.get(id=alert_id)
-    else:
-        alert = AssistAlert.objects.filter(user__email="zach@mymanagr.com").first()
-    for model in models:
-        d = datetime.now()
-        res = TwitterAccount.get_summary(
-            alert.user,
-            completion_token,
-            60.0,
-            post_list,
-            alert.search.search_boolean,
-            alert.search.instructions,
-            False,
-            model=model,
-        )
-        c_tokens = res["usage"]["completion_tokens"]
-        seconds = (datetime.now() - d).seconds
-        response_times += (
-            f"{model}: {seconds} seconds at {round((seconds/c_tokens),3)} ms per token\n"
-        )
-        print(f"Response: {res}")
-    print(response_times)
 
 
 def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=False, auto=False):
     import sys
+
+    from managr.comms.models import ArchivedArticle
+    from managr.comms.models import Article as InternalArticle
 
     """
     Archives articles older than a given date and deletes them from the original table.
@@ -1481,100 +1283,24 @@ def archive_articles(months=6, weeks=0, days=0, count_only=False, as_background=
         return
 
 
-def test_get_clips(search, boolean=False):
-    from managr.comms.models import Article, Search
-    from managr.core.constants import (
-        OPEN_AI_CHAT_COMPLETIONS_URI,
-        OPEN_AI_CHAT_COMPLETIONS_BODY,
-        OPEN_AI_HEADERS,
-    )
-    from managr.core.exceptions import _handle_response
+def check_article_validity(anchor):
+    classes = anchor.xpath("@class").get()
+    article_url = anchor.xpath("@href").extract_first()
+    if article_url is None or len(article_url) < 1:
+        return False
+    if article_url[len(article_url) - 1] == "/":
+        article_url = article_url[: len(article_url) - 1]
+    parsed_path = urlparse(article_url).path
+    path_list = parsed_path.split("/")
+    if len(path_list) <= 1:
+        return False
+    if classes:
+        for class_word in comms_consts.NON_VIABLE_CLASSES:
+            if class_word in classes:
+                return False
+    for word in comms_consts.DO_NOT_INCLUDE_WORDS:
+        if word in article_url:
+            return False
 
-    try:
-        today = datetime.now()
-        date_to = str(datetime.now().date())
-        date_from = str((today - timedelta(days=7)).date())
-        if "journalist:" in search:
-            internal_articles = Article.search_by_query(search, date_to, date_from, True)
-            articles = normalize_article_data([], internal_articles)
-            return {"articles": articles, "string": search}
-        if not boolean:
-            url = OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_QUERY_STRING(search)
-            body = OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "support@mymanagr.com",
-                prompt,
-                token_amount=500,
-                top_p=0.1,
-            )
-            with Variable_Client() as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=OPEN_AI_HEADERS,
-                )
-            r = _handle_response(r)
-            query_input = r.get("choices")[0].get("message").get("content")
-            print("BOOLEAN:", query_input)
-            print("---------------------------------------")
-            news_res = Search.get_clips(query_input, date_to, date_from)
-            articles = news_res["articles"]
-            print("NEWSAPI CLIPS:", len(articles), articles)
-            print("---------------------------------------")
-        else:
-            news_res = Search.get_clips(boolean, date_to, date_from)
-            articles = news_res["articles"]
-            query_input = boolean
-        articles = [article for article in articles if article["title"] != "[Removed]"]
-        internal_articles = Article.search_by_query(query_input, date_to, date_from)
-        dict_articles = [article.fields_to_dict() for article in internal_articles]
-        print("INTERNAL ARTICLES:", len(dict_articles), dict_articles)
-        print("---------------------------------------")
-        articles = normalize_article_data(articles, internal_articles, True)
-        return {"articles": articles, "string": query_input}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-def test_prompt(pitch, user_id):
-    user = User.objects.get(email="zach@mymanagr.com")
-    token_amount = 4000
-    timeout = 60.0
-    while True:
-        try:
-            journalists_query = JournalistContact.objects.filter(user=user)
-            journalists = [
-                f"{journalist.journalist.full_name}-{journalist.journalist.outlet}"
-                for journalist in journalists_query
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(journalists, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                "zach@mymanagr.com",
-                prompt,
-                token_amount=token_amount,
-                temperature=0,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            r = open_ai_exceptions._handle_response(r)
-            message = r.get("choices")[0].get("message").get("content")
-            message = json.loads(message)
-            journalist_data = message["journalists"]
-            break
-        except open_ai_exceptions.StopReasonLength:
-            if token_amount >= 6000:
-                journalist_data = "Token amount error"
-                break
-            else:
-                token_amount += 1000
-                continue
-        except Exception as e:
-            journalist_data = f"Unknown exception: {e}"
-            break
-    return journalist_data
+    has_valid_slug = valid_slug(path_list)
+    return has_valid_slug

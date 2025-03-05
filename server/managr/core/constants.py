@@ -34,6 +34,15 @@ OPEN_AI_COMPLETIONS_URI = "https://api.openai.com/v1/completions"
 OPEN_AI_CHAT_COMPLETIONS_URI = "https://api.openai.com/v1/chat/completions"
 OPEN_AI_EDIT_URI = "https://api.openai.com/v1/edits"
 
+USER_INTERACTION_SEARCH_TYPES = [
+    ("NEWS", "News"),
+    ("SOCIAL", "Social"),
+    ("WEB", "Web"),
+    ("OMNI", "Omni"),
+    ("WRITE", "Write"),
+    ("DISCOVER", "Discover"),
+]
+
 OPEN_AI_SUMMARY_PROMPT = (
     lambda object: f"""Summarize the meeting notes below in the most concise way (no less than 1,500 characters and no greater than 2,000 characters) as if you are reporting back to a VP of Sales, tone is casual yet professional.
     Highlight the most important information first like, the deal stage, next step and close date. 
@@ -228,21 +237,6 @@ Limit your response to under 1,000 characters.
 """
     return body
 
-
-OPEN_AI_NEWS_BOOLEAN_CONVERSION = (
-    # lambda search: f"""Convert the Search Term below into a boolean query to be used for News API.
-    # Follow these steps in order to create the best possible search:
-    # 1: Concentrate on the primary keywords or key concepts of the search term. Example: 'Articles written or about Lululemon' should just be 'Lululemon'. Example 2: 'Apple, exclude stock related news' shoud be "apple" NOT (stock or Nasdaq or shares...).
-    # 2: Do not make it a title search unless specifically instructed via the prompt.
-    # 3: Do not use acronyms in your search unless specifically asked to.
-    # 4: If the search term is a broad category such as "sports", ensure you include or exclude relevant subtopics (e.g., "football", "baseball", "basketball", "coaches", etc.), based on the nature of the query.
-    # 5: Use logical operators judiciously to balance specificity and breadth. Employ 'AND' to combine terms that are closely related or typically reported together, ensuring relevance. Opt for 'OR' when connecting terms that are less frequently associated or when one term has a low probability of appearing in news contexts. This approach broadens the search scope while maintaining focus on the primary subject.
-    # Search Term: {search}"""
-    lambda search: f"""Convert the term below into a boolean query to be used for News API.
-    term: {search}
-    output must only be the boolean string.
-    """
-)
 
 OPEN_AI_TRANSCRIPT_GENERATE_CONTENT = (
     lambda date, summary, instructions: f"""Today's date is {date}.

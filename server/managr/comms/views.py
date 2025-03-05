@@ -1,115 +1,109 @@
-import json
-import httpx
-import logging
-import io
 import csv
-import xlrd
-import pytz
-from django.db.models import Q
-from openpyxl import load_workbook
-from rest_framework import (
-    mixins,
-    viewsets,
-)
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from asgiref.sync import async_to_sync, sync_to_async
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from .pagination import PageNumberPagination
+import io
+import json
+import logging
 from datetime import datetime, timedelta, timezone
-from newspaper import Article, ArticleException
-from managr.api.models import ExpiringTokenAuthentication
-from managr.core.models import TaskResults
-from rest_framework.response import Response
-from rest_framework import (
-    permissions,
-    mixins,
-    status,
-    viewsets,
-)
 from urllib.parse import urlencode
+
+import httpx
+import pytz
+import xlrd
+from asgiref.sync import async_to_sync, sync_to_async
+from django.db.models import Q
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
-from rest_framework.decorators import action
+from django.views.decorators.http import require_http_methods
+from django_filters.rest_framework import DjangoFilterBackend
+from newspaper import Article, ArticleException
+from newspaper.article import ArticleException
+from openpyxl import load_workbook
+from rest_framework import mixins, permissions, status, viewsets
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    parser_classes,
+    permission_classes,
+)
+from rest_framework.filters import OrderingFilter
+from rest_framework.response import Response
+
+from managr.api.emails import send_html_email, send_mailgun_email
+from managr.api.models import ExpiringTokenAuthentication
+from managr.comms import exceptions as comms_exceptions
+from managr.comms.tasks import emit_get_meta_account_info
+from managr.comms.utils import (
+    alternate_google_search,
+    check_journalist_validity,
+    convert_pdf_from_url,
+    convert_social_search,
+    extract_email_address,
+    extract_pdf_text,
+    generate_config,
+    get_article_data,
+    get_bluesky_data,
+    get_domain,
+    get_journalists,
+    get_social_data,
+    get_trend_articles,
+    get_tweet_data,
+    get_url_traffic_data,
+    get_youtube_data,
+    google_search,
+    merge_sort_dates,
+    normalize_article_data,
+)
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import TaskResults, User, UserInteraction
+from managr.slack.helpers.utils import send_to_error_channel
+from managr.utils.client import Variable_Client
+from managr.utils.misc import decrypt_dict
+
 from . import constants as comms_consts
 from .filters import JournalistContactFilter
+from .models import Article as InternalArticle
 from .models import (
+    AssistAlert,
     CompanyDetails,
-    Search,
-    TwitterAccount,
+    Discovery,
+    EmailTracker,
+    InstagramAccount,
+    Journalist,
+    JournalistContact,
     Pitch,
     Process,
-    InstagramAccount,
-    Discovery,
-    Journalist,
-    EmailTracker,
+    Search,
     Thread,
+    TwitterAccount,
+    WritingStyle,
 )
-from .models import Article as InternalArticle
-from .models import WritingStyle, AssistAlert, JournalistContact
-from managr.core.models import User
-from managr.comms import exceptions as comms_exceptions
+from .pagination import PageNumberPagination
+from .serializers import (
+    AssistAlertSerializer,
+    CompanyDetailsSerializer,
+    DiscoverySerializer,
+    EmailTrackerSerializer,
+    InstagramAccountSerializer,
+    JournalistContactSerializer,
+    PitchSerializer,
+    ProcessSerializer,
+    SearchSerializer,
+    ThreadSerializer,
+    TwitterAccountSerializer,
+    WritingStyleSerializer,
+)
 from .tasks import (
+    _add_journalist_to_db,
+    emit_process_bulk_draft,
+    emit_process_contacts_excel,
     emit_process_website_domain,
     emit_send_news_summary,
     emit_send_social_summary,
     emit_share_client_summary,
-    _add_journalist_to_db,
-    emit_process_contacts_excel,
-    emit_process_bulk_draft,
-    parse_homepage,
     parse_article,
+    parse_homepage,
 )
-from .serializers import (
-    SearchSerializer,
-    PitchSerializer,
-    AssistAlertSerializer,
-    ProcessSerializer,
-    TwitterAccountSerializer,
-    InstagramAccountSerializer,
-    WritingStyleSerializer,
-    DiscoverySerializer,
-    EmailTrackerSerializer,
-    JournalistContactSerializer,
-    CompanyDetailsSerializer,
-    ThreadSerializer,
-)
-from managr.core import constants as core_consts
-from managr.utils.client import Variable_Client
-from managr.utils.misc import decrypt_dict
-from managr.core import exceptions as open_ai_exceptions
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-    parser_classes,
-)
-from managr.comms.utils import (
-    generate_config,
-    normalize_article_data,
-    get_domain,
-    extract_pdf_text,
-    convert_pdf_from_url,
-    extract_email_address,
-    google_search,
-    alternate_google_search,
-    check_journalist_validity,
-    get_journalists,
-    merge_sort_dates,
-    get_url_traffic_data,
-    get_article_data,
-    get_social_data,
-    get_trend_articles,
-    get_youtube_data,
-    get_tweet_data,
-    convert_social_search,
-    get_bluesky_data,
-)
-from django.views.decorators.http import require_http_methods
-from django.http import JsonResponse
-from managr.comms.tasks import emit_get_meta_account_info
-from managr.api.emails import send_html_email, send_mailgun_email
-from newspaper.article import ArticleException
-from managr.slack.helpers.utils import send_to_error_channel
 
 logger = logging.getLogger("managr")
 
@@ -252,11 +246,32 @@ class PRSearchViewSet(
         is_follow_up = request.data.get("followUp", False)
         trending = request.data.get("trending", False)
         company = request.data.get("company")
+        last_search = request.data.get("last_search")
+        if is_follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": last_search,
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
+
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "NEWS",
+                }
+            )
         if "journalist:" in search:
             instructions = comms_consts.JOURNALIST_INSTRUCTIONS(company)
         has_error = False
         attempts = 1
-        token_amount = 2000
+        token_amount = 3000
         timeout = 60.0
         while True:
             try:
@@ -648,6 +663,14 @@ class PRSearchViewSet(
         has_error = False
         search = request.GET.get("search")
         project = request.GET.get("project", None)
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "interaction_type": "SEARCH",
+                "query": search,
+                "search_type": "SOCIAL",
+            }
+        )
         query_input = None
         next_token = False
         tweet_list = []
@@ -746,11 +769,32 @@ class PRSearchViewSet(
         instructions = request.data.get("instructions", False)
         follow_up = request.data.get("followUp", False)
         previous = request.data.get("previous", None)
+        last_search = request.data.get("last_search")
+
         if user.has_twitter_integration:
             twitter_account = user.twitter_account
+        if follow_up:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": last_search,
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
+        else:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "SEARCH",
+                    "query": search,
+                    "search_type": "SOCIAL",
+                }
+            )
         has_error = False
         attempts = 1
-        token_amount = 1000
+        token_amount = 2000
         timeout = 60.0
         while True:
             try:
@@ -1207,7 +1251,9 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
-
+        UserInteraction.add_instance(
+            {"user": user, "type": "SEARCH", "query": type, "search_type": "WRITE"}
+        )
         while True:
             try:
                 res = Pitch.generate_pitch(user, type, instructions, style, token_amount, timeout)
@@ -1268,7 +1314,17 @@ class PitchViewSet(
         attempts = 1
         token_amount = 1000
         timeout = 60.0
+        last_search = request.data.get("last_search")
 
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "FOLLOWUP",
+                "previous": last_search,
+                "query": instructions,
+                "search_type": "WRITE",
+            }
+        )
         while True:
             try:
                 url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
@@ -1716,8 +1772,10 @@ class AssistAlertViewSet(
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            readSerializer = self.serializer_class(instance=serializer.instance)
+            instance = serializer.save()
+            instance.search = instance.thread.search
+            instance.save()
+            readSerializer = self.serializer_class(instance=instance)
         except Exception as e:
             logger.exception(f"Error validating data for email alert <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -1736,6 +1794,7 @@ class AssistAlertViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 
@@ -2063,6 +2122,14 @@ class DiscoveryViewSet(
             query = journalist
         else:
             query = f"Journalist AND {journalist} AND {outlet}"
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": "{} ({})".format(journalist, outlet),
+                "search_type": "DISCOVER",
+            }
+        )
         google_results = google_search(query)
         if len(google_results) == 0:
             return Response(
@@ -2744,8 +2811,11 @@ class ThreadViewSet(
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            instance = serializer.save()
             user.add_meta_data("thread_saved")
+            UserInteraction.add_instance(
+                {"user": user, "type": "SAVE", "search_id": str(instance.search.id)}
+            )
         except Exception as e:
             logger.exception(f"Error validating data for new thread <{e}>")
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
@@ -2764,12 +2834,14 @@ class ThreadViewSet(
         try:
             instance.delete()
         except Exception as e:
+            print(e)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": str(e)})
         return Response(status=status.HTTP_200_OK)
 
     @action(
         methods=["get"],
         permission_classes=[permissions.AllowAny],
+        authentication_classes=[],
         detail=False,
         url_path="shared",
     )
@@ -3214,8 +3286,18 @@ def get_google_summary(request):
     summary = request.data.get("summary", None)
     results = request.data.get("results", None)
     project = request.data.get("project", None)
+    for_omni = request.data.get("omni", False)
     text = ""
     elma = core_consts.ELMA
+    if not for_omni:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": query,
+                "search_type": "WEB",
+            }
+        )
     if not instructions or not summary:
         res = alternate_google_search(query)
         if len(res) == 0:
@@ -3259,7 +3341,8 @@ def get_google_summary(request):
             res = open_ai_exceptions._handle_response(r)
 
             message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-            user.add_meta_data("google_search")
+            if not for_omni:
+                user.add_meta_data("google_search")
             break
         except open_ai_exceptions.StopReasonLength:
             if token_amount <= 2000:
@@ -3744,13 +3827,12 @@ def get_social_media_data(request):
         if "error" in social_data.keys():
             errors.append(social_data["error"])
         else:
-            if value == "twitter":
-                return_data["includes"] = social_data["includes"]
             social_data_list.extend(social_data["data"])
     sorted_social_data = merge_sort_dates(social_data_list, "created_at")
     return_data["data"] = sorted_social_data
+    return_data["string"] = converted_search
     if errors:
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=return_data)
+        print(f"ERROR IN SOCIAL MEDIA DATA: {errors}")
     return Response(status=status.HTTP_200_OK, data=return_data)
 
 
@@ -3814,3 +3896,107 @@ def scraper_webhook(request):
     body = response.get("body")
     parse_homepage(url, body, priority=5)
     return Response()
+
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([ExpiringTokenAuthentication])
+def get_omni_summary(request):
+    user = request.user
+    clips = request.data.get("clips", [])
+    social_data = request.data.get("social_data", [])
+    web = request.data.get("web", [])
+    has_error = False
+    tweets = [t for t in social_data if t["type"] == "twitter"]
+    vids = [v for v in social_data if v["type"] == "youtube"]
+    skeets = [s for s in social_data if s["type"] == "bluesky"]
+    search = request.data.get("search")
+    project = request.data.get("project")
+    follow_up = request.data.get("follow_up", False)
+    original = request.data.get("original", None)
+    user.add_meta_data("omni")
+    last_search = request.data.get("last_search")
+    attempts = 1
+    token_amount = 1000
+    timeout = 60.0
+    date = datetime.now().date()
+    while True:
+        try:
+            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
+            if follow_up:
+                prompt = comms_consts.OPEN_AI_OMNI_FOLLOW_UP(
+                    original, search, clips, tweets, vids, skeets, web, project
+                )
+            else:
+                prompt = comms_consts.OPEN_AI_OMNI_SUMMARY(
+                    date, search, clips, tweets, vids, skeets, web, project
+                )
+
+            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
+                user.email,
+                prompt,
+                "You are a VP of Communications",
+                token_amount=token_amount,
+                top_p=0.1,
+            )
+            with Variable_Client(timeout) as client:
+                r = client.post(
+                    url,
+                    data=json.dumps(body),
+                    headers=core_consts.OPEN_AI_HEADERS,
+                )
+            res = open_ai_exceptions._handle_response(r)
+
+            message = res.get("choices")[0].get("message").get("content")
+            break
+        except open_ai_exceptions.StopReasonLength:
+            logger.exception(
+                f"Retrying again due to token amount, amount currently at: {token_amount}"
+            )
+            if token_amount >= 2000:
+                has_error = True
+
+                message = "Token amount error"
+                break
+            else:
+                token_amount += 500
+                continue
+        except httpx.ReadTimeout as e:
+            print(e)
+            timeout += 30.0
+            if timeout >= 120.0:
+                has_error = True
+                message = "Read timeout issue"
+                logger.exception(f"Read timeout from Open AI {e}")
+                break
+            else:
+                attempts += 1
+                continue
+        except Exception as e:
+            has_error = True
+            message = f"Unknown exception: {e}"
+            logger.exception(e)
+            break
+    if follow_up:
+        if "New Search Term:" not in message:
+            UserInteraction.add_instance(
+                data={
+                    "user": user,
+                    "type": "FOLLOWUP",
+                    "previous": last_search,
+                    "query": search,
+                    "search_type": "OMNI",
+                }
+            )
+    else:
+        UserInteraction.add_instance(
+            data={
+                "user": user,
+                "type": "SEARCH",
+                "query": search,
+                "search_type": "OMNI",
+            }
+        )
+    if has_error:
+        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data={"error": "message"})
+    return Response(status=status.HTTP_200_OK, data={"summary": message})

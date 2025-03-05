@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from scrapy.crawler import CrawlerProcess
-from managr.comms.webcrawler.crawler import NewsSpider, XMLSpider
+
 from managr.comms.models import NewsSource
 from managr.comms.utils import remove_api_sources, send_url_batch
+from managr.comms.webcrawler.crawler import NewsSpider, XMLSpider
 
 
 class Command(BaseCommand):
@@ -91,14 +93,6 @@ class Command(BaseCommand):
                 article_only=options["article"],
                 remove_urls=remove_urls,
                 print_response=response,
-            )
-        if xml_urls:
-            process.crawl(
-                XMLSpider,
-                start_urls=xml_urls,
-                test=options["test"],
-                no_report=options["noreport"],
-                article_only=options["article"],
             )
         if scraper_urls:
             send_url_batch(scraper_urls, True, False)

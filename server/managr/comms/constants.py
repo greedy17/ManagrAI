@@ -84,6 +84,87 @@ YOUTUBE_VIDEO_PARAMS = lambda video_id: {
 SCRAPER_API_KEY = settings.SCRAPER_API_KEY
 SCRAPER_BATCH_URI = "https://async.scraperapi.com/batchjobs"
 
+DO_NOT_TRACK_LIST = [
+    "https://www.bizjournals.com",
+    "https://www.tiktok.com",
+    "https://www.instagram.com",
+    "https://www.facebook.com",
+    "https://www.x.com",
+    "https://www.linkedin.com",
+]
+
+
+DO_NOT_INCLUDE_WORDS = [
+    "/photos",
+    "sex",
+    "/review",
+    "linkedin",
+    ".pdf",
+    "facebook",
+    "instagram",
+    ".jpg",
+    "/video",
+    "x.com",
+    ".png",
+    ".jpeg",
+    "/category",
+    "/podcast",
+    "/author",
+    ".jpeg",
+    "/event",
+]
+
+NON_VIABLE_CLASSES = ["menu", "nav"]
+
+EXCLUDE_DOMAINS = [
+    "bringatrailer.com",
+    "globenewswire.com",
+    "marketscreener.com",
+    "zacjohnson.com",
+    "allafrica.com",
+    "prnewswire.com",
+    "prnewswire.co.uk",
+    "gov.uk",
+    "pulse.ug",
+    "timesofindia.indiatimes.com",
+    "indiatimes.com",
+    "ibtimes.com.au",
+    "etfdailynews.com",
+    "dealnews.com",
+    "slickdeals.net",
+    "prtimes.jp",
+    "doctorofcredit.com",
+    "ozbargain.com.au",
+    "politicalwire.com",
+    "freerepublic.com",
+    "blogger.com",
+    "slashdot.org",
+    "theflightdeal.com",
+    "fly4free.com",
+    "antaranews.com",
+    "investorsobserver.com",
+    "dealcatcher.com",
+    "dansdeals.com",
+    "superpunch.net",
+    "securityaffairs.com",
+    "fuckingyoung.es",
+    "pypi.org",
+    "biztoc.com",
+    "kicksonfire.com",
+    "memeorandum.com",
+    "sostav.ru",
+]
+
+JOURNALIST_CHOICES = [
+    ("ACTIVE", "Active"),
+    ("INACTIVE", "Inactive"),
+    ("NOT_WITH", "No longer with outlet"),
+    ("FREE", "Freelancer"),
+    ("CON", "Contributor"),
+    ("OPT", "Opt out"),
+    ("OTHER", "Other"),
+]
+
 
 def SCRAPER_BATCH_BODY(urls, include_webhook=False, is_article=False):
     body = {
@@ -92,10 +173,12 @@ def SCRAPER_BATCH_BODY(urls, include_webhook=False, is_article=False):
         "apiKey": SCRAPER_API_KEY,
     }
     if include_webhook:
+        body.pop("render")
         body["callback"] = {
             "type": "webhook",
             "url": f"{SCRAPER_API_WEBHOOK}?isArticle={is_article}",
         }
+        body["apiParmas"] = {"render": "true"}
     return body
 
 
@@ -114,12 +197,14 @@ def SEMRUSH_PARAMS(urls):
     return {"key": settings.SEMRUSH_API_KEY, "targets": ",".join(urls)}
 
 
-def GOOGLE_SEARCH_PARAMS(query, number_of_results):
+def GOOGLE_SEARCH_PARAMS(query, number_of_results, for_alert=False):
+    date_restrict = "d1" if for_alert else "w1"
     params = {
         "q": query,
         "key": GOOGLE_SEARCH_KEY,
         "cx": GOOGLE_SEARCH_ID,
         "num": number_of_results,
+        "dateRestrict": date_restrict,
     }
     return params
 
@@ -328,7 +413,15 @@ NEW_API_EVERYTHING_DATE_URI = (
     lambda date_from, date_to: f"everything?from={date_from}&to={date_to}&language=en&sortBy=publishedAt&pageSize=40"
 )
 
-SEARCH_TYPE_CHOICES = (("NEWS", "News"), ("SOCIAL_MEDIA", "Social Media"), ("MIXED", "Mixed"))
+SEARCH_TYPE_CHOICES = (
+    ("NEWS", "News"),
+    ("SOCIAL_MEDIA", "Social Media"),
+    ("OMNI", "Omni"),
+    ("WEB", "Web"),
+    ("TRENDING", "Trending"),
+    ("WRITE", "Write"),
+    ("DISCOVER", "Discover"),
+)
 COVERAGE_TYPE_CHOICES = (("NATIONAL", "National"), ("LOCAL", "Local"), ("BOTH", "Both"))
 ALERT_TYPES = (("EMAIL", "Email"), ("SLACK", "Slack"), ("BOTH", "Both"))
 MESSAGE_TYPES = (("USER", "User"), ("SYSTEM", "System"))
@@ -365,6 +458,7 @@ OPEN_AI_QUERY_STRING = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 
@@ -589,7 +683,7 @@ def OPEN_AI_TWITTER_SUMMARY(date, tweets, search, project, elma, for_client=Fals
 
     Today is {date}. Please provide a concise and accurate response based on the social media coverage below. User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, just provide a brief summary of the the coverage as it pertains to their search term and identify top influencers from all channels - X (formally Twitter), Bluesky, and Youtube. For additional context, user may provide their project details (pitch, product launch, company boiler plate).
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
     
     Input Format:
 
@@ -618,7 +712,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
 
     Today is {date}. Please provide a concise and accurate answer to the query based on the previous response and the social media coverage below. It is most likely a follow up question. User provides project details for additional context.
     Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
-    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
     
     Follow these instructions carefully:
     
@@ -630,7 +724,7 @@ def TWITTER_SUMMARY_FOLLOW_UP(date, tweets, previous, project, elma, instruction
     Input Format:
     Previous response: {previous}
     User Request: {instructions}
-    Tweets, Posts, and clips: {tweets}
+    Social media coverage: {tweets}
     Project details (campaign, media pitch, etc): {project}
     
     Output format:
@@ -665,6 +759,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Avoid including extraneous context or unrelated words. 
        - Example: "Top storylines covering Lululemon" should just come back as "Lululemon."
        - Example 2: "Find journalists covering Electric vehicles" should return "Electric Vehicles."
+       - Example 3: "Tell me about Lululemon and Peloton" should return Lululemon AND Peloton
 
     3. If the user provides project details (e.g., a media pitch, campaign, or product launch), scan it prior to building a search:
 
@@ -673,7 +768,7 @@ OPEN_AI_TWITTER_SEARCH_CONVERSION = (
        - Example 2: User requests, "Find journalists interested in this pitch", for a project about Lululemon's pitch on sustainable fashion, return relevant topics or beats such as : `"Sustainable fashion" OR "Recycled materials".
 
     Boolean Formatting:
-    1. Use quotes around exact phrases as needed.
+    1. Don't include quotes around entities.
     2. Use only AND and OR operators, avoiding them within quotes unless part of an official name.
     3. For negative qualifiers, use NOT (e.g., "not stock-related" becomes NOT stocks).
     4. Focus on only the core entity or topic. Exclude date references (like "yesterday" or "latest" or "recent") and general terms like "News" or "Coverage" or "journalist".
@@ -850,7 +945,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma, proje
         prompt = f"""
         {elma}.
 
-        Please provide a concise and accurate response to my query, using the given search results. For additional context, user may provide their project details (pitch, product launch, company boiler plate) - if they do, offer creative suggestions on how they can leverage the search results for their project. 
+        Please provide a concise and accurate response to my query, using the given search results. For additional context, user may provide their project details (pitch, product launch, company boiler plate). 
         Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge. 
         
@@ -875,7 +970,7 @@ def OPEN_AI_WEB_SUMMARY(query, results, text, instructions, summary, elma, proje
         prompt = f"""
         {elma}.
 
-        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Also, if a user provides project details (check below) offer creative suggestions on how they can leverage the search results for their project.  Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+        Based on the initial summary and the additional search results, please provide a concise and accurate response to the follow-up question. Use the given search results and the initial summary to ensure the response is comprehensive. Cite your sources by enclosing the citationIndex of the search result in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
         Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. If the search results are insufficient or irrelevant, answer the query to the best of your ability using existing knowledge and the initial summary.
         Make sure that your response is properly formatted simple html with good spacing and easy to read. No padding on the body since it will be going into a container that already has it.
         
@@ -1232,86 +1327,72 @@ REGENERATE_REPORT_SUMMARY = (
 )
 
 
-DO_NOT_TRACK_LIST = [
-    "https://www.bizjournals.com",
-    "https://www.tiktok.com",
-    "https://www.instagram.com",
-    "https://www.facebook.com",
-    "https://www.x.com",
-    "https://www.linkedin.com",
-]
+def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project):
+    body = f"""
+    Today is {date}. Please provide a concise and accurate response based on the media coverage below. 
+    User may provide additional instructions, make sure to follow them. If the instructions don't ask for anything specific, 
+    just provide a brief summary of the the coverage as it pertains to their search term. 
+    For additional context, user may provide their Project details (custom prompt instructions, media pitch, company details, etc).
+    Cite your sources by enclosing the citationIndex of the article in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the news coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never make an entire list item a link. Never refer to X as twitter, only X.
+
+    Input Format:
+    User Request: {search}
+    News Coverage: {clips}
+    Social Media Coverage from X: {tweets}
+    Social Media Coverage from Youtube: {vids}
+    Social Media Coverage from Bluesky: {skeets}
+    Web Data: {web}
+    Project details: {project}
+
+    Output format:
+
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings,
+    Ordered or unordered lists using `<ol>` or `<ul>`,
+    Paragraphs with `<p>`, and
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+    return body
 
 
-DO_NOT_INCLUDE_WORDS = [
-    "/photos",
-    "sex",
-    "/review",
-    "linkedin",
-    ".pdf",
-    "facebook",
-    "instagram",
-    ".jpg",
-    "/video",
-    "x.com",
-    ".png",
-    ".jpeg",
-    "/category",
-    "/podcast",
-    "/author",
-    ".jpeg",
-    "/event",
-]
+def OPEN_AI_OMNI_FOLLOW_UP(summary, instructions, clips, tweets, vids, skeets, web, project):
+    body = f"""
+    User is asking a follow up question, see "user request" below. Please answer it based on the previous response (see below) and the media coverage associated with it (see below). Also, if a user provides project details (check below) reference those as well, as they are applicable to the request.
+    Cite your sources by enclosing the citationIndex of the coverage in a set of square brackets at the end of the corresponding sentence, without a space between the last word and the citation. For example: 'Paris is the capital of France[0].' Only use this format to cite the coverage.
+    Do not use more than 2 citations in one sentence. Do not include a references section at the end of your answer. Never refer to X as twitter, only X.
 
-NON_VIABLE_CLASSES = ["menu", "nav"]
+    1. Only create a new search if the user introduces a new entity/company/topic (e.g. from Lululemon to Nike or from fashion to finance),
+    or if the user tells you to "run a new search". If you create a new search make sure it's simple, fairly broad, and likely to get media coverage. Use an AND or OR if needed. 
+   
+    2. Only return "new search term" followed by the term, in square brackets with no explanations or other information. Example: "New Search Term: [Term is here]
 
-EXCLUDE_DOMAINS = [
-    "bringatrailer.com",
-    "globenewswire.com",
-    "marketscreener.com",
-    "zacjohnson.com",
-    "allafrica.com",
-    "prnewswire.com",
-    "prnewswire.co.uk",
-    "gov.uk",
-    "pulse.ug",
-    "timesofindia.indiatimes.com",
-    "indiatimes.com",
-    "ibtimes.com.au",
-    "etfdailynews.com",
-    "dealnews.com",
-    "slickdeals.net",
-    "prtimes.jp",
-    "doctorofcredit.com",
-    "ozbargain.com.au",
-    "politicalwire.com",
-    "freerepublic.com",
-    "blogger.com",
-    "slashdot.org",
-    "theflightdeal.com",
-    "fly4free.com",
-    "antaranews.com",
-    "investorsobserver.com",
-    "dealcatcher.com",
-    "dansdeals.com",
-    "superpunch.net",
-    "securityaffairs.com",
-    "fuckingyoung.es",
-    "pypi.org",
-    "biztoc.com",
-    "kicksonfire.com",
-    "memeorandum.com",
-    "sostav.ru",
-]
+    Previous respons: {summary}
+    User request: {instructions}
 
-JOURNALIST_CHOICES = [
-    ("ACTIVE", "Active"),
-    ("INACTIVE", "Inactive"),
-    ("NOT_WITH", "No longer with outlet"),
-    ("FREE", "Freelancer"),
-    ("CON", "Contributor"),
-    ("OPT", "Opt out"),
-    ("OTHER", "Other"),
-]
+    News coverage: {clips}
+    Social Media Coverage from X: {tweets}
+    Social Media Coverage from Youtube: {vids}
+    Social Media Coverage from Bluesky: {skeets}
+    Web Data: {web}
+
+    Project details (campaign, media pitch, etc): {project}
+
+    Output format:
+
+    **Heading** in `<h2>` tags,
+    Sections with `<strong>` subheadings, 
+    Ordered or unordered lists using `<ol>` or `<ul>`, 
+    Paragraphs with `<p>`, and 
+    Line breaks `<br>` between main points for clarity.
+    Do not include ```html in your response.
+
+    Keep responses structured and consistent for easy reading in a Vue.js app.
+    """
+    return body
 
 
 def REPORT_SUMMARY(elma, brand, clips):

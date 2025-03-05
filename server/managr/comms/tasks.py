@@ -1,86 +1,58 @@
-import logging
-import json
-import uuid
-import httpx
 import datetime
-import re
+import json
+import logging
 import math
-from copy import copy
-from scrapy.selector import Selector
-from django.db import transaction, IntegrityError
+import re
+import uuid
 from urllib.parse import urlparse
-from django.utils import timezone
-from dateutil.relativedelta import relativedelta
-from dateutil import parser
-from django.conf import settings
+
+import httpx
 from background_task import background
+from dateutil import parser
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from newspaper import Article
+from rest_framework.exceptions import ValidationError
+from scrapy.selector import Selector
+
+from managr.api.emails import send_html_email
+from managr.comms.utils import (
+    check_article_validity,
+    complete_url,
+    extract_base_domain,
+    generate_config,
+    get_domain,
+    normalize_article_data,
+    send_url_batch,
+)
+from managr.core import constants as core_consts
+from managr.core import exceptions as open_ai_exceptions
+from managr.core.models import TaskResults, User
+from managr.slack import constants as slack_const
+from managr.slack.helpers import block_builders
+from managr.slack.helpers import requests as slack_requests
+from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
+from managr.slack.helpers.utils import action_with_params, block_finder, send_to_error_channel
+from managr.slack.models import UserSlackIntegration
 from managr.utils.client import Variable_Client
 from managr.utils.misc import custom_paginator
-from rest_framework.exceptions import ValidationError
-from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
-from managr.slack.helpers.block_sets.command_views_blocksets import custom_clips_paginator_block
+
 from . import constants as comms_consts
-from .models import (
-    Search,
-    NewsSource,
-    AssistAlert,
-    Journalist,
-    JournalistContact,
-    Thread,
-    TwitterAccount,
-    ArchivedArticle,
-)
+from .models import ArchivedArticle
 from .models import Article as InternalArticle
+from .models import AssistAlert, Journalist, JournalistContact, NewsSource, Search
 from .serializers import (
-    SearchSerializer,
-    NewsSourceSerializer,
-    JournalistSerializer,
-    JournalistContactSerializer,
     EmailTrackerSerializer,
-    ArticleSerializer,
+    JournalistContactSerializer,
+    JournalistSerializer,
+    NewsSourceSerializer,
+    SearchSerializer,
 )
-from managr.core.models import TaskResults
-from managr.core import constants as core_consts
-from managr.core.models import User, TaskResults
-from managr.core import exceptions as open_ai_exceptions
-from managr.slack.helpers import requests as slack_requests
-from managr.slack.helpers import block_builders
-from managr.slack.helpers.utils import action_with_params, send_to_error_channel
-from managr.slack import constants as slack_const
-from managr.slack.models import UserSlackIntegration
-from newspaper import Article
-from managr.slack.helpers.utils import block_finder
-from managr.comms.utils import (
-    generate_config,
-    extract_base_domain,
-    normalize_article_data,
-    separate_weeks,
-    get_bluesky_data,
-    get_tweet_data,
-    get_youtube_data,
-    merge_sort_dates,
-    complete_url,
-    send_url_batch,
-    get_site_icon,
-    get_site_name,
-    data_cleaner,
-    extract_date_from_text,
-)
-from dateutil.tz import gettz
-from managr.api.emails import send_html_email
+from .webcrawler.constants import XPATH_STRING_OBJ, XPATH_TO_FIELD
 
 logger = logging.getLogger("managr")
-timezone_dict = {
-    "MYT": gettz("Asia/Kuala_Lumpur"),
-    "PT": gettz("America/Los_Angeles"),
-    "EST": gettz("America/New_York"),
-    "UK": gettz("Europe/London"),
-    "MT": gettz("America/Denver"),
-    "CT": gettz("America/Chicago"),
-    "ET": gettz("America/New_York"),
-    "EDT": gettz("America/New_York"),
-    "PST": gettz("America/Los_Angeles"),
-}
 
 
 def emit_process_slack_news_summary(payload, context, schedule=datetime.datetime.now()):
@@ -101,6 +73,10 @@ def emit_process_website_domain(url, organization_name):
 
 def emit_send_news_summary(news_alert_id, schedule=datetime.datetime.now()):
     return _send_news_summary(news_alert_id, schedule={"run_at": schedule})
+
+
+def emit_send_omni_summary(news_alert_id, schedule=datetime.datetime.now()):
+    return _send_omni_summary(news_alert_id, schedule={"run_at": schedule})
 
 
 def emit_share_client_summary(link, title, user_email):
@@ -570,93 +546,21 @@ def _process_website_domain(urls, organization_name):
 @background()
 def _send_news_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    thread = None
-    project = None
-    link = "{settings.MANAGR_URL}/login"
-    if alert.thread:
-        thread = Thread.objects.get(id=alert.thread.id)
-        project = thread.meta_data.get("project", "")
-        link = thread.generate_url()
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-    boolean = alert.search.search_boolean
-    end_time = datetime.datetime.now()
-    start_time = end_time - datetime.timedelta(hours=24)
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
 
-    context = {"search_id": str(alert.search.id), "u": str(alert.user.id)}
-    payload = {
-        "view": {
-            "state": {
-                "values": {
-                    "START_DATE": {"start": {"selected_date": str(start_time.date())}},
-                    "STOP_DATE": {"stop": {"selected_date": str(start_time.date())}},
-                }
-            }
-        }
+    content = {
+        "thread_url": link,
+        "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{alert.thread.search.name}",
     }
-    if alert.type in ["EMAIL", "BOTH"]:
-        try:
-            clips = alert.search.get_clips(boolean, end_time, start_time)["articles"]
-            clips = [article for article in clips if article["title"] != "[Removed]"]
-            internal_articles = InternalArticle.search_by_query(
-                boolean, str(end_time), str(start_time)
-            )
-            normalized_clips = normalize_article_data(clips, internal_articles, False)
-            if len(normalized_clips):
-                descriptions = [clip["description"] for clip in normalized_clips]
-                res = Search.get_summary(
-                    alert.user,
-                    2000,
-                    60.0,
-                    descriptions,
-                    alert.search.instructions,
-                    False,
-                    False,
-                    project,
-                    False,
-                    alert.search.instructions,
-                    True,
-                )
-
-                email_list = [alert.user.email]
-
-                message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-                message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-                message = re.sub(
-                    r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message
-                )
-                if thread:
-                    thread.meta_data["articlesFiltered"] = normalized_clips
-                    thread.meta_data["filteredArticles"] = normalized_clips
-                    thread.meta_data["summary"] = message
-                    thread.meta_data["summaries"] = []
-                    thread.save()
-
-                content = {
-                    "thread_url": link,
-                    "website_url": f"{settings.MANAGR_URL}/login",
-                    "title": f"{alert.search.name}",
-                }
-                send_html_email(
-                    f"ManagrAI Digest: {alert.search.name}",
-                    "core/email-templates/news-email.html",
-                    settings.DEFAULT_FROM_EMAIL,
-                    email_list,
-                    context=content,
-                )
-            else:
-                return
-        except Exception as e:
-            print(str(e))
-            send_to_error_channel(str(e), alert.user.email, "send news alert")
-        if type == "BOTH":
-            recipients = "|".join(alert.recipients)
-            context.update(r=recipients)
-            emit_process_slack_news_summary(payload, context)
-    else:
-        recipients = "|".join(alert.recipients)
-        context.update(r=recipients)
-        emit_process_slack_news_summary(payload, context)
+    send_html_email(
+        f"ManagrAI Digest: {alert.thread.search.name}",
+        "core/email-templates/news-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
+    )
     if "sent_count" in alert.meta_data.keys():
         alert.meta_data["sent_count"] += 1
     else:
@@ -669,83 +573,15 @@ def _send_news_summary(news_alert_id):
 @background()
 def _send_social_summary(news_alert_id):
     alert = AssistAlert.objects.get(id=news_alert_id)
-    user = alert.user
-    thread = None
-    link = "{settings.MANAGR_URL}/login"
-    if alert.thread:
-        thread = alert.thread
-        link = thread.generate_url()
-    if alert.search.search_boolean == alert.search.input_text:
-        alert.search.update_boolean()
-        boolean = alert.search.search_boolean
-    else:
-        boolean = alert.search.search_boolean
-    social_switcher = {
-        "youtube": get_youtube_data,
-        "twitter": get_tweet_data,
-        "bluesky": get_bluesky_data,
-    }
-    max = 0
-    social_values = ["youtube", "bluesky"]
-    if user.has_twitter_integration:
-        max = 20
-        social_values.append("twitter")
-    else:
-        max = 25
-    date_now = datetime.datetime.now(datetime.timezone.utc)
-    date_to = str(date_now.date())
-    date_from = str((date_now - datetime.timedelta(hours=24)).date())
-    email_data = {}
-    social_data_list = []
-    for value in social_values:
-        data_func = social_switcher[value]
-        social_data = data_func(boolean, max=max, user=user, date_from=date_from, date_to=date_to)
-        if "error" in social_data.keys():
-            continue
-        else:
-            if value == "twitter":
-                email_data["includes"] = social_data["includes"]
-                email_data["media"] = social_data["tweetMedia"]
-            social_data_list.extend(social_data["data"])
-    sorted_social_data = merge_sort_dates(social_data_list, "created_at")
-    email_list = []
-    for value in sorted_social_data:
-        if value["type"] == "twitter":
-            social_value = f"Name:{value['user']['username']} Tweet: {value['text']} Follower count: {value['user']['public_metrics']['followers_count']} Date: {value['created_at']}"
-            email_list.append(social_value)
-        else:
-            social_value = [
-                f"Name:{value['author']} Description: {value['text']} Date:{value['created_at']}"
-            ]
-            email_list.append(social_value)
-    res = TwitterAccount.get_summary(
-        alert.user,
-        2000,
-        60.0,
-        email_list,
-        alert.search.search_boolean,
-        alert.search.instructions,
-        False,
-    )
-    message = res.get("choices")[0].get("message").get("content").replace("**", "*")
-    message = re.sub(r"\*(.*?)\*", r"<strong>\1</strong>", message)
-    message = re.sub(r"\[(.*?)\]\((.*?)\)", r'<a href="\2" target="_blank">\1</a>', message)
-    if thread:
-        thread.meta_data["tweets"] = sorted_social_data
-        thread.meta_data["summary"] = message
-        thread.meta_data["summaries"] = []
-        if user.has_twitter_integration:
-            thread.meta_data["tweetMedia"] = email_data["media"]
-            thread.meta_data["includes"] = email_data["includes"]
-        thread.save()
-
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
     content = {
         "thread_url": link,
         "website_url": f"{settings.MANAGR_URL}/login",
-        "title": f"{alert.search.name}",
+        "title": f"{alert.title}",
     }
     send_html_email(
-        f"ManagrAI Digest: {alert.search.name}",
+        f"ManagrAI Digest: {alert.title}",
         "core/email-templates/social-email.html",
         settings.DEFAULT_FROM_EMAIL,
         [alert.user.email],
@@ -900,38 +736,6 @@ def get_article_by_week(result_id, search, date_from, date_to):
     return
 
 
-@background()
-def test_database_pull(date_to, date_from, search, result_id):
-    date_to = parser.parse(date_to)
-    date_from = parser.parse(date_from)
-    dates = separate_weeks(date_from, date_to)
-    articles = []
-    task_ids = []
-    print(datetime.datetime.now())
-    for date_set in dates:
-        try:
-            result = TaskResults.objects.create()
-            task = get_article_by_week(str(result.id), search, str(date_set[0]), str(date_set[1]))
-            result.task = task
-            result.save()
-            task_ids.append(str(result.id))
-        except Exception as e:
-            print(e)
-    while True:
-        for task_id in task_ids:
-            task = TaskResults.objects.get(id=task_id)
-            if TaskResults.ready(task):
-                articles.append(task.json_result)
-                task_ids = task_ids.remove(task_id)
-        if not task_ids:
-            break
-        all_data = TaskResults.objects.get(id=result_id)
-        all_data.json_result = articles
-        all_data.save()
-    print(datetime.datetime.now())
-    return
-
-
 def create_contacts_from_file(journalist_ids, user_id, tags):
     user = User.objects.get(id=user_id)
     s = 0
@@ -953,7 +757,6 @@ def create_contacts_from_file(journalist_ids, user_id, tags):
 
 @background()
 def _process_contacts_excel(user_id, data, result_id, tags):
-    print(tags)
     data_length = len(data["email"])
     contacts_to_create = []
     failed_list = []
@@ -1194,39 +997,28 @@ def parse_homepage(domain, body):
     except NewsSource.DoesNotExist:
         print(f"Could not find source with domain {domain}")
         return
+    source = source.initialize(selector)
+    source.save()
     if source.article_link_attribute is not None:
-        if not source.article_link_regex:
-            regex = source.create_search_regex()
-            source.article_link_regex = regex
-            source.save()
-        else:
-            regex = source.article_link_regex
+        regex = source.article_link_regex
         article_links = selector.xpath(regex)
         if len(article_links) < 1:
             source.is_crawling = False
             source.save()
-            return
+        do_not_track_str = ",".join(comms_consts.DO_NOT_TRACK_LIST)
         if source.last_scraped and source.article_link_attribute:
             article_batch = []
             for anchor in article_links:
-                classes = anchor.xpath("@class").get()
-                skip = False
                 article_url = anchor.xpath("@href").extract_first()
-                if article_url is None:
+                valid = check_article_validity(anchor)
+                if not valid:
                     continue
-                for word in comms_consts.DO_NOT_INCLUDE_WORDS:
-                    if word in article_url:
-                        skip = True
-                        break
-                if classes:
-                    for class_word in comms_consts.NON_VIABLE_CLASSES:
-                        if class_word in classes:
-                            skip = True
-                            break
-                if skip:
-                    continue
-                article_url = complete_url(article_url, domain)
-                article_batch.append(article_url)
+                article_domain = get_domain(article_url)
+                if (len(article_domain) and article_domain not in do_not_track_str) or not len(
+                    article_domain
+                ):
+                    article_url = complete_url(article_url, source.domain)
+                    article_batch.append(article_url)
             article_check = list(
                 InternalArticle.objects.filter(link__in=article_batch, source=source).values_list(
                     "link", flat=True
@@ -1235,12 +1027,6 @@ def parse_homepage(domain, body):
             new_articles = list(set(article_batch).difference(set(article_check)))
             if len(new_articles):
                 send_url_batch(new_articles, False, True)
-            if source.site_name is None:
-                site_name = get_site_name(selector, domain)
-                source.site_name = site_name
-            if source.icon is None:
-                icon_href = get_site_icon(selector, domain)
-                source.icon = icon_href
             print(f"Finished scrapping {domain} and found {len(new_articles)} articles to scrape.")
     else:
         print(f"No article link attribute for {domain}")
@@ -1252,6 +1038,7 @@ def parse_homepage(domain, body):
 @background(queue="CRAWLER")
 def parse_article(status_url):
     from managr.comms.utils import get_domain
+    from managr.comms.webcrawler.extractor import ArticleExtractor
 
     try:
         with Variable_Client() as client:
@@ -1268,7 +1055,6 @@ def parse_article(status_url):
     except json.JSONDecodeError as e:
         print(res)
         print(e)
-    xpath_copy = copy(XPATH_STRING_OBJ)
     parsed_url = urlparse(url).netloc
     try:
         source = NewsSource.objects.get(domain__contains=parsed_url)
@@ -1279,247 +1065,27 @@ def parse_article(status_url):
         print(f"Multiple instances matching {url} ({domain})")
         return
     html = Selector(text=body)
-    meta_tag_data = {"link": url, "source": source.id}
-    article_selectors = source.article_selectors()
-    fields_dict = {}
-    article_tags = None
-    if source.selectors_defined:
-        for key in article_selectors.keys():
-            path = article_selectors[key]
-            if "//script" in path:
-                script_path = path.split("|")[0]
-                selector = html.xpath(script_path).get()
-            else:
-                selector = html.xpath(path).getall()
-            if "//script" in path:
-                data_path = path.split("|")[1:]
-                for i, v in enumerate(data_path):
-                    try:
-                        integer_value = int(v)
-                        data_path[i] = integer_value
-                    except ValueError:
-                        continue
-                try:
-                    data = json.loads(selector)
-                    selector_value = data
-                    for path in data_path:
-                        selector_value = selector_value[path]
-                    selector = [selector_value]
-                except Exception as e:
-                    print(e)
-                    selector = []
-            if len(selector) and key != "content" and key != "publish_date":
-                selector = ",".join(selector)
-            if key == "publish_date":
-                if isinstance(selector, list) and len(selector):
-                    selector = selector[0]
-                selector = extract_date_from_text(selector, timezone_dict=time)
-            if key == "content":
-                article_tags = selector
-                continue
-            if selector is not None:
-                meta_tag_data[key] = selector
-            else:
-                meta_tag_data[key] = "N/A"
-    else:
-        for key in xpath_copy.keys():
-            if article_selectors[key] is not None:
-                xpath_copy[key] = [article_selectors[key]]
-            for path in xpath_copy[key]:
-                try:
-                    selector = html.xpath(path).get()
-                except ValueError as e:
-                    selector = None
-                    print(f"ERROR ({e})\n{url}\n{key}: -{path}-")
-                if key == "publish_date":
-                    if "text" in path and selector is not None:
-                        selector = extract_date_from_text(selector)
-                    if "text" not in path:
-                        try:
-                            parser.parse(selector)
-                        except TypeError as e:
-                            selector = None
-                        except Exception as e:
-                            print(e)
-                            continue
-                if selector is not None:
-                    fields_dict[key] = path
-                    meta_tag_data[key] = selector
-                    break
-            if key not in meta_tag_data.keys() or not len(meta_tag_data[key]):
-                meta_tag_data[key] = None
-        article_tag_list = ["article", "story", "content"]
-        article_xpaths = ["//article//p//text()"]
-        for a in article_tag_list:
-            article_xpaths.append(
-                f"//*[contains(@class, '{a}') or contains(@id, '{a}') and .//p]//p//text()"
-            )
-        if article_selectors["content"] is not None:
-            article_xpaths = [article_selectors["content"]]
-        for tag in article_xpaths:
-            tags = html.xpath(tag).getall()
-            if len(tags):
-                fields_dict["content"] = tag
-                article_tags = tags
-                break
-    full_article = ""
-    cleaned_data = None
-    if article_tags is not None:
-        for article in article_tags:
-            article = article.replace("\n", "").strip()
-            full_article += article
-        meta_tag_data["content"] = full_article
-    else:
-        meta_tag_data["content"] = None
-    try:
-        if "content" in meta_tag_data.keys():
-            cleaned_data = data_cleaner(meta_tag_data)
-            if isinstance(cleaned_data, dict):
-                serializer = ArticleSerializer(data=cleaned_data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-            else:
-                raise Exception(cleaned_data)
-        else:
-            logger.info(f"No content for article: {url}")
-
-    except IntegrityError as e:
-        return
-    except Exception as e:
-        if source.error_log is None or len(source.error_log) <= 5:
-            error = source.add_error(f"{str(e)}")
-            source.error_log = error
-            source.save()
-    if len(fields_dict):
-        for key in fields_dict.keys():
-            path = fields_dict[key]
-            field = XPATH_TO_FIELD[key]
-            setattr(source, field, path)
-        source.save()
-    print(f"Finished scrapping {url}")
-    return
-
-
-@background()
-def test_send_pitch():
-    user = User.objects.get(email="zach@mymanagr.com")
-    pitch = "Hi [Journalist first name],\n\nYour insightful coverage on aerospace technology advancements has been noted. An exclusive story about SpaceX's latest achievements might pique your interest.\n\nRecently, the Starship prototype was launched by SpaceX, marking a significant stride in space exploration. This development is poised to revolutionize interplanetary travel and aligns with the trend of private companies leading space missions, as highlighted in recent industry reports.\n\nAn exclusive opportunity is offered to explore the technical innovations and strategic vision driving SpaceX's success. Detailed insights and access to key experts can be provided to discuss the implications of these advancements for the future of space exploration.\n\nWould a collaboration on a feature exploring these groundbreaking developments interest you? Your expertise and perspective would bring a unique angle to this story.\n\nLooking forward to your thoughts.\n\nThanks,"
-    prompt = "Craft a short media pitch for Space X"
-    detail_id = None
-    writing_style_id = None
-    channel_id = False
-    params = [f"u={str(user.id)}"]
-    if detail_id:
-        params.append(f"d={detail_id}")
-    if writing_style_id:
-        params.append(f"ws={writing_style_id}")
-    try:
-        blocks = [
-            block_builders.context_block(f"{prompt}", "mrkdwn"),
-            block_builders.header_block("Answer:"),
-            block_builders.simple_section(f"{pitch}\n", "mrkdwn", "PITCH"),
-            block_builders.actions_block(
-                [
-                    block_builders.simple_button_block(
-                        "Edit",
-                        "EDIT",
-                        action_id=action_with_params(
-                            slack_const.PROCESS_ADD_EDIT_FIELD,
-                            params,
-                        ),
-                    )
-                ]
-            ),
-        ]
-        channel = channel_id if channel_id else user.slack_integration.channel
-        slack_res = slack_requests.send_channel_message(
-            channel,
-            user.organization.slack_integration.access_token,
-            block_set=blocks,
-        )
-    except Exception as e:
-        print(e)
-    return
-
-
-@background()
-def test_pitch():
-    user = User.objects.get(email="zach@mymanagr.com")
-    pitch = """Dear [Recipient's Name],
-
-    We are pleased to introduce a groundbreaking technology designed to enhance rainforest conservation efforts. This innovative solution leverages advanced data analytics and remote sensing to provide real-time monitoring and actionable insights.
-
-    Our technology integrates satellite imagery with machine learning algorithms to detect deforestation activities with unprecedented accuracy. By analyzing high-resolution images, it can identify illegal logging, land-use changes, and other threats to rainforest ecosystems. This allows for timely intervention and more effective enforcement of conservation policies.
-
-    Additionally, the system offers predictive analytics to forecast potential areas of deforestation, enabling proactive measures to protect vulnerable regions. The platform is user-friendly and can be accessed by conservationists, policymakers, and researchers through a secure web interface.
-
-    We believe this technology will significantly contribute to preserving the biodiversity and ecological integrity of rainforests worldwide. For further details or to schedule a demonstration, please do not hesitate to contact us.
-
-    Thank you for your attention to this important matter.
-
-    Sincerely,[Your Name][Your Position][Your Organization]"""
-
-    has_error = False
-    attempts = 1
-    token_amount = 3000
-    timeout = 60.0
-    while True:
+    instance = None
+    if source is False:
         try:
-            contacts = JournalistContact.objects.filter(user=user)
-            contact_list = [
-                f"Name:{contact.journalist.full_name}, Outlet:{contact.journalist.outlet}"
-                for contact in contacts
-            ]
-            url = core_consts.OPEN_AI_CHAT_COMPLETIONS_URI
-            prompt = comms_consts.OPEN_AI_PITCH_JOURNALIST_LIST(contact_list, pitch)
-            body = core_consts.OPEN_AI_CHAT_COMPLETIONS_BODY(
-                user.email,
-                prompt,
-                "You are a VP of Communications",
-                token_amount=token_amount,
-                top_p=0.1,
-                response_format={"type": "json_object"},
-            )
-            with Variable_Client(timeout) as client:
-                r = client.post(
-                    url,
-                    data=json.dumps(body),
-                    headers=core_consts.OPEN_AI_HEADERS,
-                )
-            res = open_ai_exceptions._handle_response(r)
-            res_content = res.get("choices")[0].get("message").get("content")
-            journalists = json.loads(res_content).get("journalists")
-            break
-        except open_ai_exceptions.StopReasonLength:
-            logger.exception(
-                f"Retrying again due to token amount, amount currently at: {token_amount}"
-            )
-            if token_amount <= 2000:
-                has_error = True
-                message = "Token amount error"
-                break
-            else:
-                token_amount += 500
-                continue
-        except httpx.ReadTimeout as e:
-            timeout += 30.0
-            if timeout >= 120.0:
-                has_error = True
-                message = "Read timeout issue"
-                logger.exception(f"Read timeout from Open AI {e}")
-                break
-            else:
-                attempts += 1
-                continue
-        except Exception as e:
-            has_error = True
-            message = f"Unknown exception: {e}"
-            logger.exception(e)
-            break
-    if has_error:
-        return message
-
-    return journalists
+            instance = Article.objects.get(link=url)
+            source = instance.source
+        except Article.DoesNotExist:
+            try:
+                domain = get_domain(url, True)
+                source = NewsSource.objects.get(domain__contains=domain)
+            except NewsSource.DoesNotExist:
+                logger.exception(f"Failed to find source with domain: {domain}")
+                return
+    source, article_selectors = source.get_selectors(html)
+    if source.selectors_defined:
+        extractor = ArticleExtractor(source, html, article_selectors, url, instance)
+        if not extractor.saved:
+            logger.info("Failed to save {}|{}".format(url, extractor.error))
+        else:
+            source.crawling
+            logger.info("Successfully saved {}".format(url))
+    return
 
 
 @background()
@@ -1590,3 +1156,29 @@ def bg_archive_articles(months=6, weeks=0, count_only=False, auto=False):
                     print(f"Successfully archived {len(successful_arts)}/{len(batch)} articles.")
         articles_to_archive.delete()
         return
+
+
+@background()
+def _send_omni_summary(news_alert_id):
+    alert = AssistAlert.objects.get(id=news_alert_id)
+    alert.update_thread_data()
+    link = alert.thread.generate_url()
+    content = {
+        "thread_url": link,
+        "website_url": f"{settings.MANAGR_URL}/login",
+        "title": f"{alert.title}",
+    }
+    send_html_email(
+        f"ManagrAI Digest: {alert.title}",
+        "core/email-templates/omni-email.html",
+        settings.DEFAULT_FROM_EMAIL,
+        [alert.user.email],
+        context=content,
+    )
+    if "sent_count" in alert.meta_data.keys():
+        alert.meta_data["sent_count"] += 1
+    else:
+        alert.meta_data["sent_count"] = 1
+    alert.meta_data["last_sent"] = datetime.datetime.now().strftime("%m/%d/%Y %H:%M")
+    alert.save()
+    return

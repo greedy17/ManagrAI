@@ -1,22 +1,25 @@
 from datetime import datetime
+
 from django.contrib import admin
 from django.db.models import Q
+from django.utils.timesince import timesince
+
 from .models import (
-    Search,
-    Pitch,
-    NewsSource,
+    ArchivedArticle,
     Article,
     AssistAlert,
-    WritingStyle,
-    TwitterAccount,
-    InstagramAccount,
-    Discovery,
-    Journalist,
-    EmailTracker,
-    JournalistContact,
     CompanyDetails,
+    Discovery,
+    EmailTracker,
+    InstagramAccount,
+    Journalist,
+    JournalistContact,
+    NewsSource,
+    Pitch,
+    Search,
     Thread,
-    ArchivedArticle,
+    TwitterAccount,
+    WritingStyle,
 )
 
 # Register your models here.
@@ -64,10 +67,29 @@ def update_active_status(modeladmin, request, queryset):
 update_active_status.short_description = "Update active status"
 
 
+def update_stopped(modeladmin, request, queryset):
+    for instance in queryset:
+        instance.check_if_stopped()
+    modeladmin.message_user(request, f"{queryset.count()} sources were updated")
+
+
+update_stopped.short_description = "Update stopped status"
+
+
+def update_boolean(modeladmin, request, queryset):
+    for instance in queryset:
+        instance.update_boolean()
+    modeladmin.message_user(request, f"{queryset.count()} searches were updated")
+
+
+update_active_status.short_description = "Update boolean"
+
+
 class CustomSearch(admin.ModelAdmin):
     list_display = ("user", "type", "input_text", "search_boolean")
     list_filter = ("user__organization",)
     ordering = ("-datetime_created",)
+    actions = [update_boolean]
 
 
 class CustomPitch(admin.ModelAdmin):
@@ -79,14 +101,13 @@ class CustomPitch(admin.ModelAdmin):
 class CustomNewsSource(admin.ModelAdmin):
     list_display = (
         "domain",
-        "site_name",
         "is_active",
         "is_crawling",
-        "last_scraped",
-        "article_link_attribute",
-        "article_link_selector",
+        "is_stopped",
+        "get_last_scraped",
+        "art_link_attrs",
     )
-    ordering = ("-datetime_created",)
+    ordering = ("-last_scraped",)
     readonly_fields = ("access_count", "newest_article_date")
     search_fields = ["domain"]
     list_filter = (
@@ -96,7 +117,22 @@ class CustomNewsSource(admin.ModelAdmin):
         "use_scrape_api",
         CustomActiveNotCrawlingFilter,
     )
-    actions = [update_crawling, update_active_status]
+    actions = [update_crawling, update_active_status, update_stopped]
+
+    def get_last_scraped(self, obj):
+        if obj.last_scraped:
+            return timesince(obj.last_scraped)
+        else:
+            return obj.last_scraped
+
+    get_last_scraped.short_description = "Last Scrape"
+
+    def art_link_attrs(self, obj):
+        if obj.article_link_attribute:
+            return "({}) {}".format(obj.article_link_attribute, obj.article_link_selector)
+        return "-"
+
+    art_link_attrs.short_description = "Link Attr/Sel"
 
     def get_ordering(self, request):
         """
@@ -121,10 +157,13 @@ class CustomNewsSource(admin.ModelAdmin):
                     pass
             if ordering:
                 return ordering
+        else:
+            return self.ordering
         return super().get_ordering(request)
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
+        extra_context["search_help_text"] = "Search by domain"
         extra_context["new_sources"] = bool(request.GET.get("new_sources"))
         return super().changelist_view(request, extra_context=extra_context)
 
@@ -152,6 +191,11 @@ class CustomArticle(admin.ModelAdmin):
     ordering = ("-publish_date",)
     search_fields = ("title", "link")
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["search_help_text"] = "Search by title or url"
+        return super().changelist_view(request, extra_context=extra_context)
+
 
 class CustomArchivedArticle(admin.ModelAdmin):
     list_display = ("title", "publish_date", "source", "archived_on")
@@ -159,11 +203,32 @@ class CustomArchivedArticle(admin.ModelAdmin):
     ordering = ("-publish_date",)
     search_fields = ("title", "link")
 
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["search_help_text"] = "Search by title or url"
+        return super().changelist_view(request, extra_context=extra_context)
+
 
 class CustomAssistAlertAdmin(admin.ModelAdmin):
-    list_display = ("user", "search", "run_at", "times_sent", "last_sent")
-    ordering = ("run_at",)
-    list_filter = ("type", "search__type", "user")
+    list_display = ("user", "run_at", "search", "times_sent", "last_sent")
+    fields = [
+        "search_type",
+        "search_boolean",
+        "user",
+        "run_at",
+        "type",
+        "thread",
+        "recipients",
+    ]
+    ordering = ("datetime_created",)
+    list_filter = ("type", "thread__search__type")
+    search_fields = ["user__email"]
+    readonly_fields = ["search_type", "search_boolean", "user"]
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["search_help_text"] = "Search by user email"
+        return super().changelist_view(request, extra_context=extra_context)
 
     def times_sent(self, obj):
         ts = obj.meta_data["sent_count"] if "sent_count" in obj.meta_data.keys() else 0
@@ -175,6 +240,11 @@ class CustomAssistAlertAdmin(admin.ModelAdmin):
 
     times_sent.short_description = "Times Sent"
     last_sent.short_description = "Last Sent"
+
+    def search(self, obj):
+        if hasattr(obj.thread, "search"):
+            return obj.thread.search
+        return "N/A"
 
 
 class CustomJournalAdmin(admin.ModelAdmin):
@@ -204,11 +274,28 @@ class CustomCompanyDetail(admin.ModelAdmin):
 
 
 class CustomThread(admin.ModelAdmin):
-    list_display = ("user", "title")
+    list_display = ("user", "title", "thread_type", "follow_ups")
     list_filter = (
-        "user",
+        "search__type",
         "user__organization",
     )
+    search_fields = ["user__email", "title"]
+
+    def thread_type(self, obj):
+        if hasattr(obj, "search"):
+            return obj.search.type.title()
+        return "-"
+
+    def follow_ups(self, obj):
+        meta_data = obj.meta_data
+        followups = meta_data.get("followUps")
+        return len(followups)
+
+    def changelist_view(self, request, extra_context=None):
+        if extra_context is None:
+            extra_context = {}
+        extra_context["search_help_text"] = "Search by title or user email"
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 admin.site.register(Search, CustomSearch)

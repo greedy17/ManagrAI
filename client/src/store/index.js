@@ -69,9 +69,13 @@ const state = {
   stripeKey: null,
   listName: 'news',
   viewOnly: false,
+  reportThread: null
 }
 
 const mutations = {
+  setSharedObject(state, obj) {
+    state.reportThread = obj;
+  },
   VIEW_ONLY: (state, payload) => {
     state.viewOnly = payload
   },
@@ -300,6 +304,9 @@ const mutations = {
 }
 
 const actions = {
+  updateSharedObject({ commit }, obj) {
+    commit("setSharedObject", obj);
+  },
   async updateStages({ state, commit }) {
     if (!state.token) return null
 
