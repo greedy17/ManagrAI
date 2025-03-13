@@ -5157,7 +5157,7 @@ export default {
       secondaryLoader: false,
       secondaryLoaderAlt: false,
       articlesShowingDetails: [],
-      showingArticles: false,
+      showingArticles: true,
       citationsMounted: true,
       altCitationsMounted: true,
       reportInstructions: '',
@@ -8963,9 +8963,12 @@ Your goal is to create content that resonates deeply, connects authentically, an
       }
 
       this.$nextTick(() => {
-        this.getEmailAlerts()
-        this.refreshUser()
+        if (!this.$route.params.code) {
+          this.getEmailAlerts()
+          this.refreshUser()
+        }
       })
+
     },
     async testEmailAlert() {
       try {
@@ -10651,7 +10654,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
 
       try {
         if (this.summary.length) {
-          this.showingArticles = false
+          // this.showingArticles = false
 
           const res = await Comms.api.getClips({
             search: this.newSearch,
@@ -10697,7 +10700,7 @@ Your goal is to create content that resonates deeply, connects authentically, an
           this.latestArticles = this.altOmniNews.concat(this.altOmniSocial, this.altOmniWeb)
           this.searchingType = 'summary'
         } else {
-          this.showingArticles = false
+          // this.showingArticles = false
           this.latestArticles = []
 
           const res = await Comms.api.getClips({
