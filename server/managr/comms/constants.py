@@ -1345,16 +1345,17 @@ def OPEN_AI_OMNI_SUMMARY(date, search, clips, tweets, vids, skeets, web, project
     Web Data: {web}
     Project details: {project}
 
-    Output format:
+    Output must follow this format:
 
     **Heading** in `<h2>` tags,
     Sections with `<strong>` subheadings,
     Ordered or unordered lists using `<ol>` or `<ul>`,
     Paragraphs with `<p>`, and
     Line breaks `<br>` between main points for clarity.
+    List MUST use `<ol>` or `<ul>`
     Do not include ```html in your response.
 
-    Keep responses structured and consistent for easy reading in a Vue.js app.
+    Keep responses structured and consistent for easy reading in a Vue.js app. 
     """
     return body
 
