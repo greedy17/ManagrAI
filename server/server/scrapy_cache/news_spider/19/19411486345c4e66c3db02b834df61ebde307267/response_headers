@@ -1,0 +1,18 @@
+Content-Length: 116058
+Core-Api-Cache-Key: 633a8c83-a8f1-429d-8660-c5b51bcf6e55 fcfb59d3-96b7-43b3-9df5-39b8ab5f8d43
+Link: <https://assets1.cbsnewsstatic.com>; rel="preconnect", <https://assets2.cbsnewsstatic.com>; rel="preconnect", <https://assets3.cbsnewsstatic.com>; rel="preconnect", </fly/bundles/cbsnewscontent/fonts/ProximaNova-Regular/ProximaNova-Regular.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/ProximaNova-Bold/ProximaNova-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Bold/PublicoHeadline-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Black/PublicoHeadline-Black.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoText/PublicoText.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/css/article.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", </fly/bundles/cbsnewscontent/css/responsive.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.responsive.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://vidtech.cbsinteractive.com>; rel="preconnect"
+Content-Type: text/html; charset=UTF-8
+X-Content-Type-Options: nosniff
+Cache-Control: max-age=7200, public
+Via: 1.1 varnish, 1.1 varnish, 1.1 varnish
+X-Xss-Protection: 1; mode=block
+Content-Encoding: gzip
+Last-Modified: Fri, 05 Sep 2025 21:25:09 GMT
+X-Device: desktop
+X-Edge-Forwarded-Proto: https
+Accept-Ranges: bytes
+Date: Fri, 05 Sep 2025 23:14:02 GMT
+Age: 6533
+Vary: Accept-Encoding, X-Geo-GDPR, X-Device, X-Edge-Forwarded-Proto, X-Device, X-Edge-Forwarded-Proto
+Set-Cookie: fly_device=desktop; expires=Fri, 05 Sep 2025 23:19:02 GMT; path=/; domain=.cbsnews.com
+Fastly-Restarts: 0

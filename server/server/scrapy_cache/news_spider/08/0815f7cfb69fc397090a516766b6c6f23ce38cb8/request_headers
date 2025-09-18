@@ -1,0 +1,10 @@
+Cache-Control: no-cache
+Pragma: no-cache
+Connection: keep-alive
+Referer: https://www.google.com/
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36 Edge/91.0.864.37 managr-crawler/1.8 (https://managr.ai/documentation)
+Dnt: 1
+Cookie: fly_device=desktop; fly_geo={"countryCode": "US", "region": "GA", "dma": "524", "connection": { "type": "mobile"}}
+Accept-Encoding: gzip, deflate

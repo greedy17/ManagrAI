@@ -1,0 +1,10 @@
+Cache-Control: no-cache
+Pragma: no-cache
+Connection: keep-alive
+Referer: https://www.quora.com/
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en
+User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:53.0) Gecko/20100101 Firefox/53.0 managr-crawler/2.1 (https://managr.ai/documentation)
+Dnt: 1
+Cookie: fly_device=desktop; fly_geo={"countryCode": "US", "region": "GA", "dma": "524", "connection": { "type": "mobile"}}
+Accept-Encoding: gzip, deflate

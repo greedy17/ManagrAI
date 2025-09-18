@@ -6372,20 +6372,11 @@ Your goal is to create content that resonates deeply, connects authentically, an
         this.refreshUser()
       } catch (e) {
         console.log(e)
-        // this.$toast('Article analysis not available', {
-        //   timeout: 2000,
-        //   position: 'top-left',
-        //   type: 'error',
-        //   toastClassName: 'custom',
-        //   bodyClassName: ['custom'],
-        // })
 
         this.currentArticle['summary'] = 'Summary not available for this article'
 
         this.loadingAnalytics = false
       } finally {
-        // this.showArticleRegenerate = false
-        // this.loadingUrl = null
       }
     },
 

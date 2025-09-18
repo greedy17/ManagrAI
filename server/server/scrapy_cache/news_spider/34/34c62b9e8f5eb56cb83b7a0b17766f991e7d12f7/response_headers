@@ -1,0 +1,17 @@
+Server: nginx
+Date: Fri, 05 Sep 2025 22:47:21 GMT
+Content-Type: text/html; charset=UTF-8
+Vary: Accept-Encoding
+Vary: Cookie
+Host-Header: Newspack
+Content-Security-Policy: upgrade-insecure-requests
+Link: <https://calmatters.org/wp-json/>; rel="https://api.w.org/"
+Link: <https://calmatters.org/wp-json/wp/v2/posts/468175>; rel="alternate"; title="JSON"; type="application/json"
+Link: <https://calmatters.org/?p=468175>; rel=shortlink
+Last-Modified: Tue, 02 Sep 2025 13:58:13 GMT
+Cache-Control: max-age=360, must-revalidate
+X-Nananana: Batcache-Set
+Content-Encoding: gzip
+X-Ac: 1.atl _atomic_dfw STALE
+Alt-Svc: h3=":443"; ma=86400
+Server-Timing: a8c-cdn, dc;desc=atl, cache;desc=STALE;dur=2.0

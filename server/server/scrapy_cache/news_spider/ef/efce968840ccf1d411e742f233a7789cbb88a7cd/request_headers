@@ -1,0 +1,10 @@
+Cache-Control: no-cache
+Pragma: no-cache
+Connection: keep-alive
+Referer: https://www.cnn.com/
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en
+User-Agent: Mozilla/5.0 (Linux; Android 9; Pixel 3 XL Build/PQ3A.190805.002) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36 managr-crawler/1.4 (https://managr.ai/documentation)
+Dnt: 1
+Cookie: A1=d=AQABBNRvu2gCEFGQxtkO7EiIVBXPk-ERzUgFEgEBAQHBvGjFaNwx0iMA_eMCAA&S=AQAAAmDpYmCZ34u02qMZNFWz4o4; A3=d=AQABBNRvu2gCEFGQxtkO7EiIVBXPk-ERzUgFEgEBAQHBvGjFaNwx0iMA_eMCAA&S=AQAAAmDpYmCZ34u02qMZNFWz4o4; A1S=d=AQABBNRvu2gCEFGQxtkO7EiIVBXPk-ERzUgFEgEBAQHBvGjFaNwx0iMA_eMCAA&S=AQAAAmDpYmCZ34u02qMZNFWz4o4
+Accept-Encoding: gzip, deflate

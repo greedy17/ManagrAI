@@ -1,0 +1,19 @@
+Content-Length: 738
+Content-Type: text/html;charset=utf-8
+Server: CloudFront
+Date: Fri, 05 Sep 2025 23:12:25 GMT
+X-Datadome: protected
+Accept-Ch: Sec-CH-UA,Sec-CH-UA-Mobile,Sec-CH-UA-Platform,Sec-CH-UA-Arch,Sec-CH-UA-Full-Version-List,Sec-CH-UA-Model,Sec-CH-Device-Memory
+Charset: utf-8
+Cache-Control: max-age=0, private, no-cache, no-store, must-revalidate
+Pragma: no-cache
+Access-Control-Allow-Credentials: true
+Access-Control-Expose-Headers: x-dd-b, x-set-cookie
+Access-Control-Allow-Origin: https://www.instagram.com
+X-Datadome-Cid: AHrlqAAAAAMAeHJBqCtRme8ArDhCag==
+X-Dd-B: 3
+Set-Cookie: datadome=1de3gj7Q5Z8nnBgJKrprG7P3tY_96UHG7WyIsShMW4nnUVQR3S74azG0K5b36Q16CzZO8CBDCX1K2l9HfUfX8t5TpB7_Xpj5Nv8nWMD302d8n~1cOTw7tcbayg0WfrjB; Max-Age=31536000; Domain=.wsj.com; Path=/; SameSite=Lax
+X-Cache: LambdaGeneratedResponse from cloudfront
+Via: 1.1 fdc632d3538adbffdbb2b5b8fde20ac4.cloudfront.net (CloudFront)
+X-Amz-Cf-Pop: ATL59-P2
+X-Amz-Cf-Id: sOfCxAhXiUukQ7cGOClwzzT3e9wa46G8MTdIME3fAwNqq9nAe6Bw9Q==

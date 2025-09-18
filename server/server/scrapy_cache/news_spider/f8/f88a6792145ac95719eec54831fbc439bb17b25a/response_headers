@@ -1,0 +1,12 @@
+Content-Length: 159493
+Content-Type: text/html
+X-Xss-Protection: 1; mode=block
+P3P: CP="NOI DSP COR NID CURaADMa OUR STP"
+Pool-Info: WP2
+X-Frame-Options: ALLOW-FROM https://www.bls.gov
+Content-Security-Policy: frame-ancestors https://*.bls.gov
+Cross-Origin-Opener-Policy: same-origin
+Content-Encoding: gzip
+Date: Fri, 05 Sep 2025 23:24:57 GMT
+Vary: Accept-Encoding
+Strict-Transport-Security: max-age=31536000 ; includeSubDomains ; preload

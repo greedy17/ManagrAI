@@ -1,0 +1,18 @@
+Content-Length: 110932
+X-Xss-Protection: 1; mode=block
+Via: 1.1 varnish, 1.1 varnish, 1.1 varnish
+Link: <https://assets1.cbsnewsstatic.com>; rel="preconnect", <https://assets2.cbsnewsstatic.com>; rel="preconnect", <https://assets3.cbsnewsstatic.com>; rel="preconnect", </fly/bundles/cbsnewscontent/fonts/ProximaNova-Regular/ProximaNova-Regular.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/ProximaNova-Bold/ProximaNova-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Bold/PublicoHeadline-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Black/PublicoHeadline-Black.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoText/PublicoText.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/css/article.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", </fly/bundles/cbsnewscontent/css/responsive.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.responsive.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script"
+Last-Modified: Fri, 05 Sep 2025 21:31:00 GMT
+Content-Type: text/html; charset=UTF-8
+Content-Encoding: gzip
+X-Content-Type-Options: nosniff
+Core-Api-Cache-Key: 5577e213-1967-46a5-acbd-f3f12fbc22df
+Cache-Control: max-age=14400, public
+X-Device: desktop
+X-Edge-Forwarded-Proto: https
+Accept-Ranges: bytes
+Age: 6155
+Date: Fri, 05 Sep 2025 23:13:35 GMT
+Vary: Accept-Encoding, X-Device, X-Edge-Forwarded-Proto, X-Device, X-Edge-Forwarded-Proto
+Set-Cookie: fly_device=desktop; expires=Fri, 05 Sep 2025 23:18:35 GMT; path=/; domain=.cbsnews.com
+Fastly-Restarts: 0

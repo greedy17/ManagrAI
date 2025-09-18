@@ -396,7 +396,7 @@ def remove_api_sources():
         source_list = [source["url"] for source in r]
     except Exception as e:
         print(str(e))
-    database_check = NewsSource.objects.filter(domain__in=source_list, is_active=True)
+    database_check = NewsSource.objects.filter(domain__in=[], is_active=True)
     if database_check:
         database_check.update(is_active=False)
     return

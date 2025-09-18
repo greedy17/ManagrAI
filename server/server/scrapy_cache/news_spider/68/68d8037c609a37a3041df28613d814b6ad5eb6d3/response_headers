@@ -1,0 +1,17 @@
+Content-Length: 164
+Content-Type: text/html; charset=UTF-8
+Location: https://www.acenet.edu/Pages/default.aspx
+Server: Microsoft-IIS/10.0
+X-Sharepointhealthscore: 0
+Sprequestguid: d4e5c2a1-701f-d055-bc52-55d3e9968732
+Request-Id: d4e5c2a1-701f-d055-bc52-55d3e9968732
+X-Frame-Options: SAMEORIGIN
+Content-Security-Policy: frame-ancestors 'self' teams.microsoft.com *.teams.microsoft.com *.skype.com *.teams.microsoft.us local.teams.office.com *.powerapps.com *.yammer.com *.officeapps.live.com *.office.com *.stream.azure-test.net *.microsoftstream.com *.dynamics.com *.microsoft.com onedrive.live.com *.onedrive.live.com;
+Sprequestduration: 25
+Spiislatency: 10
+X-Powered-By: ASP.NET
+Microsoftsharepointteamservices: 16.0.0.5513
+X-Content-Type-Options: nosniff
+X-Ms-Invokeapp: 1; RequireReadOnly
+X-Xss-Protection: 0
+Date: Fri, 05 Sep 2025 23:22:38 GMT

@@ -1,0 +1,17 @@
+Content-Length: 1
+X-Xss-Protection: 1; mode=block
+Location: /news/powerball-jackpot-1-8-billion-second-highest/
+Content-Type: text/html; charset=UTF-8
+X-Content-Type-Options: nosniff
+Cache-Control: max-age=300, public
+Last-Modified: Fri, 05 Sep 2025 23:09:12 GMT
+Via: 1.1 varnish, 1.1 varnish, 1.1 varnish
+Core-Api-Cache-Key: 
+X-Device: desktop
+X-Edge-Forwarded-Proto: https
+Accept-Ranges: bytes
+Age: 267
+Date: Fri, 05 Sep 2025 23:13:39 GMT
+Vary: X-Device, X-Edge-Forwarded-Proto, X-Device, X-Edge-Forwarded-Proto
+Set-Cookie: fly_device=desktop; expires=Fri, 05 Sep 2025 23:18:39 GMT; path=/; domain=.cbsnews.com
+Fastly-Restarts: 0

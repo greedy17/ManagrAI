@@ -1,0 +1,19 @@
+Content-Length: 165302
+X-Xss-Protection: 1; mode=block
+Link: <https://assets1.cbsnewsstatic.com>; rel="preconnect", <https://assets2.cbsnewsstatic.com>; rel="preconnect", <https://assets3.cbsnewsstatic.com>; rel="preconnect", </fly/bundles/cbsnewscontent/fonts/ProximaNova-Regular/ProximaNova-Regular.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/ProximaNova-Bold/ProximaNova-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Bold/PublicoHeadline-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Black/PublicoHeadline-Black.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoText/PublicoText.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/css/responsive.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.responsive.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://vidtech.cbsinteractive.com>; rel="preconnect"
+Content-Type: text/html; charset=UTF-8
+X-Content-Type-Options: nosniff
+Cache-Control: max-age=90, public
+Last-Modified: Fri, 05 Sep 2025 23:12:27 GMT
+Via: 1.1 varnish, 1.1 varnish, 1.1 varnish
+Content-Encoding: gzip
+Core-Api-Cache-Key: e8074928-8717-4e96-94d3-c57247d92fc5
+X-Device: desktop
+X-Edge-Forwarded-Proto: https
+Accept-Ranges: bytes
+Date: Fri, 05 Sep 2025 23:12:55 GMT
+Age: 27
+Vary: Accept-Encoding, X-Geo-GDPR, X-Device, X-Edge-Forwarded-Proto, X-Device, X-Edge-Forwarded-Proto
+Set-Cookie: fly_device=desktop; expires=Fri, 05 Sep 2025 23:17:55 GMT; path=/; domain=.cbsnews.com
+Set-Cookie: fly_geo={"countryCode": "US", "region": "GA", "dma": "524", "connection": { "type": "mobile"}}; expires=Fri, 05 Sep 2025 23:17:55 GMT; path=/; domain=.cbsnews.com
+Fastly-Restarts: 0

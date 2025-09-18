@@ -1,0 +1,21 @@
+Content-Length: 99704
+Content-Type: text/html; charset=UTF-8
+Content-Encoding: gzip
+X-Media: ip-10-150-200-6
+Etag: W/"3a19b421b2288a7a7a623255690dea56"
+X-Be-Age: 848
+X-Assigned-Ttl: 2752.000
+X-Cacheable: 1
+Accept-Ranges: bytes
+Date: Fri, 05 Sep 2025 23:13:03 GMT
+Access-Control-Allow-Origin: *
+Server: ContentServer
+Set-Cookie: fly_ab_uid=78aa2376-00fe-499f-90bb-1fc985e8ddb9; max-age=(null); path=/; domain=.cbssports.com;
+Content-Security-Policy: frame-ancestors 'self' *.cbssports.com *.sportsline.com popculture.com comicbook.com 247sports.com *.247sports.com *.maxpreps.com *.ampproject.org; default-src https: blob: wss: 'unsafe-inline' 'unsafe-eval'; font-src https: blob: data:; media-src https: blob: data:; img-src https: blob: data: android-webview: android-webview-video-poster:; object-src 'none'; block-all-mixed-content;
+X-Final-Cache-Control: max-age=60, public
+X-Cache-State: MISS-CLUSTER
+X-Age: 0.000
+X-Remaining-Ttl: 2752.000
+X-Auth-Present: false
+Vary: Accept-Encoding
+Cache-Control: private, max-age=0

@@ -77,7 +77,7 @@ class Command(BaseCommand):
                     )
                 )
         else:
-            remove_api_sources()
+            # remove_api_sources()
             scrape_ready = True if options["active"] else False
             html_urls = NewsSource.domain_list(scrape_ready, new)
             xml_urls = NewsSource.domain_list(scrape_ready, new, type="XML")

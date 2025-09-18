@@ -1,0 +1,20 @@
+Content-Length: 303949
+Cache-Control: private
+Content-Type: text/html; charset=utf-8
+Expires: Fri, 05 Sep 2025 23:32:45 GMT
+Vary: *
+Server: Microsoft-IIS/10.0
+X-Sharepointhealthscore: 0
+X-Aspnet-Version: 4.0.30319
+Sprequestguid: d5e5c2a1-c074-d055-bc52-5e93a84d7d4e
+Request-Id: d5e5c2a1-c074-d055-bc52-5e93a84d7d4e
+X-Frame-Options: SAMEORIGIN
+Content-Security-Policy: frame-ancestors 'self' teams.microsoft.com *.teams.microsoft.com *.skype.com *.teams.microsoft.us local.teams.office.com *.powerapps.com *.yammer.com *.officeapps.live.com *.office.com *.stream.azure-test.net *.microsoftstream.com *.dynamics.com *.microsoft.com onedrive.live.com *.onedrive.live.com;
+Sprequestduration: 656
+Spiislatency: 0
+X-Powered-By: ASP.NET
+Microsoftsharepointteamservices: 16.0.0.5513
+X-Content-Type-Options: nosniff
+X-Ms-Invokeapp: 1; RequireReadOnly
+X-Xss-Protection: 0
+Date: Fri, 05 Sep 2025 23:22:45 GMT

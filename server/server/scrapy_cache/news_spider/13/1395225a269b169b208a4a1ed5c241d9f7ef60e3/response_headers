@@ -1,0 +1,19 @@
+Content-Length: 116329
+Via: 1.1 varnish, 1.1 varnish, 1.1 varnish
+Set-Cookie: fly_device=desktop; path=/; domain=.cbsnews.com
+Set-Cookie: fly_device=desktop; expires=Fri, 05 Sep 2025 23:19:31 GMT; path=/; domain=.cbsnews.com
+Content-Encoding: gzip
+Last-Modified: Fri, 05 Sep 2025 21:47:52 GMT
+Link: <https://assets1.cbsnewsstatic.com>; rel="preconnect", <https://assets2.cbsnewsstatic.com>; rel="preconnect", <https://assets3.cbsnewsstatic.com>; rel="preconnect", </fly/bundles/cbsnewscontent/fonts/ProximaNova-Regular/ProximaNova-Regular.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/ProximaNova-Bold/ProximaNova-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Bold/PublicoHeadline-Bold.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoHeadline-Black/PublicoHeadline-Black.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/fonts/PublicoText/PublicoText.woff2>; rel="preload"; as="font"; crossorigin, </fly/bundles/cbsnewscontent/css/article.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", </fly/bundles/cbsnewscontent/css/responsive.min.css?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="style", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://www.cbsnews.com/fly/bundles/cbsnewscore/js-build/main.responsive.js?v=b2b7dd801fbe4341af93bb707aef839c>; rel="preload"; as="script", <https://vidtech.cbsinteractive.com>; rel="preconnect"
+Core-Api-Cache-Key: a4ef9289-3c77-4358-8bf7-d2c4f9568105 4e98077d-8af0-4b2a-8f9b-40d15e0b81cd
+X-Xss-Protection: 1; mode=block
+Cache-Control: max-age=7200, public
+Content-Type: text/html; charset=UTF-8
+X-Content-Type-Options: nosniff
+X-Device: desktop
+X-Edge-Forwarded-Proto: https
+Accept-Ranges: bytes
+Age: 5198
+Date: Fri, 05 Sep 2025 23:14:31 GMT
+Vary: Accept-Encoding, X-Geo-GDPR, X-Device, X-Edge-Forwarded-Proto, X-Device, X-Edge-Forwarded-Proto
+Fastly-Restarts: 0

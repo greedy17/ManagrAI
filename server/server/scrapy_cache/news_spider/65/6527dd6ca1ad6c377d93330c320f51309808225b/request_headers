@@ -1,0 +1,9 @@
+Cache-Control: no-cache
+Pragma: no-cache
+Connection: keep-alive
+Referer: https://www.quora.com/
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36 managr-crawler/1.5 (https://managr.ai/documentation)
+Dnt: 0
+Accept-Encoding: gzip, deflate
