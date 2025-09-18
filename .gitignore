@@ -66,3 +66,5 @@ override.tf.json
 deploy/infra/.terraform/
 deploy/infra/.terraform/
 .env
+deploy/infra/.terraform/
+.env
