@@ -65,3 +65,4 @@ override.tf.json
 # example: *tfplan*
 deploy/infra/.terraform/
 deploy/infra/.terraform/
+.env
