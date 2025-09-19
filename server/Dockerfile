@@ -12,7 +12,7 @@ RUN npm run build
 
 
 # ---------- BACKEND BUILD ----------
-FROM python:3.11-slim AS backend
+FROM python:3.9 AS backend
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE 1
