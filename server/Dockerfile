@@ -1,6 +1,6 @@
 # ---------- FRONTEND BUILD ----------
 FROM node:14 AS frontend
-WORKDIR /client
+WORKDIR /app/client
 
 # Install frontend deps
 COPY client/package*.json ./
