@@ -2,7 +2,7 @@
 FROM node:16 AS frontend
 WORKDIR /app/client
 
-# Set npm to allow running as root
+# Allow npm to run as root
 RUN npm config set unsafe-perm true
 
 # Install frontend dependencies
@@ -25,12 +25,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential libpq-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies
-COPY server/requirements.txt .
+# Copy requirements from root
+COPY ../requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy backend code
-COPY server/ .
+COPY . .
 
 # Copy built Vue app into Django static/templates
 COPY --from=frontend /app/client/dist ./client/dist
