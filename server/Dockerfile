@@ -1,5 +1,5 @@
 # ---------- FRONTEND BUILD ----------
-FROM node:16 AS frontend
+FROM node:14 AS frontend
 WORKDIR /client
 
 # Install frontend deps
