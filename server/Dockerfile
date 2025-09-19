@@ -2,12 +2,14 @@
 FROM node:14 AS frontend
 WORKDIR /app/client
 
+# Copy package.json and package-lock.json from root client folder
+COPY ../client/package*.json ./
+
 # Install frontend deps
-COPY client/package*.json ./
 RUN npm install
 
-# Copy source + build
-COPY client/ .
+# Copy frontend source and build
+COPY ../client/ .
 RUN npm run build
 
 
@@ -31,7 +33,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 # Copy built Vue app into Django static/templates
-COPY --from=frontend /client/dist ./client/dist
+COPY --from=frontend /app/client/dist ./client/dist
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
