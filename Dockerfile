@@ -5,12 +5,16 @@ WORKDIR /app/client
 # Allow npm to run as root
 RUN npm config set unsafe-perm true
 
-# Install frontend dependencies
+# Copy package.json + package-lock.json (if exists) first
 COPY client/package*.json ./
+
+# Install frontend dependencies
 RUN npm install
 
-# Copy frontend source and build
-COPY client/ .
+# Copy frontend source code
+COPY client/ ./
+
+# Build frontend
 RUN npm run build
 
 # ---------- BACKEND BUILD ----------
@@ -26,13 +30,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # Copy requirements from root
-COPY ../requirements.txt .
+COPY requirements.txt .
+
+# Install Python dependencies
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy backend code
 COPY . .
 
-# Copy built Vue app into Django static/templates
+# Copy built frontend into Django static folder
 COPY --from=frontend /app/client/dist ./client/dist
 
 # Collect static files
